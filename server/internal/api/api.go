@@ -5,14 +5,16 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"gorm.io/gorm"
 )
 
 type Application struct {
 	Router *chi.Mux
+	DB     *gorm.DB
 }
 
-func New() *Application {
-	app := &Application{}
+func New(db *gorm.DB) *Application {
+	app := &Application{DB: db}
 	app.Router = app.setupRoutes()
 	return app
 }

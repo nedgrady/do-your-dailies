@@ -1,17 +1,23 @@
 package main
 
 import (
-	"do-your-dailies/server/api"
 	"log"
 	"net/http"
+
+	"do-your-dailies/server/internal/api"
+	"do-your-dailies/server/internal/db"
 )
 
 func main() {
-	app := api.New()
+	dsn := "host=localhost user=postgres password=postgres dbname=dailies port=5432 sslmode=disable"
+
+	database, err := db.New(dsn)
+	if err != nil {
+		log.Fatal("failed to connect to database:", err)
+	}
+
+	app := api.New(database)
 
 	log.Println("starting server on :8080")
-	err := http.ListenAndServe(":8080", app.Router)
-	if err != nil {
-		log.Fatal(err)
-	}
+	log.Fatal(http.ListenAndServe(":8080", app.Router))
 }
