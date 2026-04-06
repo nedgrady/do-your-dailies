@@ -25,10 +25,7 @@ func (app *Application) setupRoutes() *chi.Mux {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	})
+	r.Get("/health", app.healthCheck)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/chores", func(r chi.Router) {
@@ -39,4 +36,10 @@ func (app *Application) setupRoutes() *chi.Mux {
 	})
 
 	return r
+}
+
+func (app *Application) healthCheck(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("OK"))
 }
