@@ -1,23 +1,16 @@
 package api
 
 import (
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"do-your-dailies/server/internal/models"
-
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateChoreReturns201(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		createFn: func(req models.CreateChoreRequest) (models.Chore, error) {
-			return models.Chore{Name: req.Name, CadenceInDays: req.CadenceInDays}, nil
-		},
-	})
+	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
 	rr := httptest.NewRecorder()
@@ -27,11 +20,7 @@ func TestCreateChoreReturns201(t *testing.T) {
 }
 
 func TestCreateChoreReturnsCreatedChore(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		createFn: func(req models.CreateChoreRequest) (models.Chore, error) {
-			return models.Chore{Name: req.Name, CadenceInDays: req.CadenceInDays}, nil
-		},
-	})
+	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
 	rr := httptest.NewRecorder()
@@ -41,11 +30,7 @@ func TestCreateChoreReturnsCreatedChore(t *testing.T) {
 }
 
 func TestCreateChoreRejectsSnakeCaseCadenceJSON(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		createFn: func(req models.CreateChoreRequest) (models.Chore, error) {
-			return models.Chore{Name: req.Name, CadenceInDays: req.CadenceInDays}, nil
-		},
-	})
+	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"dishes","cadence_in_days":7}`)
 	rr := httptest.NewRecorder()
@@ -55,11 +40,7 @@ func TestCreateChoreRejectsSnakeCaseCadenceJSON(t *testing.T) {
 }
 
 func TestCreateChoreDecodesCadenceInDaysFromLowerCamelJSON(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		createFn: func(req models.CreateChoreRequest) (models.Chore, error) {
-			return models.Chore{Name: req.Name, CadenceInDays: req.CadenceInDays}, nil
-		},
-	})
+	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":7}`)
 	rr := httptest.NewRecorder()
@@ -69,11 +50,7 @@ func TestCreateChoreDecodesCadenceInDaysFromLowerCamelJSON(t *testing.T) {
 }
 
 func TestCreateChoreReturnsLowerCamelCaseCadence(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		createFn: func(req models.CreateChoreRequest) (models.Chore, error) {
-			return models.Chore{Name: req.Name, CadenceInDays: req.CadenceInDays}, nil
-		},
-	})
+	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":7}`)
 	rr := httptest.NewRecorder()
@@ -83,7 +60,7 @@ func TestCreateChoreReturnsLowerCamelCaseCadence(t *testing.T) {
 }
 
 func TestCreateChoreReturns422OnBadJSON(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{})
+	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`not-json`)
 	rr := httptest.NewRecorder()
@@ -93,11 +70,8 @@ func TestCreateChoreReturns422OnBadJSON(t *testing.T) {
 }
 
 func TestCreateChoreReturns500OnStoreError(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		createFn: func(req models.CreateChoreRequest) (models.Chore, error) {
-			return models.Chore{}, errors.New("db error")
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	breakChoreTable(t, database)
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
 	rr := httptest.NewRecorder()
@@ -107,11 +81,8 @@ func TestCreateChoreReturns500OnStoreError(t *testing.T) {
 }
 
 func TestCreateChoreStoreErrorBody(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		createFn: func(req models.CreateChoreRequest) (models.Chore, error) {
-			return models.Chore{}, errors.New("db error")
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	breakChoreTable(t, database)
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
 	rr := httptest.NewRecorder()

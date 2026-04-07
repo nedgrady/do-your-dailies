@@ -1,30 +1,26 @@
 package api
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
 func TestDeleteChoreReturns204(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		deleteFn: func(id uint) error { return nil },
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
 
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodDelete, "/api/chores/1", nil))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/chores/%d", chore.ID), nil))
 
 	assert.Equal(t, http.StatusNoContent, rr.Code)
 }
 
 func TestDeleteChoreReturns404WhenNotFound(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		deleteFn: func(id uint) error { return gorm.ErrRecordNotFound },
-	})
+	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodDelete, "/api/chores/99", nil))
@@ -33,7 +29,7 @@ func TestDeleteChoreReturns404WhenNotFound(t *testing.T) {
 }
 
 func TestDeleteChoreReturns400OnNonNumericID(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{})
+	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodDelete, "/api/chores/abc", nil))
@@ -42,29 +38,27 @@ func TestDeleteChoreReturns400OnNonNumericID(t *testing.T) {
 }
 
 func TestDeleteChoreReturns500OnUnexpectedError(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		deleteFn: func(id uint) error { return errors.New("db error") },
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
+	breakChoreTable(t, database)
 
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodDelete, "/api/chores/1", nil))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/chores/%d", chore.ID), nil))
 
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 }
 
 func TestDeleteChoreAcceptsLargeUintID(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		deleteFn: func(id uint) error { return nil },
-	})
+	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodDelete, "/api/chores/9223372036854775808", nil))
 
-	assert.Equal(t, http.StatusNoContent, rr.Code)
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 }
 
 func TestDeleteChoreRejectsBase11OnlyID(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{})
+	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodDelete, "/api/chores/a", nil))

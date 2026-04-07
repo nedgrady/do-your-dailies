@@ -1,20 +1,15 @@
 package api
 
 import (
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"do-your-dailies/server/internal/models"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestListChoresReturns200(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		listFn: func() ([]models.Chore, error) { return []models.Chore{}, nil },
-	})
+	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/", nil))
@@ -23,9 +18,7 @@ func TestListChoresReturns200(t *testing.T) {
 }
 
 func TestListChoresReturnsJSONContentType(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		listFn: func() ([]models.Chore, error) { return []models.Chore{}, nil },
-	})
+	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/", nil))
@@ -34,10 +27,8 @@ func TestListChoresReturnsJSONContentType(t *testing.T) {
 }
 
 func TestListChoresReturnsChores(t *testing.T) {
-	chore := models.Chore{Name: "dishes", CadenceInDays: 1}
-	app := newAppWithStore(&mockChoreStore{
-		listFn: func() ([]models.Chore, error) { return []models.Chore{chore}, nil },
-	})
+	app, database := newPostgresTestApp(t)
+	seedChore(t, database, "dishes", 1)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/", nil))
@@ -46,9 +37,8 @@ func TestListChoresReturnsChores(t *testing.T) {
 }
 
 func TestListChoresReturns500OnStoreError(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		listFn: func() ([]models.Chore, error) { return nil, errors.New("db error") },
-	})
+	app, database := newPostgresTestApp(t)
+	breakChoreTable(t, database)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/", nil))

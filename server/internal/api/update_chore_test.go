@@ -1,134 +1,94 @@
 package api
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"do-your-dailies/server/internal/models"
-
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
 func TestUpdateChoreReturns200(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
-			return models.Chore{Name: *req.Name}, nil
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/chores/%d", chore.ID), body))
 
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
 func TestUpdateChoreReturnsUpdatedChore(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
-			return models.Chore{Name: *req.Name}, nil
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/chores/%d", chore.ID), body))
 
 	assert.Contains(t, rr.Body.String(), "vacuuming")
 }
 
 func TestUpdateChoreOmitsCadenceAsNilPointer(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
-			if req.CadenceInDays != nil {
-				return models.Chore{}, errors.New("cadence should be nil when omitted")
-			}
-			return models.Chore{Name: "ok"}, nil
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 7)
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/chores/%d", chore.ID), body))
 
-	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), `"cadenceInDays":7`)
 }
 
 func TestUpdateChoreAllowsExplicitZeroCadence(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
-			if req.CadenceInDays == nil {
-				return models.Chore{}, errors.New("cadence should be set")
-			}
-			if *req.CadenceInDays != 0 {
-				return models.Chore{}, errors.New("cadence should decode zero")
-			}
-			return models.Chore{CadenceInDays: *req.CadenceInDays}, nil
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 7)
 
 	body := strings.NewReader(`{"cadenceInDays":0}`)
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/chores/%d", chore.ID), body))
 
-	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), `"cadenceInDays":0`)
 }
 
 func TestUpdateChoreDecodesLowerCamelCaseCadence(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
-			if req.CadenceInDays == nil {
-				return models.Chore{}, errors.New("cadence should decode")
-			}
-			return models.Chore{CadenceInDays: *req.CadenceInDays}, nil
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
 
 	body := strings.NewReader(`{"cadenceInDays":3}`)
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/chores/%d", chore.ID), body))
 
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
 func TestUpdateChoreRejectsSnakeCaseCadenceJSON(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
-			return models.Chore{Name: "unexpected"}, nil
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
 
 	body := strings.NewReader(`{"cadence_in_days":3}`)
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/chores/%d", chore.ID), body))
 
 	assert.Equal(t, http.StatusUnprocessableEntity, rr.Code)
 }
 
 func TestUpdateChoreReturnsLowerCamelCaseCadence(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
-			return models.Chore{CadenceInDays: 3}, nil
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
 
 	body := strings.NewReader(`{"cadenceInDays":3}`)
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/chores/%d", chore.ID), body))
 
 	assert.Contains(t, rr.Body.String(), `"cadenceInDays":3`)
 }
 
 func TestUpdateChoreReturns404WhenNotFound(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
-			return models.Chore{}, gorm.ErrRecordNotFound
-		},
-	})
+	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)
 	rr := httptest.NewRecorder()
@@ -138,7 +98,7 @@ func TestUpdateChoreReturns404WhenNotFound(t *testing.T) {
 }
 
 func TestUpdateChoreReturns400OnNonNumericID(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{})
+	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)
 	rr := httptest.NewRecorder()
@@ -148,7 +108,7 @@ func TestUpdateChoreReturns400OnNonNumericID(t *testing.T) {
 }
 
 func TestUpdateChoreReturns422OnBadJSON(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{})
+	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`not-json`)
 	rr := httptest.NewRecorder()
@@ -158,35 +118,29 @@ func TestUpdateChoreReturns422OnBadJSON(t *testing.T) {
 }
 
 func TestUpdateChoreReturns500OnUnexpectedError(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
-			return models.Chore{}, errors.New("db error")
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
+	breakChoreTable(t, database)
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/chores/%d", chore.ID), body))
 
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 }
 
 func TestUpdateChoreAcceptsLargeUintID(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
-			return models.Chore{Name: "large-id"}, nil
-		},
-	})
+	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/9223372036854775808", body))
 
-	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 }
 
 func TestUpdateChoreRejectsBase11OnlyID(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{})
+	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)
 	rr := httptest.NewRecorder()

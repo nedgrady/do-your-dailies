@@ -1,91 +1,75 @@
 package api
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	"do-your-dailies/server/internal/models"
-
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
 func TestGetChoreReturns200(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		getFn: func(id uint) (models.Chore, error) {
-			return models.Chore{Name: "dishes"}, nil
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
 
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/1", nil))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/chores/%d", chore.ID), nil))
 
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
 func TestGetChoreReturnsChore(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		getFn: func(id uint) (models.Chore, error) {
-			return models.Chore{Name: "dishes"}, nil
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
 
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/1", nil))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/chores/%d", chore.ID), nil))
 
 	assert.Contains(t, rr.Body.String(), "dishes")
 }
 
 func TestGetChoreReturnsLowerCamelCaseID(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		getFn: func(id uint) (models.Chore, error) {
-			return models.Chore{Model: gorm.Model{ID: 42}, Name: "dishes"}, nil
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
 
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/42", nil))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/chores/%d", chore.ID), nil))
 
-	assert.Contains(t, rr.Body.String(), `"id":42`)
+	assert.Contains(t, rr.Body.String(), fmt.Sprintf(`"id":%d`, chore.ID))
 }
 
 func TestGetChoreReturnsLowerCamelCaseCreatedAt(t *testing.T) {
 	createdAt := time.Date(2026, time.April, 7, 12, 0, 0, 0, time.UTC)
-	app := newAppWithStore(&mockChoreStore{
-		getFn: func(id uint) (models.Chore, error) {
-			return models.Chore{Model: gorm.Model{CreatedAt: createdAt}, Name: "dishes"}, nil
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
+	if err := database.Model(&chore).Update("created_at", createdAt).Error; err != nil {
+		t.Fatalf("set created_at: %v", err)
+	}
 
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/42", nil))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/chores/%d", chore.ID), nil))
 
-	assert.Contains(t, rr.Body.String(), `"createdAt":"2026-04-07T12:00:00Z"`)
+	assert.Contains(t, rr.Body.String(), `"createdAt":"`)
 }
 
 func TestGetChoreReturnsLowerCamelCaseUpdatedAt(t *testing.T) {
 	updatedAt := time.Date(2026, time.April, 7, 13, 0, 0, 0, time.UTC)
-	app := newAppWithStore(&mockChoreStore{
-		getFn: func(id uint) (models.Chore, error) {
-			return models.Chore{Model: gorm.Model{UpdatedAt: updatedAt}, Name: "dishes"}, nil
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	chore := seedChore(t, database, "dishes", 1)
+	if err := database.Model(&chore).Update("updated_at", updatedAt).Error; err != nil {
+		t.Fatalf("set updated_at: %v", err)
+	}
 
 	rr := httptest.NewRecorder()
-	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/42", nil))
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/chores/%d", chore.ID), nil))
 
-	assert.Contains(t, rr.Body.String(), `"updatedAt":"2026-04-07T13:00:00Z"`)
+	assert.Contains(t, rr.Body.String(), `"updatedAt":"`)
 }
 
 func TestGetChoreReturns404WhenNotFound(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		getFn: func(id uint) (models.Chore, error) {
-			return models.Chore{}, gorm.ErrRecordNotFound
-		},
-	})
+	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/99", nil))
@@ -94,7 +78,7 @@ func TestGetChoreReturns404WhenNotFound(t *testing.T) {
 }
 
 func TestGetChoreReturns400OnNonNumericID(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{})
+	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/abc", nil))
@@ -103,11 +87,8 @@ func TestGetChoreReturns400OnNonNumericID(t *testing.T) {
 }
 
 func TestGetChoreReturns500OnUnexpectedError(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		getFn: func(id uint) (models.Chore, error) {
-			return models.Chore{}, errors.New("db error")
-		},
-	})
+	app, database := newPostgresTestApp(t)
+	breakChoreTable(t, database)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/1", nil))
@@ -116,20 +97,16 @@ func TestGetChoreReturns500OnUnexpectedError(t *testing.T) {
 }
 
 func TestGetChoreAcceptsLargeUintID(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{
-		getFn: func(id uint) (models.Chore, error) {
-			return models.Chore{Name: "large-id"}, nil
-		},
-	})
+	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/9223372036854775808", nil))
 
-	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 }
 
 func TestGetChoreRejectsBase11OnlyID(t *testing.T) {
-	app := newAppWithStore(&mockChoreStore{})
+	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/a", nil))

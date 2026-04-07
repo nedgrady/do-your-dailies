@@ -5,38 +5,38 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"do-your-dailies/server/internal/models"
-	"do-your-dailies/server/internal/store"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type mockChoreStore struct {
-	listFn   func() ([]models.Chore, error)
-	createFn func(models.CreateChoreRequest) (models.Chore, error)
-	getFn    func(uint) (models.Chore, error)
-	updateFn func(uint, models.UpdateChoreRequest) (models.Chore, error)
-	deleteFn func(uint) error
+func newPostgresTestApp(t *testing.T) (*Application, *gorm.DB) {
+	t.Helper()
+	tx := newCreateChoreTestTransactionDB(t)
+	return New(tx), tx
 }
 
-func (m *mockChoreStore) List() ([]models.Chore, error) { return m.listFn() }
-func (m *mockChoreStore) Create(req models.CreateChoreRequest) (models.Chore, error) {
-	return m.createFn(req)
-}
-func (m *mockChoreStore) Get(id uint) (models.Chore, error) { return m.getFn(id) }
-func (m *mockChoreStore) Update(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
-	return m.updateFn(id, req)
-}
-func (m *mockChoreStore) Delete(id uint) error { return m.deleteFn(id) }
+func seedChore(t *testing.T, database *gorm.DB, name string, cadenceInDays int) models.Chore {
+	t.Helper()
 
-func newAppWithStore(mock store.ChoreStore) *Application {
-	app := New(nil)
-	app.ChoreStore = mock
-	app.Router = app.setupRoutes()
-	return app
+	chore := models.Chore{Name: name, CadenceInDays: cadenceInDays}
+	if err := database.Create(&chore).Error; err != nil {
+		t.Fatalf("seed chore: %v", err)
+	}
+
+	return chore
+}
+
+func breakChoreTable(t *testing.T, database *gorm.DB) {
+	t.Helper()
+
+	if err := database.Exec("DROP TABLE chores CASCADE").Error; err != nil {
+		t.Fatalf("drop chores table: %v", err)
+	}
 }
 
 func newCreateChoreTestDB(t *testing.T) *gorm.DB {
@@ -93,7 +93,7 @@ func newCreateChoreTestTransactionDB(t *testing.T) *gorm.DB {
 		if err != nil {
 			t.Fatalf("get postgres sql db: %v", err)
 		}
-		if err := sqlDB.Close(); err != nil {
+		if err := sqlDB.Close(); err != nil && !strings.Contains(err.Error(), "closed") {
 			t.Fatalf("close postgres db: %v", err)
 		}
 	})
@@ -128,12 +128,13 @@ func ensureDatabaseExists(t *testing.T, adminDSNs []string, databaseName string)
 		}
 	}()
 
-	if err := adminDB.Exec(fmt.Sprintf("CREATE DATABASE %s", databaseName)).Error; err != nil {
-		var existing int64
-		if lookupErr := adminDB.Raw("SELECT COUNT(*) FROM pg_database WHERE datname = ?", databaseName).Scan(&existing).Error; lookupErr != nil {
-			t.Fatalf("ensure postgres test database: %v", lookupErr)
-		}
-		if existing == 0 {
+	var existing int64
+	if lookupErr := adminDB.Raw("SELECT COUNT(*) FROM pg_database WHERE datname = ?", databaseName).Scan(&existing).Error; lookupErr != nil {
+		t.Fatalf("ensure postgres test database: %v", lookupErr)
+	}
+
+	if existing == 0 {
+		if err := adminDB.Exec(fmt.Sprintf("CREATE DATABASE %s", databaseName)).Error; err != nil {
 			t.Fatalf("create postgres test database: %v", err)
 		}
 	}
