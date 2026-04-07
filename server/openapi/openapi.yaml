@@ -1,0 +1,130 @@
+openapi: 3.0.3
+info:
+  title: Do Your Dailies API
+  version: 1.0.0
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/chores/:
+    get:
+      operationId: listChores
+      responses:
+        "200":
+          description: List chores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Chore"
+    post:
+      operationId: createChore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateChoreRequest"
+      responses:
+        "201":
+          description: Created chore
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chore"
+        "422":
+          description: Invalid JSON payload
+  /api/chores/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: uint64
+    get:
+      operationId: getChore
+      responses:
+        "200":
+          description: A chore
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chore"
+        "404":
+          description: Chore not found
+    put:
+      operationId: updateChore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateChoreRequest"
+      responses:
+        "200":
+          description: Updated chore
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chore"
+        "404":
+          description: Chore not found
+        "422":
+          description: Invalid JSON payload
+    delete:
+      operationId: deleteChore
+      responses:
+        "204":
+          description: Deleted chore
+        "404":
+          description: Chore not found
+components:
+  schemas:
+    Chore:
+      type: object
+      required:
+        - id
+        - name
+        - cadenceInDays
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: uint64
+        name:
+          type: string
+        cadenceInDays:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateChoreRequest:
+      type: object
+      required:
+        - name
+        - cadenceInDays
+      properties:
+        name:
+          type: string
+        cadenceInDays:
+          type: integer
+    UpdateChoreRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        cadenceInDays:
+          type: integer

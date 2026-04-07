@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"do-your-dailies/server/internal/models"
 	"do-your-dailies/server/internal/store"
@@ -251,7 +252,7 @@ func TestCreateChoreReturns201(t *testing.T) {
 		},
 	})
 
-	body := strings.NewReader(`{"name":"dishes","cadence_in_days":1}`)
+	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPost, "/api/chores/", body))
 
@@ -265,17 +266,17 @@ func TestCreateChoreReturnsCreatedChore(t *testing.T) {
 		},
 	})
 
-	body := strings.NewReader(`{"name":"dishes","cadence_in_days":1}`)
+	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPost, "/api/chores/", body))
 
 	assert.Contains(t, rr.Body.String(), "dishes")
 }
 
-func TestCreateChoreDecodesCadenceInDaysFromSnakeCaseJSON(t *testing.T) {
+func TestCreateChoreRejectsSnakeCaseCadenceJSON(t *testing.T) {
 	app := newAppWithStore(&mockChoreStore{
 		createFn: func(req models.CreateChoreRequest) (models.Chore, error) {
-			return models.Chore{Name: "ok", CadenceInDays: req.CadenceInDays}, nil
+			return models.Chore{Name: req.Name, CadenceInDays: req.CadenceInDays}, nil
 		},
 	})
 
@@ -283,7 +284,35 @@ func TestCreateChoreDecodesCadenceInDaysFromSnakeCaseJSON(t *testing.T) {
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPost, "/api/chores/", body))
 
-	assert.Contains(t, rr.Body.String(), `"cadence_in_days":7`)
+	assert.Equal(t, http.StatusUnprocessableEntity, rr.Code)
+}
+
+func TestCreateChoreDecodesCadenceInDaysFromLowerCamelJSON(t *testing.T) {
+	app := newAppWithStore(&mockChoreStore{
+		createFn: func(req models.CreateChoreRequest) (models.Chore, error) {
+			return models.Chore{Name: req.Name, CadenceInDays: req.CadenceInDays}, nil
+		},
+	})
+
+	body := strings.NewReader(`{"name":"dishes","cadenceInDays":7}`)
+	rr := httptest.NewRecorder()
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPost, "/api/chores/", body))
+
+	assert.Equal(t, http.StatusCreated, rr.Code)
+}
+
+func TestCreateChoreReturnsLowerCamelCaseCadence(t *testing.T) {
+	app := newAppWithStore(&mockChoreStore{
+		createFn: func(req models.CreateChoreRequest) (models.Chore, error) {
+			return models.Chore{Name: req.Name, CadenceInDays: req.CadenceInDays}, nil
+		},
+	})
+
+	body := strings.NewReader(`{"name":"dishes","cadenceInDays":7}`)
+	rr := httptest.NewRecorder()
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPost, "/api/chores/", body))
+
+	assert.Contains(t, rr.Body.String(), `"cadenceInDays":7`)
 }
 
 func TestCreateChoreReturns422OnBadJSON(t *testing.T) {
@@ -322,6 +351,47 @@ func TestGetChoreReturnsChore(t *testing.T) {
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/1", nil))
 
 	assert.Contains(t, rr.Body.String(), "dishes")
+}
+
+func TestGetChoreReturnsLowerCamelCaseID(t *testing.T) {
+	app := newAppWithStore(&mockChoreStore{
+		getFn: func(id uint) (models.Chore, error) {
+			return models.Chore{Model: gorm.Model{ID: 42}, Name: "dishes"}, nil
+		},
+	})
+
+	rr := httptest.NewRecorder()
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/42", nil))
+
+	assert.Contains(t, rr.Body.String(), `"id":42`)
+}
+
+func TestGetChoreReturnsLowerCamelCaseCreatedAt(t *testing.T) {
+	createdAt := time.Date(2026, time.April, 7, 12, 0, 0, 0, time.UTC)
+	app := newAppWithStore(&mockChoreStore{
+		getFn: func(id uint) (models.Chore, error) {
+			return models.Chore{Model: gorm.Model{CreatedAt: createdAt}, Name: "dishes"}, nil
+		},
+	})
+
+	rr := httptest.NewRecorder()
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/42", nil))
+
+	assert.Contains(t, rr.Body.String(), `"createdAt":"2026-04-07T12:00:00Z"`)
+}
+
+func TestGetChoreReturnsLowerCamelCaseUpdatedAt(t *testing.T) {
+	updatedAt := time.Date(2026, time.April, 7, 13, 0, 0, 0, time.UTC)
+	app := newAppWithStore(&mockChoreStore{
+		getFn: func(id uint) (models.Chore, error) {
+			return models.Chore{Model: gorm.Model{UpdatedAt: updatedAt}, Name: "dishes"}, nil
+		},
+	})
+
+	rr := httptest.NewRecorder()
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/42", nil))
+
+	assert.Contains(t, rr.Body.String(), `"updatedAt":"2026-04-07T13:00:00Z"`)
 }
 
 func TestGetChoreReturns404WhenNotFound(t *testing.T) {
@@ -406,11 +476,42 @@ func TestUpdateChoreAllowsExplicitZeroCadence(t *testing.T) {
 		},
 	})
 
-	body := strings.NewReader(`{"cadence_in_days":0}`)
+	body := strings.NewReader(`{"cadenceInDays":0}`)
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
 
 	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestUpdateChoreDecodesLowerCamelCaseCadence(t *testing.T) {
+	app := newAppWithStore(&mockChoreStore{
+		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
+			if req.CadenceInDays == nil {
+				return models.Chore{}, errors.New("cadence should decode")
+			}
+			return models.Chore{CadenceInDays: *req.CadenceInDays}, nil
+		},
+	})
+
+	body := strings.NewReader(`{"cadenceInDays":3}`)
+	rr := httptest.NewRecorder()
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestUpdateChoreReturnsLowerCamelCaseCadence(t *testing.T) {
+	app := newAppWithStore(&mockChoreStore{
+		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
+			return models.Chore{CadenceInDays: 3}, nil
+		},
+	})
+
+	body := strings.NewReader(`{"cadenceInDays":3}`)
+	rr := httptest.NewRecorder()
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
+
+	assert.Contains(t, rr.Body.String(), `"cadenceInDays":3`)
 }
 
 func TestUpdateChoreReturns404WhenNotFound(t *testing.T) {
@@ -483,7 +584,7 @@ func TestCreateChoreReturns500OnStoreError(t *testing.T) {
 		},
 	})
 
-	body := strings.NewReader(`{"name":"dishes","cadence_in_days":1}`)
+	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPost, "/api/chores/", body))
 
@@ -497,7 +598,7 @@ func TestCreateChoreStoreErrorBody(t *testing.T) {
 		},
 	})
 
-	body := strings.NewReader(`{"name":"dishes","cadence_in_days":1}`)
+	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
 	rr := httptest.NewRecorder()
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPost, "/api/chores/", body))
 
