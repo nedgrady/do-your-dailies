@@ -8,7 +8,7 @@ fi
 
 cd /workspace/server
 
-echo "==> go mod tidy (verify go.mod/go.sum are consistent)"
+echo "==> go mod tidy"
 tidy_log="$(mktemp)"
 if ! go mod tidy >"$tidy_log" 2>&1; then
 	cat "$tidy_log"
