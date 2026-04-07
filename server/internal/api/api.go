@@ -3,18 +3,24 @@ package api
 import (
 	"net/http"
 
+	"do-your-dailies/server/internal/store"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"gorm.io/gorm"
 )
 
 type Application struct {
-	Router *chi.Mux
-	DB     *gorm.DB
+	Router     *chi.Mux
+	DB         *gorm.DB
+	ChoreStore store.ChoreStore
 }
 
 func New(db *gorm.DB) *Application {
 	app := &Application{DB: db}
+	if db != nil {
+		app.ChoreStore = store.NewGormChoreStore(db)
+	}
 	app.Router = app.setupRoutes()
 	return app
 }
@@ -32,6 +38,8 @@ func (app *Application) setupRoutes() *chi.Mux {
 			r.Get("/", app.listChores)
 			r.Post("/", app.createChore)
 			r.Get("/{id}", app.getChore)
+			r.Put("/{id}", app.updateChore)
+			r.Delete("/{id}", app.deleteChore)
 		})
 	})
 
