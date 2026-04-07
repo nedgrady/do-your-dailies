@@ -30,6 +30,24 @@ if [ "$quick_mode" -eq 1 ]; then
 	echo "==> quick mode: skipping go-mutesting"
 else
 	echo "==> go-mutesting ./internal/api"
-	go-mutesting ./internal/api 2>&1 | grep -E "^FAIL|^The mutation score"
+	mutation_log="$(mktemp)"
+	go-mutesting ./internal/api >"$mutation_log" 2>&1 &
+	mutation_pid=$!
+	mutation_elapsed=0
+
+	while kill -0 "$mutation_pid" 2>/dev/null; do
+		sleep 15
+		mutation_elapsed=$((mutation_elapsed + 15))
+		echo "   ... go-mutesting still running (${mutation_elapsed}s)"
+	done
+
+	if ! wait "$mutation_pid"; then
+		cat "$mutation_log"
+		rm -f "$mutation_log"
+		exit 1
+	fi
+
+	grep -E "^FAIL|^The mutation score" "$mutation_log" || true
+	rm -f "$mutation_log"
 fi
 

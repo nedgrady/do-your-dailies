@@ -12,6 +12,35 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	errBadRequest = errors.New("bad request")
+	errNotFound   = errors.New("not found")
+	errInternal   = errors.New("internal server error")
+)
+
+type categorizedError struct {
+	category error
+	cause    error
+}
+
+func (e categorizedError) Error() string {
+	if e.cause != nil {
+		return e.cause.Error()
+	}
+	if e.category != nil {
+		return e.category.Error()
+	}
+	return ""
+}
+
+func (e categorizedError) Unwrap() error {
+	return e.cause
+}
+
+func (e categorizedError) Is(target error) bool {
+	return target != nil && e.category == target
+}
+
 func (app *Application) listChores(w http.ResponseWriter, r *http.Request) {
 	chores, err := app.ChoreStore.List()
 	if err != nil {
@@ -23,20 +52,20 @@ func (app *Application) listChores(w http.ResponseWriter, r *http.Request) {
 
 func (app *Application) createChore(w http.ResponseWriter, r *http.Request) {
 	var req CreateChoreRequest
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&req); err != nil {
-		http.Error(w, "bad request", http.StatusUnprocessableEntity)
+	if err := decodeJSONBody(r, &req); err != nil {
+		writeAPIError(w, err)
 		return
 	}
+
 	chore, err := app.ChoreStore.Create(dbmodels.CreateChoreRequest{
 		Name:          req.Name,
 		CadenceInDays: req.CadenceInDays,
 	})
 	if err != nil {
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		writeAPIError(w, categorizedError{category: errInternal, cause: err})
 		return
 	}
+
 	writeJSON(w, http.StatusCreated, toAPIChore(chore))
 }
 
@@ -48,13 +77,10 @@ func (app *Application) getChore(w http.ResponseWriter, r *http.Request) {
 	}
 	chore, err := app.ChoreStore.Get(uint(id))
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			http.Error(w, "not found", http.StatusNotFound)
-			return
-		}
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		writeAPIError(w, mapStoreError(err))
 		return
 	}
+
 	writeJSON(w, http.StatusOK, toAPIChore(chore))
 }
 
@@ -64,25 +90,22 @@ func (app *Application) updateChore(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
+
 	var req UpdateChoreRequest
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&req); err != nil {
-		http.Error(w, "bad request", http.StatusUnprocessableEntity)
+	if err := decodeJSONBody(r, &req); err != nil {
+		writeAPIError(w, err)
 		return
 	}
+
 	chore, err := app.ChoreStore.Update(uint(id), dbmodels.UpdateChoreRequest{
 		Name:          req.Name,
 		CadenceInDays: req.CadenceInDays,
 	})
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			http.Error(w, "not found", http.StatusNotFound)
-			return
-		}
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		writeAPIError(w, mapStoreError(err))
 		return
 	}
+
 	writeJSON(w, http.StatusOK, toAPIChore(chore))
 }
 
@@ -93,14 +116,41 @@ func (app *Application) deleteChore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := app.ChoreStore.Delete(uint(id)); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			http.Error(w, "not found", http.StatusNotFound)
-			return
-		}
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		writeAPIError(w, mapStoreError(err))
 		return
 	}
+
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func decodeJSONBody(r *http.Request, dst any) error {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(dst); err != nil {
+		return categorizedError{category: errBadRequest, cause: err}
+	}
+
+	return nil
+}
+
+func mapStoreError(err error) error {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return categorizedError{category: errNotFound, cause: err}
+	}
+
+	return categorizedError{category: errInternal, cause: err}
+}
+
+func writeAPIError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, errBadRequest):
+		http.Error(w, errBadRequest.Error(), http.StatusUnprocessableEntity)
+	case errors.Is(err, errNotFound):
+		http.Error(w, errNotFound.Error(), http.StatusNotFound)
+	default:
+		http.Error(w, errInternal.Error(), http.StatusInternalServerError)
+	}
 }
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {
