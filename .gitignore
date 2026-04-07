@@ -34,3 +34,4 @@ go.work.sum
 *.go.tmp
 
 tmp
+server/report.json
