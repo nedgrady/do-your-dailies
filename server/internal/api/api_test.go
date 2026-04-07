@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -108,6 +110,94 @@ func TestHealthCheckBody(t *testing.T) {
 	assert.Equal(t, "healthy", rr.Body.String())
 }
 
+func TestOpenAPISpecRouteReturns200(t *testing.T) {
+	app := New(nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
+	rr := httptest.NewRecorder()
+
+	app.Router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestOpenAPISpecRouteReturnsSpecBody(t *testing.T) {
+	app := New(nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
+	rr := httptest.NewRecorder()
+
+	app.Router.ServeHTTP(rr, req)
+
+	assert.Contains(t, rr.Body.String(), "openapi: 3.0.3")
+}
+
+func TestOpenAPISpecRouteReturnsYAMLContentType(t *testing.T) {
+	app := New(nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
+	rr := httptest.NewRecorder()
+
+	app.Router.ServeHTTP(rr, req)
+
+	assert.Equal(t, "application/yaml", rr.Header().Get("Content-Type"))
+}
+
+func TestSwaggerUIRouteReturns200(t *testing.T) {
+	app := New(nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/swagger/", nil)
+	rr := httptest.NewRecorder()
+
+	app.Router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestSwaggerUIRouteReferencesSpec(t *testing.T) {
+	app := New(nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/swagger/", nil)
+	rr := httptest.NewRecorder()
+
+	app.Router.ServeHTTP(rr, req)
+
+	assert.Contains(t, rr.Body.String(), "/openapi.yaml")
+}
+
+func TestSwaggerRouteRedirects(t *testing.T) {
+	app := New(nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/swagger", nil)
+	rr := httptest.NewRecorder()
+
+	app.Router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusMovedPermanently, rr.Code)
+}
+
+func TestSwaggerRouteRedirectsToTrailingSlash(t *testing.T) {
+	app := New(nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/swagger", nil)
+	rr := httptest.NewRecorder()
+
+	app.Router.ServeHTTP(rr, req)
+
+	assert.Equal(t, "/swagger/", rr.Header().Get("Location"))
+}
+
+func TestSwaggerUIRouteReturnsHTMLContentType(t *testing.T) {
+	app := New(nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/swagger/", nil)
+	rr := httptest.NewRecorder()
+
+	app.Router.ServeHTTP(rr, req)
+
+	assert.Equal(t, "text/html; charset=utf-8", rr.Header().Get("Content-Type"))
+}
+
 func TestHealthCheckWritesExplicitStatusBeforeBody(t *testing.T) {
 	app := New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -146,6 +236,99 @@ func TestHealthCheckWriterBody(t *testing.T) {
 	app.healthCheck(writer, req)
 
 	assert.Equal(t, "healthy", writer.body.String())
+}
+
+func TestOpenAPISpecWritesExplicitStatusBeforeBody(t *testing.T) {
+	app := New(nil)
+	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
+	writer := newRecordingResponseWriter()
+
+	app.openAPISpec(writer, req)
+
+	assert.False(t, writer.writeBeforeWriteHeader)
+}
+
+func TestOpenAPISpecWriterStatusCode(t *testing.T) {
+	app := New(nil)
+	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
+	writer := newRecordingResponseWriter()
+
+	app.openAPISpec(writer, req)
+
+	assert.Equal(t, http.StatusOK, writer.statusCode)
+}
+
+func TestOpenAPISpecWriterContentType(t *testing.T) {
+	app := New(nil)
+	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
+	writer := newRecordingResponseWriter()
+
+	app.openAPISpec(writer, req)
+
+	assert.Equal(t, "application/yaml", writer.Header().Get("Content-Type"))
+}
+
+func TestOpenAPISpecReturns500WhenSpecMissing(t *testing.T) {
+	app := New(nil)
+	original := openAPISpecPathFunc
+	openAPISpecPathFunc = func() string { return filepath.Join(t.TempDir(), "missing-openapi.yaml") }
+	t.Cleanup(func() {
+		openAPISpecPathFunc = original
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
+	rr := httptest.NewRecorder()
+
+	app.openAPISpec(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+}
+
+func TestOpenAPISpecPathFallsBackToPrimaryCandidate(t *testing.T) {
+	originalWorkingDirectory, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	temporaryWorkingDirectory := t.TempDir()
+
+	if err := os.Chdir(temporaryWorkingDirectory); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_ = os.Chdir(originalWorkingDirectory)
+	})
+
+	assert.Equal(t, filepath.Clean(filepath.Join("openapi", "openapi.yaml")), openAPISpecPath())
+}
+
+func TestSwaggerUIWritesExplicitStatusBeforeBody(t *testing.T) {
+	app := New(nil)
+	req := httptest.NewRequest(http.MethodGet, "/swagger/", nil)
+	writer := newRecordingResponseWriter()
+
+	app.swaggerUI(writer, req)
+
+	assert.False(t, writer.writeBeforeWriteHeader)
+}
+
+func TestSwaggerUIWriterStatusCode(t *testing.T) {
+	app := New(nil)
+	req := httptest.NewRequest(http.MethodGet, "/swagger/", nil)
+	writer := newRecordingResponseWriter()
+
+	app.swaggerUI(writer, req)
+
+	assert.Equal(t, http.StatusOK, writer.statusCode)
+}
+
+func TestSwaggerUIWriterContentType(t *testing.T) {
+	app := New(nil)
+	req := httptest.NewRequest(http.MethodGet, "/swagger/", nil)
+	writer := newRecordingResponseWriter()
+
+	app.swaggerUI(writer, req)
+
+	assert.Equal(t, "text/html; charset=utf-8", writer.Header().Get("Content-Type"))
 }
 
 func TestRouterLogsHealthRequests(t *testing.T) {
@@ -498,6 +681,20 @@ func TestUpdateChoreDecodesLowerCamelCaseCadence(t *testing.T) {
 	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
 
 	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestUpdateChoreRejectsSnakeCaseCadenceJSON(t *testing.T) {
+	app := newAppWithStore(&mockChoreStore{
+		updateFn: func(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
+			return models.Chore{Name: "unexpected"}, nil
+		},
+	})
+
+	body := strings.NewReader(`{"cadence_in_days":3}`)
+	rr := httptest.NewRecorder()
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
+
+	assert.Equal(t, http.StatusUnprocessableEntity, rr.Code)
 }
 
 func TestUpdateChoreReturnsLowerCamelCaseCadence(t *testing.T) {

@@ -32,6 +32,11 @@ func (app *Application) setupRoutes() *chi.Mux {
 	r.Use(middleware.Recoverer)
 
 	r.Get("/health", app.healthCheck)
+	r.Get("/openapi.yaml", app.openAPISpec)
+	r.Get("/swagger", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/swagger/", http.StatusMovedPermanently)
+	})
+	r.Get("/swagger/", app.swaggerUI)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/chores", func(r chi.Router) {
