@@ -1,6 +1,7 @@
 param(
 	[switch]$RebuildImage,
-	[switch]$NoQuiet
+	[switch]$NoQuiet,
+	[switch]$Quick
 )
 
 $ErrorActionPreference = 'Stop'
@@ -20,4 +21,10 @@ if ($RebuildImage -or -not $imageExists) {
 	docker @buildArgs
 }
 
-docker run --rm -v "${rootDir}:/workspace" $validationImage
+$runArgs = @('run', '--rm', '-v', "${rootDir}:/workspace")
+if ($Quick) {
+	$runArgs += @('-e', 'VALIDATE_QUICK=1')
+}
+$runArgs += $validationImage
+
+docker @runArgs
