@@ -40,6 +40,10 @@ func newAppWithStore(mock store.ChoreStore) *Application {
 }
 
 func newCreateChoreTestDB(t *testing.T) *gorm.DB {
+	return newCreateChoreTestTransactionDB(t)
+}
+
+func newCreateChoreTestTransactionDB(t *testing.T) *gorm.DB {
 	t.Helper()
 	testDatabaseName := "dailies_test"
 
@@ -76,11 +80,15 @@ func newCreateChoreTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("migrate postgres db: %v", err)
 	}
 
-	if err := database.Exec("TRUNCATE TABLE chore_completions, chores RESTART IDENTITY CASCADE").Error; err != nil {
-		t.Fatalf("reset postgres db: %v", err)
+	tx := database.Begin()
+	if tx.Error != nil {
+		t.Fatalf("begin postgres transaction: %v", tx.Error)
 	}
 
 	t.Cleanup(func() {
+		if err := tx.Rollback().Error; err != nil && err != gorm.ErrInvalidTransaction {
+			t.Fatalf("rollback postgres transaction: %v", err)
+		}
 		sqlDB, err := database.DB()
 		if err != nil {
 			t.Fatalf("get postgres sql db: %v", err)
@@ -90,7 +98,7 @@ func newCreateChoreTestDB(t *testing.T) *gorm.DB {
 		}
 	})
 
-	return database
+	return tx
 }
 
 func ensureDatabaseExists(t *testing.T, adminDSNs []string, databaseName string) {

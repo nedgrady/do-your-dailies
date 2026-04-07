@@ -141,3 +141,13 @@ func TestCreateChoreWithRealDBPersistsChore(t *testing.T) {
 
 	assert.Contains(t, listResponse.Body.String(), "dishes")
 }
+
+func TestCreateChoreWithTransactionDBReturns201(t *testing.T) {
+	app := New(newCreateChoreTestTransactionDB(t))
+
+	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
+	rr := httptest.NewRecorder()
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPost, "/api/chores/", body))
+
+	assert.Equal(t, http.StatusCreated, rr.Code)
+}
