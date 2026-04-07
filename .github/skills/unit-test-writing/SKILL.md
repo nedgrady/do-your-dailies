@@ -33,4 +33,6 @@ Use this skill when writing or reviewing unit tests.
 2. Second choice: integration tests through repository or DB boundary.
 3. Last resort: narrow structural tests, only with explicit justification in test comments.
 
+## Test File Organization
 
+1. A test file should test maximum 1 endpoint

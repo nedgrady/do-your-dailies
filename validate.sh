@@ -4,7 +4,13 @@ set -eu
 cd /workspace/server
 
 echo "==> go mod tidy (verify go.mod/go.sum are consistent)"
-go mod tidy
+tidy_log="$(mktemp)"
+if ! go mod tidy >"$tidy_log" 2>&1; then
+	cat "$tidy_log"
+	rm -f "$tidy_log"
+	exit 1
+fi
+rm -f "$tidy_log"
 
 echo "==> go fmt ./..."
 go fmt ./...
