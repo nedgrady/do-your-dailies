@@ -4,28 +4,29 @@ import (
 	"bytes"
 	"net/http"
 
-	"do-your-dailies/server/internal/chores"
+	"do-your-dailies/server/internal/models"
+	"do-your-dailies/server/internal/store"
 )
 
 type mockChoreStore struct {
-	listFn   func() ([]chores.Chore, error)
-	createFn func(chores.CreateRequest) (chores.Chore, error)
-	getFn    func(uint) (chores.Chore, error)
-	updateFn func(uint, chores.UpdateRequest) (chores.Chore, error)
+	listFn   func() ([]models.Chore, error)
+	createFn func(models.CreateChoreRequest) (models.Chore, error)
+	getFn    func(uint) (models.Chore, error)
+	updateFn func(uint, models.UpdateChoreRequest) (models.Chore, error)
 	deleteFn func(uint) error
 }
 
-func (m *mockChoreStore) List() ([]chores.Chore, error) { return m.listFn() }
-func (m *mockChoreStore) Create(req chores.CreateRequest) (chores.Chore, error) {
+func (m *mockChoreStore) List() ([]models.Chore, error) { return m.listFn() }
+func (m *mockChoreStore) Create(req models.CreateChoreRequest) (models.Chore, error) {
 	return m.createFn(req)
 }
-func (m *mockChoreStore) Get(id uint) (chores.Chore, error) { return m.getFn(id) }
-func (m *mockChoreStore) Update(id uint, req chores.UpdateRequest) (chores.Chore, error) {
+func (m *mockChoreStore) Get(id uint) (models.Chore, error) { return m.getFn(id) }
+func (m *mockChoreStore) Update(id uint, req models.UpdateChoreRequest) (models.Chore, error) {
 	return m.updateFn(id, req)
 }
 func (m *mockChoreStore) Delete(id uint) error { return m.deleteFn(id) }
 
-func newAppWithStore(mock chores.Store) *Application {
+func newAppWithStore(mock store.ChoreStore) *Application {
 	app := New(nil)
 	app.ChoreStore = mock
 	app.Router = app.setupRoutes()
