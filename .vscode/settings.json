@@ -12,6 +12,7 @@
   },
   "go.formatTool": "gofmt",
   "chat.tools.terminal.autoApprove": {
-    ".\\validate.ps1": true
+    ".\\validate.ps1": true,
+    "go": true
   }
 }
