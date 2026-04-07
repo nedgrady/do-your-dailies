@@ -2,51 +2,34 @@
 
 ## Mutation testing
 
-Use WSL on Windows for mutation testing.
+Validation runs inside a Linux Docker container so Windows host setup stays simple.
 
-Native PowerShell is not supported for this toolchain. Run mutation tests inside Ubuntu WSL.
+### Run all validation checks
 
-### Windows setup (WSL)
-
-From PowerShell, install Ubuntu WSL once:
+From PowerShell in the repository root:
 
 ```powershell
-wsl --install -d Ubuntu
+./validate.ps1
 ```
 
-Then open Ubuntu and install Go (example version):
+This script builds `server/Dockerfile.validate` and runs these checks in the container:
 
-```bash
-cd /tmp
-curl -LO https://go.dev/dl/go1.25.5.linux-amd64.tar.gz
-sudo rm -rf /usr/local/go
-sudo tar -C /usr/local -xzf go1.25.5.linux-amd64.tar.gz
-echo 'export PATH=/usr/local/go/bin:$PATH' >> ~/.profile
-source ~/.profile
-go version
+- `go mod tidy`
+- `go fmt ./...`
+- `go vet ./...`
+- `go test ./...`
+- `go-mutesting ./internal/api`
+
+### Run mutation test only
+
+From PowerShell in the repository root:
+
+```powershell
+docker build -f .\server\Dockerfile.validate -t do-your-dailies-validate:local .
+docker run --rm -v "${PWD}:/workspace" -w /workspace/server do-your-dailies-validate:local bash -lc "go-mutesting ./internal/api"
 ```
-
-Set local toolchain mode so Go does not try to auto-download another version:
-
-```bash
-go env -w GOTOOLCHAIN=local
-```
-
-### Run mutation tests
-
-In Ubuntu WSL:
-
-```bash
-cd /mnt/c/Code/do-your-dailies/server
-go test ./...
-go install github.com/avito-tech/go-mutesting/cmd/go-mutesting@latest
-$(go env GOPATH)/bin/go-mutesting ./internal/api
-```
-
-`./validate.ps1` now includes this mutation step and runs it through WSL.
 
 ### Troubleshooting
 
-- If you see toolchain not available, your go.mod version is newer than your installed Go version. Install a matching Go version or lower the go directive in server/go.mod.
-- If go-mutesting is not found, run it with full path: $(go env GOPATH)/bin/go-mutesting.
-- If you want validate.ps1 to use a specific distro, set WSL_DISTRO_NAME before running it.
+- If Docker Desktop is not running, start it and rerun `./validate.ps1`.
+- If Docker cannot mount your drive, enable file sharing for the drive in Docker Desktop settings.

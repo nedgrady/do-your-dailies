@@ -1,0 +1,11 @@
+FROM golang:1.25.5-bookworm
+
+WORKDIR /workspace/server
+
+RUN go install github.com/avito-tech/go-mutesting/cmd/go-mutesting@latest
+
+COPY validate.sh /workspace/
+
+ENV PATH="/go/bin:${PATH}"
+
+CMD ["bash", "/workspace/validate.sh"]
