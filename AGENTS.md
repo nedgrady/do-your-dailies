@@ -7,3 +7,5 @@
 All code changes must be made by writing red unit tests first and seeing them go red
 
 No need to give a big summary of what you did/validation results after each change, keep it to 2 sentences maximum.
+
+Do NOT change your terminal location as this will break scripts. No exceptions.
