@@ -16,6 +16,6 @@ echo "==> go test ./..."
 go test ./...
 
 echo "==> go-mutesting ./internal/api"
-go-mutesting ./internal/api 2>&1 | grep -E "^(PASS|FAIL|The mutation score)" | tail -1
+go-mutesting ./internal/api 2>&1 | grep -E "^FAIL|^The mutation score"
 
 echo "==> validate passed"
