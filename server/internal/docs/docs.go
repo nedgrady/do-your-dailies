@@ -1,14 +1,30 @@
-package api
+package docs
 
 import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/go-chi/chi/v5"
 )
 
 var openAPISpecPathFunc = openAPISpecPath
 
-func (app *Application) openAPISpec(w http.ResponseWriter, r *http.Request) {
+type Handler struct{}
+
+func NewHandler() *Handler {
+	return &Handler{}
+}
+
+func (handler *Handler) RegisterRoutes(router chi.Router) {
+	router.Get("/openapi.yaml", handler.openAPISpec)
+	router.Get("/swagger", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/swagger/", http.StatusMovedPermanently)
+	})
+	router.Get("/swagger/", handler.swaggerUI)
+}
+
+func (handler *Handler) openAPISpec(w http.ResponseWriter, r *http.Request) {
 	content, err := os.ReadFile(openAPISpecPathFunc())
 	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -20,7 +36,7 @@ func (app *Application) openAPISpec(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(content)
 }
 
-func (app *Application) swaggerUI(w http.ResponseWriter, r *http.Request) {
+func (handler *Handler) swaggerUI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(`<!DOCTYPE html>

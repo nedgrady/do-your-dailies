@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	"do-your-dailies/server/internal/docs"
 	"do-your-dailies/server/internal/store"
 
 	"github.com/go-chi/chi/v5"
@@ -32,11 +33,7 @@ func (app *Application) setupRoutes() *chi.Mux {
 	r.Use(middleware.Recoverer)
 
 	r.Get("/health", app.healthCheck)
-	r.Get("/openapi.yaml", app.openAPISpec)
-	r.Get("/swagger", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/swagger/", http.StatusMovedPermanently)
-	})
-	r.Get("/swagger/", app.swaggerUI)
+	docs.NewHandler().RegisterRoutes(r)
 
 	r.Route("/api", func(r chi.Router) {
 		r.Route("/chores", func(r chi.Router) {
