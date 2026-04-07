@@ -11,6 +11,7 @@ import (
 )
 
 func TestUpdateChoreReturns200(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
 
@@ -22,6 +23,7 @@ func TestUpdateChoreReturns200(t *testing.T) {
 }
 
 func TestUpdateChoreReturnsUpdatedChore(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
 
@@ -33,6 +35,7 @@ func TestUpdateChoreReturnsUpdatedChore(t *testing.T) {
 }
 
 func TestUpdateChoreOmitsCadenceAsNilPointer(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 7)
 
@@ -44,6 +47,7 @@ func TestUpdateChoreOmitsCadenceAsNilPointer(t *testing.T) {
 }
 
 func TestUpdateChoreAllowsExplicitZeroCadence(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 7)
 
@@ -55,6 +59,7 @@ func TestUpdateChoreAllowsExplicitZeroCadence(t *testing.T) {
 }
 
 func TestUpdateChoreDecodesLowerCamelCaseCadence(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
 
@@ -66,6 +71,7 @@ func TestUpdateChoreDecodesLowerCamelCaseCadence(t *testing.T) {
 }
 
 func TestUpdateChoreRejectsSnakeCaseCadenceJSON(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
 
@@ -77,6 +83,7 @@ func TestUpdateChoreRejectsSnakeCaseCadenceJSON(t *testing.T) {
 }
 
 func TestUpdateChoreReturnsLowerCamelCaseCadence(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
 
@@ -88,6 +95,7 @@ func TestUpdateChoreReturnsLowerCamelCaseCadence(t *testing.T) {
 }
 
 func TestUpdateChoreReturns404WhenNotFound(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)
@@ -98,6 +106,7 @@ func TestUpdateChoreReturns404WhenNotFound(t *testing.T) {
 }
 
 func TestUpdateChoreReturns400OnNonNumericID(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)
@@ -108,6 +117,7 @@ func TestUpdateChoreReturns400OnNonNumericID(t *testing.T) {
 }
 
 func TestUpdateChoreReturns422OnBadJSON(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`not-json`)
@@ -118,6 +128,7 @@ func TestUpdateChoreReturns422OnBadJSON(t *testing.T) {
 }
 
 func TestUpdateChoreReturns500OnUnexpectedError(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
 	breakChoreTable(t, database)
@@ -130,6 +141,7 @@ func TestUpdateChoreReturns500OnUnexpectedError(t *testing.T) {
 }
 
 func TestUpdateChoreAcceptsLargeUintID(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)
@@ -140,6 +152,7 @@ func TestUpdateChoreAcceptsLargeUintID(t *testing.T) {
 }
 
 func TestUpdateChoreRejectsBase11OnlyID(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)

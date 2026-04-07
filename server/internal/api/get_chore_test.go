@@ -11,6 +11,7 @@ import (
 )
 
 func TestGetChoreReturns200(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
 
@@ -21,6 +22,7 @@ func TestGetChoreReturns200(t *testing.T) {
 }
 
 func TestGetChoreReturnsChore(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
 
@@ -31,6 +33,7 @@ func TestGetChoreReturnsChore(t *testing.T) {
 }
 
 func TestGetChoreReturnsLowerCamelCaseID(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
 
@@ -41,6 +44,7 @@ func TestGetChoreReturnsLowerCamelCaseID(t *testing.T) {
 }
 
 func TestGetChoreReturnsLowerCamelCaseCreatedAt(t *testing.T) {
+	t.Parallel()
 	createdAt := time.Date(2026, time.April, 7, 12, 0, 0, 0, time.UTC)
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
@@ -55,6 +59,7 @@ func TestGetChoreReturnsLowerCamelCaseCreatedAt(t *testing.T) {
 }
 
 func TestGetChoreReturnsLowerCamelCaseUpdatedAt(t *testing.T) {
+	t.Parallel()
 	updatedAt := time.Date(2026, time.April, 7, 13, 0, 0, 0, time.UTC)
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
@@ -69,6 +74,7 @@ func TestGetChoreReturnsLowerCamelCaseUpdatedAt(t *testing.T) {
 }
 
 func TestGetChoreReturns404WhenNotFound(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
@@ -78,6 +84,7 @@ func TestGetChoreReturns404WhenNotFound(t *testing.T) {
 }
 
 func TestGetChoreReturns400OnNonNumericID(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
@@ -87,6 +94,7 @@ func TestGetChoreReturns400OnNonNumericID(t *testing.T) {
 }
 
 func TestGetChoreReturns500OnUnexpectedError(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	breakChoreTable(t, database)
 
@@ -97,6 +105,7 @@ func TestGetChoreReturns500OnUnexpectedError(t *testing.T) {
 }
 
 func TestGetChoreAcceptsLargeUintID(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
@@ -106,6 +115,7 @@ func TestGetChoreAcceptsLargeUintID(t *testing.T) {
 }
 
 func TestGetChoreRejectsBase11OnlyID(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()

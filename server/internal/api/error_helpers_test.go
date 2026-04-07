@@ -10,6 +10,7 @@ import (
 )
 
 func TestDecodeJSONBodyReturnsBadRequestErrorOnUnknownField(t *testing.T) {
+	t.Parallel()
 	body := strings.NewReader(`{"name":"dishes","unknown":1}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/chores/", body)
 	var dst CreateChoreRequest
@@ -20,6 +21,7 @@ func TestDecodeJSONBodyReturnsBadRequestErrorOnUnknownField(t *testing.T) {
 }
 
 func TestWriteAPIErrorReturns404ForNotFound(t *testing.T) {
+	t.Parallel()
 	rr := httptest.NewRecorder()
 
 	writeAPIError(rr, errNotFound)
@@ -28,6 +30,7 @@ func TestWriteAPIErrorReturns404ForNotFound(t *testing.T) {
 }
 
 func TestWriteAPIErrorReturns500ForUnexpectedError(t *testing.T) {
+	t.Parallel()
 	rr := httptest.NewRecorder()
 
 	writeAPIError(rr, errInternal)

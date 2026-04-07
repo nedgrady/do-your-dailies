@@ -9,6 +9,7 @@ import (
 )
 
 func TestSwaggerRouteRedirects(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/swagger", nil)
@@ -20,6 +21,7 @@ func TestSwaggerRouteRedirects(t *testing.T) {
 }
 
 func TestSwaggerRouteRedirectsToTrailingSlash(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/swagger", nil)

@@ -10,6 +10,7 @@ import (
 )
 
 func TestCreateChoreReturns201(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
@@ -20,6 +21,7 @@ func TestCreateChoreReturns201(t *testing.T) {
 }
 
 func TestCreateChoreReturnsCreatedChore(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
@@ -30,6 +32,7 @@ func TestCreateChoreReturnsCreatedChore(t *testing.T) {
 }
 
 func TestCreateChoreRejectsSnakeCaseCadenceJSON(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"dishes","cadence_in_days":7}`)
@@ -40,6 +43,7 @@ func TestCreateChoreRejectsSnakeCaseCadenceJSON(t *testing.T) {
 }
 
 func TestCreateChoreDecodesCadenceInDaysFromLowerCamelJSON(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":7}`)
@@ -50,6 +54,7 @@ func TestCreateChoreDecodesCadenceInDaysFromLowerCamelJSON(t *testing.T) {
 }
 
 func TestCreateChoreReturnsLowerCamelCaseCadence(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":7}`)
@@ -60,6 +65,7 @@ func TestCreateChoreReturnsLowerCamelCaseCadence(t *testing.T) {
 }
 
 func TestCreateChoreReturns422OnBadJSON(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	body := strings.NewReader(`not-json`)
@@ -70,6 +76,7 @@ func TestCreateChoreReturns422OnBadJSON(t *testing.T) {
 }
 
 func TestCreateChoreReturns500OnStoreError(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	breakChoreTable(t, database)
 
@@ -81,6 +88,7 @@ func TestCreateChoreReturns500OnStoreError(t *testing.T) {
 }
 
 func TestCreateChoreStoreErrorBody(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	breakChoreTable(t, database)
 
@@ -92,6 +100,7 @@ func TestCreateChoreStoreErrorBody(t *testing.T) {
 }
 
 func TestCreateChoreWithRealDBReturns201(t *testing.T) {
+	t.Parallel()
 	app := New(newCreateChoreTestDB(t))
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
@@ -102,6 +111,7 @@ func TestCreateChoreWithRealDBReturns201(t *testing.T) {
 }
 
 func TestCreateChoreWithRealDBPersistsChore(t *testing.T) {
+	t.Parallel()
 	app := New(newCreateChoreTestDB(t))
 
 	createBody := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
@@ -114,6 +124,7 @@ func TestCreateChoreWithRealDBPersistsChore(t *testing.T) {
 }
 
 func TestCreateChoreWithTransactionDBReturns201(t *testing.T) {
+	t.Parallel()
 	app := New(newCreateChoreTestTransactionDB(t))
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)

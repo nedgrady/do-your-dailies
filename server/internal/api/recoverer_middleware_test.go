@@ -9,6 +9,7 @@ import (
 )
 
 func TestRouterRecoversFromPanics(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 	app.Router.Get("/panic", func(w http.ResponseWriter, r *http.Request) {
 		panic("boom")
@@ -23,6 +24,7 @@ func TestRouterRecoversFromPanics(t *testing.T) {
 }
 
 func TestRouterRecoversFromPanicsReturns500(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 	app.Router.Get("/panic", func(w http.ResponseWriter, r *http.Request) {
 		panic("boom")

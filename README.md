@@ -1,5 +1,11 @@
 # do-your-dailies
 
+## Database (Docker)
+
+```powershell
+docker compose up -d postgres
+```
+
 ## Mutation testing
 
 Validation runs inside a Linux Docker container so Windows host setup stays simple.

@@ -9,6 +9,7 @@ import (
 )
 
 func TestListChoresReturns200(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
@@ -18,6 +19,7 @@ func TestListChoresReturns200(t *testing.T) {
 }
 
 func TestListChoresReturnsJSONContentType(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
@@ -27,6 +29,7 @@ func TestListChoresReturnsJSONContentType(t *testing.T) {
 }
 
 func TestListChoresReturnsChores(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	seedChore(t, database, "dishes", 1)
 
@@ -37,6 +40,7 @@ func TestListChoresReturnsChores(t *testing.T) {
 }
 
 func TestListChoresReturns500OnStoreError(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	breakChoreTable(t, database)
 

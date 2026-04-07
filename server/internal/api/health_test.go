@@ -9,6 +9,7 @@ import (
 )
 
 func TestHealthCheck(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -20,6 +21,7 @@ func TestHealthCheck(t *testing.T) {
 }
 
 func TestHealthCheckContentType(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -31,6 +33,7 @@ func TestHealthCheckContentType(t *testing.T) {
 }
 
 func TestHealthCheckBody(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -42,6 +45,7 @@ func TestHealthCheckBody(t *testing.T) {
 }
 
 func TestHealthCheckWritesExplicitStatusBeforeBody(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	writer := newRecordingResponseWriter()
@@ -52,6 +56,7 @@ func TestHealthCheckWritesExplicitStatusBeforeBody(t *testing.T) {
 }
 
 func TestHealthCheckWriterStatusCode(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	writer := newRecordingResponseWriter()
@@ -62,6 +67,7 @@ func TestHealthCheckWriterStatusCode(t *testing.T) {
 }
 
 func TestHealthCheckWriterContentType(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	writer := newRecordingResponseWriter()
@@ -72,6 +78,7 @@ func TestHealthCheckWriterContentType(t *testing.T) {
 }
 
 func TestHealthCheckWriterBody(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	writer := newRecordingResponseWriter()

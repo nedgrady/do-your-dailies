@@ -5,10 +5,21 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+var docsGlobalStateLock sync.Mutex
+
+func lockDocsGlobals(t *testing.T) {
+	t.Helper()
+	docsGlobalStateLock.Lock()
+	t.Cleanup(func() {
+		docsGlobalStateLock.Unlock()
+	})
+}
 
 type recordingResponseWriter struct {
 	header                 http.Header
@@ -39,6 +50,8 @@ func (w *recordingResponseWriter) Write(payload []byte) (int, error) {
 }
 
 func TestOpenAPISpecWritesExplicitStatusBeforeBody(t *testing.T) {
+	t.Parallel()
+	lockDocsGlobals(t)
 	handler := NewHandler()
 	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
 	writer := newRecordingResponseWriter()
@@ -49,6 +62,8 @@ func TestOpenAPISpecWritesExplicitStatusBeforeBody(t *testing.T) {
 }
 
 func TestOpenAPISpecWriterStatusCode(t *testing.T) {
+	t.Parallel()
+	lockDocsGlobals(t)
 	handler := NewHandler()
 	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
 	writer := newRecordingResponseWriter()
@@ -59,6 +74,8 @@ func TestOpenAPISpecWriterStatusCode(t *testing.T) {
 }
 
 func TestOpenAPISpecWriterContentType(t *testing.T) {
+	t.Parallel()
+	lockDocsGlobals(t)
 	handler := NewHandler()
 	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
 	writer := newRecordingResponseWriter()
@@ -69,6 +86,9 @@ func TestOpenAPISpecWriterContentType(t *testing.T) {
 }
 
 func TestOpenAPISpecReturns500WhenSpecMissing(t *testing.T) {
+	t.Parallel()
+	lockDocsGlobals(t)
+
 	handler := NewHandler()
 	original := openAPISpecPathFunc
 	openAPISpecPathFunc = func() string { return filepath.Join(t.TempDir(), "missing-openapi.yaml") }
@@ -85,6 +105,9 @@ func TestOpenAPISpecReturns500WhenSpecMissing(t *testing.T) {
 }
 
 func TestOpenAPISpecPathFallsBackToPrimaryCandidate(t *testing.T) {
+	t.Parallel()
+	lockDocsGlobals(t)
+
 	originalWorkingDirectory, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -102,6 +125,8 @@ func TestOpenAPISpecPathFallsBackToPrimaryCandidate(t *testing.T) {
 }
 
 func TestSwaggerUIWritesExplicitStatusBeforeBody(t *testing.T) {
+	t.Parallel()
+	lockDocsGlobals(t)
 	handler := NewHandler()
 	req := httptest.NewRequest(http.MethodGet, "/swagger/", nil)
 	writer := newRecordingResponseWriter()
@@ -112,6 +137,8 @@ func TestSwaggerUIWritesExplicitStatusBeforeBody(t *testing.T) {
 }
 
 func TestSwaggerUIWriterStatusCode(t *testing.T) {
+	t.Parallel()
+	lockDocsGlobals(t)
 	handler := NewHandler()
 	req := httptest.NewRequest(http.MethodGet, "/swagger/", nil)
 	writer := newRecordingResponseWriter()
@@ -122,6 +149,8 @@ func TestSwaggerUIWriterStatusCode(t *testing.T) {
 }
 
 func TestSwaggerUIWriterContentType(t *testing.T) {
+	t.Parallel()
+	lockDocsGlobals(t)
 	handler := NewHandler()
 	req := httptest.NewRequest(http.MethodGet, "/swagger/", nil)
 	writer := newRecordingResponseWriter()

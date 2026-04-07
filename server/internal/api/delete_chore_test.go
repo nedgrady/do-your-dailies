@@ -10,6 +10,7 @@ import (
 )
 
 func TestDeleteChoreReturns204(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
 
@@ -20,6 +21,7 @@ func TestDeleteChoreReturns204(t *testing.T) {
 }
 
 func TestDeleteChoreReturns404WhenNotFound(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
@@ -29,6 +31,7 @@ func TestDeleteChoreReturns404WhenNotFound(t *testing.T) {
 }
 
 func TestDeleteChoreReturns400OnNonNumericID(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
@@ -38,6 +41,7 @@ func TestDeleteChoreReturns400OnNonNumericID(t *testing.T) {
 }
 
 func TestDeleteChoreReturns500OnUnexpectedError(t *testing.T) {
+	t.Parallel()
 	app, database := newPostgresTestApp(t)
 	chore := seedChore(t, database, "dishes", 1)
 	breakChoreTable(t, database)
@@ -49,6 +53,7 @@ func TestDeleteChoreReturns500OnUnexpectedError(t *testing.T) {
 }
 
 func TestDeleteChoreAcceptsLargeUintID(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()
@@ -58,6 +63,7 @@ func TestDeleteChoreAcceptsLargeUintID(t *testing.T) {
 }
 
 func TestDeleteChoreRejectsBase11OnlyID(t *testing.T) {
+	t.Parallel()
 	app, _ := newPostgresTestApp(t)
 
 	rr := httptest.NewRecorder()

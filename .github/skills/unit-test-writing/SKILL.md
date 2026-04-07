@@ -12,6 +12,7 @@ Use this skill when writing or reviewing unit tests.
 1. Assert on outputs and observable behavior, not specific implementations.
 2. Cyclomatic complexity must be 1. No exceptions.
 3. Each test should have only 1 assertion most of the time. Multiple assertions should be very rare.
+4. Default to `t.Parallel()` in every test unless the test mutates shared global state or cannot be made parallel-safe.
 
 ## Testing Philosophy
 
@@ -36,3 +37,9 @@ Use this skill when writing or reviewing unit tests.
 ## Test File Organization
 
 1. A test file should test maximum 1 endpoint
+
+## Parallel Safety
+
+1. Prefer `t.Parallel()` by default to reduce suite runtime.
+2. If a test must mutate global process/package state (cwd, globals, env, singleton loggers), keep `t.Parallel()` and guard the mutation with a package-level mutex.
+3. For database tests, use per-test transactions with rollback cleanup; avoid DDL/drop-table patterns in parallel tests unless protected.

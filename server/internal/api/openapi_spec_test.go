@@ -9,6 +9,7 @@ import (
 )
 
 func TestOpenAPISpecRouteReturns200(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
@@ -20,6 +21,7 @@ func TestOpenAPISpecRouteReturns200(t *testing.T) {
 }
 
 func TestOpenAPISpecRouteReturnsSpecBody(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
@@ -31,6 +33,7 @@ func TestOpenAPISpecRouteReturnsSpecBody(t *testing.T) {
 }
 
 func TestOpenAPISpecRouteReturnsYAMLContentType(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)

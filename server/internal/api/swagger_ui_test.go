@@ -9,6 +9,7 @@ import (
 )
 
 func TestSwaggerUIRouteReturns200(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/swagger/", nil)
@@ -20,6 +21,7 @@ func TestSwaggerUIRouteReturns200(t *testing.T) {
 }
 
 func TestSwaggerUIRouteReferencesSpec(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/swagger/", nil)
@@ -31,6 +33,7 @@ func TestSwaggerUIRouteReferencesSpec(t *testing.T) {
 }
 
 func TestSwaggerUIRouteReturnsHTMLContentType(t *testing.T) {
+	t.Parallel()
 	app := New(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/swagger/", nil)
