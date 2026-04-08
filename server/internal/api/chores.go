@@ -76,6 +76,11 @@ func (app *Application) createChoreCompletion(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	if _, err := app.ChoreStore.Get(uint(req.ChoreId)); err != nil {
+		writeAPIError(w, mapStoreError(err))
+		return
+	}
+
 	choreCompletion, err := app.ChoreCompletionStore.Create(dbmodels.CreateChoreCompletionRequest{
 		ChoreID: uint(req.ChoreId),
 	})

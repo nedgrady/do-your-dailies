@@ -103,6 +103,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ChoreCompletion"
+        "404":
+          description: Chore not found
         "422":
           description: Invalid JSON payload
 components:

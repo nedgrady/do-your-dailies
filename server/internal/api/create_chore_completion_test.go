@@ -86,6 +86,17 @@ func TestCreateChoreCompletionStoreErrorBody(t *testing.T) {
 	assert.Equal(t, "internal server error\n", rr.Body.String())
 }
 
+func TestCreateChoreCompletionReturns404WhenChoreDoesNotExist(t *testing.T) {
+	t.Parallel()
+	app, _ := newPostgresTestApp(t)
+
+	body := strings.NewReader(`{"choreId":999999999}`)
+	rr := httptest.NewRecorder()
+	app.Router.ServeHTTP(rr, httptest.NewRequest(http.MethodPost, "/api/chore-completions/", body))
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+}
+
 func itoa(input uint) string {
 	return strconv.FormatUint(uint64(input), 10)
 }
