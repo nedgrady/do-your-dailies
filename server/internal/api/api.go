@@ -12,15 +12,17 @@ import (
 )
 
 type Application struct {
-	Router     *chi.Mux
-	DB         *gorm.DB
-	ChoreStore store.ChoreStore
+	Router               *chi.Mux
+	DB                   *gorm.DB
+	ChoreStore           store.ChoreStore
+	ChoreCompletionStore store.ChoreCompletionStore
 }
 
 func New(db *gorm.DB) *Application {
 	app := &Application{DB: db}
 	if db != nil {
 		app.ChoreStore = store.NewGormChoreStore(db)
+		app.ChoreCompletionStore = store.NewGormChoreCompletionStore(db)
 	}
 	app.Router = app.setupRoutes()
 	return app
@@ -28,7 +30,6 @@ func New(db *gorm.DB) *Application {
 
 func (app *Application) setupRoutes() *chi.Mux {
 	r := chi.NewRouter()
-
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
@@ -42,6 +43,10 @@ func (app *Application) setupRoutes() *chi.Mux {
 			r.Get("/{id}", app.getChore)
 			r.Put("/{id}", app.updateChore)
 			r.Delete("/{id}", app.deleteChore)
+		})
+
+		r.Route("/chore-completions", func(r chi.Router) {
+			r.Post("/", app.createChoreCompletion)
 		})
 	})
 

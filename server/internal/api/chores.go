@@ -69,6 +69,24 @@ func (app *Application) createChore(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, toAPIChore(chore))
 }
 
+func (app *Application) createChoreCompletion(w http.ResponseWriter, r *http.Request) {
+	var req CreateChoreCompletionRequest
+	if err := decodeJSONBody(r, &req); err != nil {
+		writeAPIError(w, err)
+		return
+	}
+
+	choreCompletion, err := app.ChoreCompletionStore.Create(dbmodels.CreateChoreCompletionRequest{
+		ChoreID: uint(req.ChoreId),
+	})
+	if err != nil {
+		writeAPIError(w, categorizedError{category: errInternal, cause: err})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, toAPIChoreCompletion(choreCompletion))
+}
+
 func (app *Application) getChore(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
@@ -174,5 +192,14 @@ func toAPIChore(chore dbmodels.Chore) Chore {
 		CadenceInDays: chore.CadenceInDays,
 		CreatedAt:     chore.CreatedAt,
 		UpdatedAt:     chore.UpdatedAt,
+	}
+}
+
+func toAPIChoreCompletion(choreCompletion dbmodels.ChoreCompletion) ChoreCompletion {
+	return ChoreCompletion{
+		Id:        uint64(choreCompletion.ID),
+		ChoreId:   uint64(choreCompletion.ChoreID),
+		CreatedAt: choreCompletion.CreatedAt,
+		UpdatedAt: choreCompletion.UpdatedAt,
 	}
 }

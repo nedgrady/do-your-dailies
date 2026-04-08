@@ -18,13 +18,7 @@ From PowerShell in the repository root:
 ./validate.ps1
 ```
 
-This script builds `server/Dockerfile.validate` and runs these checks in the container:
-
-- `go mod tidy`
-- `go fmt ./...`
-- `go vet ./...`
-- `go test ./...`
-- `go-mutesting ./internal/api`
+This script builds `server/Dockerfile.validate` and runs these checks in the container.
 
 ### Run mutation test only
 
@@ -32,7 +26,7 @@ From PowerShell in the repository root:
 
 ```powershell
 docker build -f .\server\Dockerfile.validate -t do-your-dailies-validate:local .
-docker run --rm -v "${PWD}:/workspace" -w /workspace/server do-your-dailies-validate:local bash -lc "go-mutesting ./internal/api"
+docker run --rm -v "${PWD}:/workspace" -w /workspace/server do-your-dailies-validate:local bash -lc "go-mutesting ./internal/api ; go-mutesting ./internal/docs"
 ```
 
 ### Troubleshooting

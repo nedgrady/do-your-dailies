@@ -20,6 +20,10 @@ type CreateChoreRequest struct {
 	CadenceInDays int    `json:"cadence_in_days"`
 }
 
+type CreateChoreCompletionRequest struct {
+	ChoreID uint `json:"chore_id"`
+}
+
 type UpdateChoreRequest struct {
 	Name          *string `json:"name"`
 	CadenceInDays *int    `json:"cadence_in_days"`

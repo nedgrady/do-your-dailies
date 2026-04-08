@@ -14,12 +14,24 @@ type ChoreStore interface {
 	Delete(id uint) error
 }
 
+type ChoreCompletionStore interface {
+	Create(req models.CreateChoreCompletionRequest) (models.ChoreCompletion, error)
+}
+
 type GormChoreStore struct {
+	db *gorm.DB
+}
+
+type GormChoreCompletionStore struct {
 	db *gorm.DB
 }
 
 func NewGormChoreStore(db *gorm.DB) *GormChoreStore {
 	return &GormChoreStore{db: db}
+}
+
+func NewGormChoreCompletionStore(db *gorm.DB) *GormChoreCompletionStore {
+	return &GormChoreCompletionStore{db: db}
 }
 
 func (s *GormChoreStore) List() ([]models.Chore, error) {
@@ -67,4 +79,10 @@ func (s *GormChoreStore) Delete(id uint) error {
 		return gorm.ErrRecordNotFound
 	}
 	return nil
+}
+
+func (s *GormChoreCompletionStore) Create(req models.CreateChoreCompletionRequest) (models.ChoreCompletion, error) {
+	choreCompletion := models.ChoreCompletion{ChoreID: req.ChoreID}
+	result := s.db.Create(&choreCompletion)
+	return choreCompletion, result.Error
 }
