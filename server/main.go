@@ -6,7 +6,7 @@ import (
 
 	"do-your-dailies/server/internal/api"
 	"do-your-dailies/server/internal/db"
-	"do-your-dailies/server/internal/models"
+	"do-your-dailies/server/internal/migrations"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 		log.Fatal("failed to connect to database:", err)
 	}
 
-	if err := database.AutoMigrate(&models.Chore{}, &models.ChoreCompletion{}); err != nil {
+	if err := migrations.Migrate(database); err != nil {
 		log.Fatal("failed to run migrations:", err)
 	}
 

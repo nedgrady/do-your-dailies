@@ -5,6 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"do-your-dailies/server/internal/testhelpers"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -46,44 +48,40 @@ func TestHealthCheckBody(t *testing.T) {
 
 func TestHealthCheckWritesExplicitStatusBeforeBody(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
-	writer := newRecordingResponseWriter()
+	writer := testhelpers.NewRecordingResponseWriter()
 
-	app.healthCheck(writer, req)
+	healthCheck(writer, req)
 
-	assert.False(t, writer.writeBeforeWriteHeader)
+	assert.False(t, writer.WriteBeforeWriteHeader)
 }
 
 func TestHealthCheckWriterStatusCode(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
-	writer := newRecordingResponseWriter()
+	writer := testhelpers.NewRecordingResponseWriter()
 
-	app.healthCheck(writer, req)
+	healthCheck(writer, req)
 
-	assert.Equal(t, http.StatusOK, writer.statusCode)
+	assert.Equal(t, http.StatusOK, writer.StatusCode)
 }
 
 func TestHealthCheckWriterContentType(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
-	writer := newRecordingResponseWriter()
+	writer := testhelpers.NewRecordingResponseWriter()
 
-	app.healthCheck(writer, req)
+	healthCheck(writer, req)
 
 	assert.Equal(t, "text/plain; charset=utf-8", writer.Header().Get("Content-Type"))
 }
 
 func TestHealthCheckWriterBody(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
-	writer := newRecordingResponseWriter()
+	writer := testhelpers.NewRecordingResponseWriter()
 
-	app.healthCheck(writer, req)
+	healthCheck(writer, req)
 
-	assert.Equal(t, "healthy", writer.body.String())
+	assert.Equal(t, "healthy", writer.Body.String())
 }

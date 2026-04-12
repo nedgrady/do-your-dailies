@@ -2,6 +2,7 @@
 set -eu
 
 quick_mode=0
+# quick mode skips mutation testing
 if [ "${1:-}" = "--quick" ] || [ "${VALIDATE_QUICK:-0}" = "1" ]; then
 	quick_mode=1
 fi
@@ -29,6 +30,7 @@ go test ./...
 if [ "$quick_mode" -eq 1 ]; then
 	echo "==> quick mode: skipping go-mutesting"
 else
+	:
 	# mutation_packages=(
 	# 	"./internal/api"
 	# 	"./internal/models"
