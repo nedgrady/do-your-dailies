@@ -46,7 +46,7 @@ func TestUpdateChoreOmitsCadenceAsNilPointer(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), `"cadenceInDays":7`)
 }
 
-func TestUpdateChoreAllowsExplicitZeroCadence(t *testing.T) {
+func TestUpdateChoreRejectsExplicitZeroCadence(t *testing.T) {
 	t.Parallel()
 	router, database := newPostgresTestRouter(t)
 	chore := seedChore(t, database, "dishes", 7)
@@ -55,7 +55,7 @@ func TestUpdateChoreAllowsExplicitZeroCadence(t *testing.T) {
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/chores/%d", chore.ID), body))
 
-	assert.Contains(t, rr.Body.String(), `"cadenceInDays":0`)
+	assert.Equal(t, http.StatusUnprocessableEntity, rr.Code)
 }
 
 func TestUpdateChoreDecodesLowerCamelCaseCadence(t *testing.T) {

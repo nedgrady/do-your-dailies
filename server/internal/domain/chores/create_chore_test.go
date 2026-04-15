@@ -64,6 +64,17 @@ func TestCreateChoreReturnsLowerCamelCaseCadence(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), `"cadenceInDays":7`)
 }
 
+func TestCreateChoreRejectsZeroCadence(t *testing.T) {
+	t.Parallel()
+	router, _ := newPostgresTestRouter(t)
+
+	body := strings.NewReader(`{"name":"dishes","cadenceInDays":0}`)
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, httptest.NewRequest(http.MethodPost, "/api/chores/", body))
+
+	assert.Equal(t, http.StatusUnprocessableEntity, rr.Code)
+}
+
 func TestCreateChoreReturns422OnBadJSON(t *testing.T) {
 	t.Parallel()
 	router, _ := newPostgresTestRouter(t)

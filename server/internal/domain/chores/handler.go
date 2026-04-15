@@ -1,6 +1,7 @@
 package chores
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -33,6 +34,10 @@ func (handler Handler) create(w http.ResponseWriter, r *http.Request) {
 	var req contracts.CreateChoreRequest
 	if err := apijson.DecodeBody(r, &req); err != nil {
 		apperrors.Write(w, err)
+		return
+	}
+	if err := validateCadence(req.CadenceInDays); err != nil {
+		apperrors.Write(w, apperrors.BadRequest(err))
 		return
 	}
 
@@ -76,6 +81,12 @@ func (handler Handler) update(w http.ResponseWriter, r *http.Request) {
 		apperrors.Write(w, err)
 		return
 	}
+	if req.CadenceInDays != nil {
+		if err := validateCadence(*req.CadenceInDays); err != nil {
+			apperrors.Write(w, apperrors.BadRequest(err))
+			return
+		}
+	}
 
 	chore, err := handler.Store.Update(uint(id), UpdateRequest{
 		Name:          req.Name,
@@ -102,4 +113,12 @@ func (handler Handler) delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func validateCadence(cadenceInDays int) error {
+	if cadenceInDays <= 0 {
+		return errors.New("cadenceInDays must be greater than zero")
+	}
+
+	return nil
 }

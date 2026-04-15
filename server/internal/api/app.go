@@ -2,6 +2,7 @@ package api
 
 import (
 	"do-your-dailies/server/internal/domain/chorecompletions"
+	"do-your-dailies/server/internal/domain/chorequeue"
 	"do-your-dailies/server/internal/domain/chores"
 
 	"github.com/go-chi/chi/v5"
@@ -12,6 +13,7 @@ type Application struct {
 	Router               *chi.Mux
 	ChoreStore           chores.Store
 	ChoreCompletionStore chorecompletions.Store
+	ChoreQueueStore      chorequeue.Store
 }
 
 func New(db *gorm.DB) *Application {
@@ -19,6 +21,7 @@ func New(db *gorm.DB) *Application {
 	if db != nil {
 		app.ChoreStore = chores.NewGormStore(db)
 		app.ChoreCompletionStore = chorecompletions.NewGormStore(db)
+		app.ChoreQueueStore = chorequeue.NewGormStore(db)
 	}
 	app.Router = app.setupRoutes()
 	return app

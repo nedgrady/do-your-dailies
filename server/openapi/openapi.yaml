@@ -107,6 +107,31 @@ paths:
           description: Chore not found
         "422":
           description: Invalid JSON payload
+  /api/chore-queue/:
+    get:
+      operationId: listChoreQueue
+      parameters:
+        - name: dayOffset
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: maxChores
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Ordered chores due for the requested day
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Chore"
+        "400":
+          description: Invalid query parameter
 components:
   schemas:
     Chore:
@@ -125,6 +150,7 @@ components:
           type: string
         cadenceInDays:
           type: integer
+          minimum: 1
         createdAt:
           type: string
           format: date-time
@@ -141,6 +167,7 @@ components:
           type: string
         cadenceInDays:
           type: integer
+          minimum: 1
     UpdateChoreRequest:
       type: object
       properties:
@@ -148,6 +175,7 @@ components:
           type: string
         cadenceInDays:
           type: integer
+          minimum: 1
     ChoreCompletion:
       type: object
       required:
