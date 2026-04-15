@@ -1,0 +1,5 @@
+2026-04-12 checksum b1fea0726e529d87244b48dd2ffb9768
+Reason: Persistent survivor in internal/errors/http.go.3 after behavior-level tests for status, body, category matching, and unwrap semantics; treated as equivalent/impractical with current go-mutesting granularity.
+
+2026-04-12 checksum 11b16bf3206db0564418664b18d2e00c
+Reason: Persistent survivor in internal/errors/http.go.6 after behavior-level tests for all public error-mapping paths; treated as equivalent/impractical with current go-mutesting granularity.
