@@ -1,6 +1,7 @@
 package chores
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -88,8 +89,7 @@ func TestCreateChoreReturns422OnBadJSON(t *testing.T) {
 
 func TestCreateChoreReturns500OnStoreError(t *testing.T) {
 	t.Parallel()
-	router, database := newPostgresTestRouter(t)
-	breakChoreTable(t, database)
+	router := newTestRouter(failingStore{createErr: errors.New("boom")})
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
 	rr := httptest.NewRecorder()
@@ -100,8 +100,7 @@ func TestCreateChoreReturns500OnStoreError(t *testing.T) {
 
 func TestCreateChoreStoreErrorBody(t *testing.T) {
 	t.Parallel()
-	router, database := newPostgresTestRouter(t)
-	breakChoreTable(t, database)
+	router := newTestRouter(failingStore{createErr: errors.New("boom")})
 
 	body := strings.NewReader(`{"name":"dishes","cadenceInDays":1}`)
 	rr := httptest.NewRecorder()

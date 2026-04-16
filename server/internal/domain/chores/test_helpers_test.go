@@ -1,6 +1,7 @@
 package chores
 
 import (
+	"errors"
 	"testing"
 
 	"do-your-dailies/server/internal/testhelpers"
@@ -32,9 +33,47 @@ func seedChore(t *testing.T, database *gorm.DB, name string, cadenceInDays int) 
 	return chore
 }
 
-func breakChoreTable(t *testing.T, database *gorm.DB) {
-	t.Helper()
-	testhelpers.BreakTable(t, database, "chores")
+type failingStore struct {
+	listErr   error
+	createErr error
+	getErr    error
+	updateErr error
+	deleteErr error
+}
+
+func (store failingStore) List() ([]Chore, error) {
+	if store.listErr != nil {
+		return nil, store.listErr
+	}
+	return nil, errors.New("list not implemented")
+}
+
+func (store failingStore) Create(req CreateRequest) (Chore, error) {
+	if store.createErr != nil {
+		return Chore{}, store.createErr
+	}
+	return Chore{}, errors.New("create not implemented")
+}
+
+func (store failingStore) Get(id uint) (Chore, error) {
+	if store.getErr != nil {
+		return Chore{}, store.getErr
+	}
+	return Chore{}, errors.New("get not implemented")
+}
+
+func (store failingStore) Update(id uint, req UpdateRequest) (Chore, error) {
+	if store.updateErr != nil {
+		return Chore{}, store.updateErr
+	}
+	return Chore{}, errors.New("update not implemented")
+}
+
+func (store failingStore) Delete(id uint) error {
+	if store.deleteErr != nil {
+		return store.deleteErr
+	}
+	return errors.New("delete not implemented")
 }
 
 func newCreateChoreTestDB(t *testing.T) *gorm.DB {

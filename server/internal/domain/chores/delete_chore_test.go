@@ -1,6 +1,7 @@
 package chores
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -42,12 +43,10 @@ func TestDeleteChoreReturns400OnNonNumericID(t *testing.T) {
 
 func TestDeleteChoreReturns500OnUnexpectedError(t *testing.T) {
 	t.Parallel()
-	router, database := newPostgresTestRouter(t)
-	chore := seedChore(t, database, "dishes", 1)
-	breakChoreTable(t, database)
+	router := newTestRouter(failingStore{deleteErr: errors.New("boom")})
 
 	rr := httptest.NewRecorder()
-	router.ServeHTTP(rr, httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/chores/%d", chore.ID), nil))
+	router.ServeHTTP(rr, httptest.NewRequest(http.MethodDelete, "/api/chores/1", nil))
 
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 }

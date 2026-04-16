@@ -3,3 +3,6 @@ Reason: Persistent survivor in internal/errors/http.go.3 after behavior-level te
 
 2026-04-12 checksum 11b16bf3206db0564418664b18d2e00c
 Reason: Persistent survivor in internal/errors/http.go.6 after behavior-level tests for all public error-mapping paths; treated as equivalent/impractical with current go-mutesting granularity.
+
+2026-04-15 checksum 61e78f9a5637505a7aafffff7e07b040
+Reason: Equivalent mutant in internal/domain/chores/handler.go create handler. Removes apperrors.Write(w,err)+return from the JSON-decode error branch; execution then falls through to validateCadence(0), which also returns 422 "bad request\n". Since zero-value CadenceInDays is always 0, validateCadence always rejects it with the same observable response (status 422, body "bad request\n") as the original JSON-decode error path. No behavioral test can distinguish the two paths under the current error response model.

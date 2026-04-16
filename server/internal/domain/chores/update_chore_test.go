@@ -1,6 +1,7 @@
 package chores
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -129,13 +130,11 @@ func TestUpdateChoreReturns422OnBadJSON(t *testing.T) {
 
 func TestUpdateChoreReturns500OnUnexpectedError(t *testing.T) {
 	t.Parallel()
-	router, database := newPostgresTestRouter(t)
-	chore := seedChore(t, database, "dishes", 1)
-	breakChoreTable(t, database)
+	router := newTestRouter(failingStore{updateErr: errors.New("boom")})
 
 	body := strings.NewReader(`{"name":"vacuuming"}`)
 	rr := httptest.NewRecorder()
-	router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/chores/%d", chore.ID), body))
+	router.ServeHTTP(rr, httptest.NewRequest(http.MethodPut, "/api/chores/1", body))
 
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 }

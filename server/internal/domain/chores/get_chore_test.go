@@ -1,6 +1,7 @@
 package chores
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -95,8 +96,7 @@ func TestGetChoreReturns400OnNonNumericID(t *testing.T) {
 
 func TestGetChoreReturns500OnUnexpectedError(t *testing.T) {
 	t.Parallel()
-	router, database := newPostgresTestRouter(t)
-	breakChoreTable(t, database)
+	router := newTestRouter(failingStore{getErr: errors.New("boom")})
 
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chores/1", nil))

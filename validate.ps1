@@ -1,7 +1,8 @@
 param(
 	[switch]$RebuildImage,
 	[switch]$NoQuiet,
-	[switch]$Quick
+	[switch]$Quick,
+	[switch]$Verbose
 )
 
 $ErrorActionPreference = 'Stop'
@@ -27,4 +28,12 @@ if ($Quick) {
 }
 $runArgs += $validationImage
 
-docker @runArgs
+$summaryPattern = '==>|ALLOWLISTED FAIL|^The mutation score|^FAIL\b|^ok\b|All validation checks passed'
+
+if ($Verbose) {
+	docker @runArgs
+} else {
+	docker @runArgs 2>&1 | Select-String -Pattern $summaryPattern | ForEach-Object { $_.Line }
+}
+
+exit $LASTEXITCODE

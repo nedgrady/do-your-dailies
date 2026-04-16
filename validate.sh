@@ -33,14 +33,16 @@ else
 	mutation_checksum_allowlist=(
 		"b1fea0726e529d87244b48dd2ffb9768"
 		"11b16bf3206db0564418664b18d2e00c"
+		"61e78f9a5637505a7aafffff7e07b040"
 	)
 
 	mutation_packages=(
-		# "./internal/domain/chores"
-		# "./internal/domain/chorecompletions"
-		# "./internal/errors"
-		# "./internal/api/json"
-		# "./internal/api"
+		"./internal/domain/chores"
+		"./internal/domain/chorecompletions"
+		"./internal/domain/chorequeue"
+		"./internal/errors"
+		"./internal/api/json"
+		"./internal/api"
 	)
 
 	for pkg in "${mutation_packages[@]}"; do
@@ -93,3 +95,4 @@ EOF
 	done
 fi
 
+echo "All validation checks passed"
