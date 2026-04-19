@@ -1,10 +1,11 @@
+import { apiBaseUrl } from '#/lib/axios'
 import { http, HttpResponse } from 'msw'
 
 export const handlers = [
-  http.get('/api/chore-queue', () => {
+  http.get(`${apiBaseUrl}/api/chore-queue`, () => {
     return HttpResponse.json([])
   }),
-  http.all('/api/{*path}', ({ request, params }) => {
+  http.all(`${apiBaseUrl}/api/{*path}`, ({ request, params }) => {
     console.warn(
       `[MSW] Unmocked API request: ${request.method} /api/${String(params.path ?? '')}`,
     )

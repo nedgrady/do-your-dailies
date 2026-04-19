@@ -1,8 +1,8 @@
+import axios from '#/lib/axios'
 import {
   QueryErrorResetBoundary,
   useSuspenseQuery,
 } from '@tanstack/react-query'
-import axios from 'axios'
 import { Suspense } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { z } from 'zod'

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { apiBaseUrl } from '#/lib/axios'
 import { server } from '#/mocks/server'
 import { render, screen } from '#/test-utils'
 import { http, HttpResponse } from 'msw'
@@ -9,7 +10,7 @@ import ChoreQueuePage from './ChoreQueuePage'
 describe('chore queue page', () => {
   it('renders chores from the backend current-day queue endpoint', async () => {
     server.use(
-      http.get('/api/chore-queue', () => {
+      http.get(`${apiBaseUrl}/api/chore-queue`, () => {
         return HttpResponse.json([
           {
             id: 1,
