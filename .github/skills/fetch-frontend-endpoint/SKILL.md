@@ -3,49 +3,221 @@ name: fetch-frontend-endpoint
 description: "Use when adding frontend data fetching for a new API endpoint in this repo"
 ---
 
-# Fetch Frontend Endpoint
+# Fetch Frontend Endpoint (TanStack Query v5 + Suspense Architecture)
 
 Use this workflow when the frontend must call a new API endpoint and render data.
 
+---
+
 ## Purpose
 
-- Keep all frontend data fetching consistent with React Query patterns.
-- Keep tests behavior-focused and deterministic with MSW.
+- Enforce TanStack Query v5 idiomatic patterns
+- Use Suspense for loading orchestration
+- Use Error Boundaries for error handling (no inline error UI logic)
+- Keep API logic, validation, and UI strictly separated
+- Ensure MSW tests are deterministic and explicitly configured
 
-## Rules
+---
 
-1. Always use react-query for data fetching and state management, using useSuspenseQuery
-2. Always use Axios, never `fetch`.
-3. Always write MSW handlers for the new endpoint, see MSW Rules below.
-4. Always wrap a raw useQuery hook in a custom hook (e.g. `useItemsQuery`) that encapsulates the endpoint details.
-5. Keep endpoint calling code outside the component body in a dedicated query module.
-6. Always use React Suspense for loading states. Do NOT handle loading state manually in components or hooks.
-7. Always use an Error Boundary for error states. Do NOT handle `error` directly in components returned from `useQuery`.
-8. Use a `QueryState` (or similarly named) wrapper ONLY for error handling composition with Suspense, not for loading logic.
+# Core Architecture Rules
 
-## Model + Serialization/Deserialization + Validation
+## 1. Data Fetching (MANDATORY)
 
-1. Always define two models for the endpoint data: one for the raw API response (e.g. `ItemResponse`) and one for the internal frontend representation (e.g. `Item`).
-2. All fields in the API response model MUST be basic types (string, number, boolean, arrays, objects) without any transformation or parsing logic.
-3. All fields in the internal frontend model SHOULD be the most convenient and type-safe representation for use in the app, for example use `Date` objects instead of ISO date strings.
-4. Always use a zod schema to validate and parse incoming data from the endpoint in the query function
+- Always use TanStack Query v5
+- Always use Axios
+- Always use Suspense mode via `useSuspenseQuery`
+- NEVER use `useQuery({ suspense: true })`
 
-## MSW Rules
+```ts
+import { useSuspenseQuery } from "@tanstack/react-query";
+```
 
-1. Keep a base handler in `src/mocks/handlers.ts` for happy-path defaults.
-2. Override per-test behavior with `server.use(...)` in the test file.
-3. Match the exact endpoint path used by the frontend.
-4. For new API routes, add explicit handlers rather than relying on fallback handlers.
-5. By default return realistic, and populated data in handlers
-6. Tests should never rely on the default MSW handlers; they should always explicitly set up the handlers they depend on.
+## 2. UI State Rules (STRICT)
 
-## Test Expectations (Frontend)
+- NEVER handle loading state in components
+- NEVER use `isLoading`, `isFetching`, or `isError`
+- NEVER return early based on query state
+- Use Suspense for loading
+- Use ErrorBoundary for errors
 
-Include tests for at least:
+## 3. Error Handling Model (MANDATORY)
 
-1. Successful render of fetched data.
-2. Error UI when endpoint fails (e.g. 500).
-3. Loading state when request is in flight.
-4. Correct handling of empty response data.
+Required stack:
 
-## Example
+- ErrorBoundary (UI boundary)
+- QueryErrorResetBoundary (React Query reset integration)
+- QueryState (optional UI-scoped error wrapper)
+
+Page composition (required):
+
+```tsx
+import { Suspense } from "react";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { ErrorBoundary } from "react-error-boundary";
+
+<QueryErrorResetBoundary>
+  {({ reset }) => (
+    <ErrorBoundary
+      onReset={reset}
+      fallbackRender={({ resetErrorBoundary }) => (
+        <InlineError
+          message="Could not load data"
+          onRetry={resetErrorBoundary}
+        />
+      )}
+    >
+      <Suspense fallback={<PageSkeleton />}>
+        <Page />
+      </Suspense>
+    </ErrorBoundary>
+  )}
+</QueryErrorResetBoundary>;
+```
+
+QueryState (optional):
+
+QueryState is only an error boundary wrapper. It must not interact with React Query.
+
+```tsx
+import { ErrorBoundary } from "react-error-boundary";
+
+type QueryStateProps = {
+  fallback: React.ReactNode;
+  children: React.ReactNode;
+};
+
+export function QueryState({ fallback, children }: QueryStateProps) {
+  return (
+    <ErrorBoundary fallbackRender={() => fallback}>{children}</ErrorBoundary>
+  );
+}
+```
+
+## 4. Query Hook Pattern (MANDATORY)
+
+Each endpoint must have a dedicated hook.
+
+```ts
+import { useSuspenseQuery } from "@tanstack/react-query";
+
+export function useTodosQuery() {
+  return useSuspenseQuery({
+    queryKey: ["todos"],
+    queryFn: fetchTodos,
+  });
+}
+```
+
+## 5. Query Function Rules (MANDATORY)
+
+- Must use Axios
+- Must validate with Zod
+- Must map API model to domain model
+- Must not include React Query logic
+
+```ts
+export async function fetchTodos(): Promise<Todo[]> {
+  const res = await axios.get("/api/todos");
+  const parsed = todosResponseSchema.parse(res.data);
+  return parsed.map(toTodo);
+}
+```
+
+Model rules:
+
+- API model: raw JSON shape, primitives only
+- Domain model: UI-friendly; may include Date, enums, derived fields
+
+## 6. Component Rules (STRICT)
+
+```tsx
+function TodosSection() {
+  const todos = useTodosQuery();
+  return <TodoList todos={todos} />;
+}
+```
+
+Forbidden:
+
+- no loading logic
+- no error logic
+- no conditional query handling
+
+## 7. Suspense Rules
+
+- Suspense is required
+- Every route must define fallback UI
+
+```tsx
+<Suspense fallback={<TodosSkeleton />}>
+  <TodosSection />
+</Suspense>
+```
+
+## 8. Retry Semantics
+
+Per-query retry overrides should be rare and only used with explicit justification in code comments.
+
+## 9. Query Reset Handling (MANDATORY)
+
+All Suspense flows must support reset:
+
+```tsx
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { ErrorBoundary } from "react-error-boundary";
+
+<QueryErrorResetBoundary>
+  {({ reset }) => (
+    <ErrorBoundary onReset={reset}>
+      <Page />
+    </ErrorBoundary>
+  )}
+</QueryErrorResetBoundary>;
+```
+
+## 10. MSW Rules (STRICT)
+
+Base handler required:
+
+```ts
+http.get("/api/todos", () => {
+  return HttpResponse.json([{ id: "1", title: "Buy milk", completed: false }]);
+});
+```
+
+Required edge cases:
+
+1. 500 error
+
+```ts
+return HttpResponse.error();
+```
+
+2. empty response
+
+```ts
+return HttpResponse.json([]);
+```
+
+3. malformed response
+
+```ts
+return HttpResponse.json({ invalid: true });
+```
+
+## 11. Test Requirements
+
+Each endpoint must include:
+
+- success state
+- empty state
+- error state (500)
+- loading state (Suspense fallback)
+
+## Architecture Summary
+
+1. Axios + Zod
+2. React Query (`useSuspenseQuery`)
+3. Suspense (loading)
+4. ErrorBoundary + QueryErrorResetBoundary (error)
+5. UI components (pure render)
