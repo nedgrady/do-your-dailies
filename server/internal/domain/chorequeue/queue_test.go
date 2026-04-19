@@ -115,3 +115,101 @@ func day(offset int) time.Time {
 func intPtr(value int) *int {
 	return &value
 }
+
+func TestStartOfDayUTCReturnsMidnight(t *testing.T) {
+	t.Parallel()
+
+	dt := time.Date(2026, time.April, 15, 13, 14, 15, 123456789, time.FixedZone("X", 2*3600))
+	got := startOfDayUTC(dt)
+	want := time.Date(2026, time.April, 15, 0, 0, 0, 0, time.UTC)
+
+	assert.Equal(t, want, got)
+}
+
+func TestBuildQueueIncludesOneDayOverdue(t *testing.T) {
+	t.Parallel()
+
+	anchor := day(0)
+	chore := chores.Chore{Name: "oneDay", CadenceInDays: 7}
+	chore.CreatedAt = anchor
+	candidate := Candidate{Chore: chore, LastCompletedAt: nil}
+
+	queue := BuildQueue([]Candidate{candidate}, day(8), 10)
+
+	assert.Equal(t, []string{"oneDay"}, queueNames(queue))
+}
+
+func TestBuildQueueExcludesZeroCadence(t *testing.T) {
+	t.Parallel()
+
+	queue := BuildQueue([]Candidate{
+		newCandidate(1, "zero", 0, -1, nil),
+		newCandidate(2, "valid", 1, -1, intPtr(-2)),
+	}, day(0), 10)
+
+	assert.Equal(t, []string{"valid"}, queueNames(queue))
+}
+
+func TestBuildQueueOverdueScorePreferredToDueDay(t *testing.T) {
+	t.Parallel()
+
+	// Create two chores that share the same dueDay but have different cadences
+	// so their overdueScore differs; the higher overdueScore should come first.
+	// Candidate A: ID 1, created day 0, cadence 2 -> dueDay = day(2)
+	// Candidate B: ID 2, created day 1, cadence 1 -> dueDay = day(2)
+	a := chores.Chore{Name: "A", CadenceInDays: 2}
+	a.ID = 1
+	a.CreatedAt = day(0)
+	b := chores.Chore{Name: "B", CadenceInDays: 1}
+	b.ID = 2
+	b.CreatedAt = day(1)
+
+	queue := BuildQueue([]Candidate{
+		{Chore: a, LastCompletedAt: nil},
+		{Chore: b, LastCompletedAt: nil},
+	}, day(3), 10)
+
+	assert.Equal(t, []string{"B", "A"}, queueNames(queue))
+}
+
+func TestBuildQueueNoCapWhenMaxChoresNonPositive(t *testing.T) {
+	t.Parallel()
+
+	queue := BuildQueue([]Candidate{
+		newCandidate(1, "one", 1, -10, intPtr(-2)),
+		newCandidate(2, "two", 1, -10, intPtr(-2)),
+	}, day(0), 0)
+
+	assert.Equal(t, 2, len(queue))
+}
+
+func TestBuildQueueAppliesStartOfDayToTarget(t *testing.T) {
+	t.Parallel()
+
+	chore := chores.Chore{Name: "X", CadenceInDays: 1}
+	chore.CreatedAt = day(0)
+	candidate := Candidate{Chore: chore}
+
+	q1 := BuildQueue([]Candidate{candidate}, time.Date(2026, time.April, 16, 12, 0, 0, 0, time.UTC), 10)
+	q2 := BuildQueue([]Candidate{candidate}, time.Date(2026, time.April, 16, 0, 0, 0, 0, time.UTC), 10)
+
+	assert.Equal(t, q1, q2)
+}
+
+func TestBuildQueueDueDayTieBreakerUsedWhenScoresEqual(t *testing.T) {
+	t.Parallel()
+
+	// Construct two chores with equal overdueScore but different dueDays.
+	// Expect the earlier dueDay to come first.
+	a := chores.Chore{Name: "A", CadenceInDays: 4}
+	a.ID = 1
+	a.CreatedAt = day(0) // dueDay = day(4)
+
+	b := chores.Chore{Name: "B", CadenceInDays: 2}
+	b.ID = 2
+	b.CreatedAt = day(3) // dueDay = day(5)
+
+	queue := BuildQueue([]Candidate{{Chore: b}, {Chore: a}}, day(6), 10)
+
+	assert.Equal(t, []string{"A", "B"}, queueNames(queue))
+}

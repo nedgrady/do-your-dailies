@@ -3,6 +3,7 @@ package chorequeue
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -112,4 +113,38 @@ func queueNamesFromBody(t *testing.T, body string) []string {
 	}
 
 	return names
+}
+
+func TestListChoreQueueRespectsDefaultMaxChores(t *testing.T) {
+	t.Parallel()
+	router, database := newPostgresTestRouter(t)
+
+	// seed more than defaultMaxChores chores that are due
+	total := defaultMaxChores + 2
+	for i := 0; i < total; i++ {
+		seedChoreWithCompletion(t, database, fmt.Sprintf("task-%d", i), 1, -100, intPtr(-1))
+	}
+
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chore-queue/", nil))
+
+	names := queueNamesFromBody(t, rr.Body.String())
+	assert.Equal(t, defaultMaxChores, len(names))
+}
+
+func TestDefaultMaxChoresValue(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, 10, defaultMaxChores)
+}
+
+func TestListChoreQueueAcceptsMaxChoresOne(t *testing.T) {
+	t.Parallel()
+	router, _ := newPostgresTestRouter(t)
+
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chore-queue/?maxChores=1", nil))
+
+	// should be OK; mutated logic that rejects <=1 would make this 400
+	assert.Equal(t, http.StatusOK, rr.Code)
 }
