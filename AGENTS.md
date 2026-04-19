@@ -22,3 +22,5 @@ Do not rely on exact sequence values in Postgres-backed tests; sequence counters
 Keep migrations outside per-test transactions to avoid DDL-in-transaction behavior differences and noise.
 
 Whenever you are writing a unit test you MUST use your `unit-test-writing` skill.
+
+Whenever you are adding frontend data fetching for a new endpoint you MUST use your `fetch-frontend-endpoint` skill.

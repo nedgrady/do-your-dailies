@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { useEffect, useState } from 'react'
 
 type Chore = {
@@ -17,17 +18,13 @@ export default function ChoreQueuePage() {
 
     async function loadQueue() {
       try {
-        const response = await fetch('/api/chore-queue', {
+        const response = await axios.get<Chore[]>('/api/chore-queue', {
           headers: {
             Accept: 'application/json',
           },
         })
 
-        if (!response.ok) {
-          throw new Error('queue request failed')
-        }
-
-        const queue = (await response.json()) as Chore[]
+        const queue = response.data
         if (isMounted) {
           setChores(queue)
         }
