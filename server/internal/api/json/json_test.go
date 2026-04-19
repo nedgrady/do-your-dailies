@@ -6,9 +6,11 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"do-your-dailies/server/internal/contracts"
 	apperrors "do-your-dailies/server/internal/errors"
+	"do-your-dailies/server/internal/utctime"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -75,4 +77,33 @@ func TestWriteEncodesPayload(t *testing.T) {
 	var payload map[string]string
 	_ = json.Unmarshal(rr.Body.Bytes(), &payload)
 	assert.Equal(t, "dishes", payload["name"])
+}
+
+func TestDecodeBodyNormalizesDateTimeToUTC(t *testing.T) {
+	t.Parallel()
+	body := strings.NewReader(`{"id":1,"name":"dishes","cadenceInDays":3,"createdAt":"2026-04-07T12:00:00+02:00","updatedAt":"2026-04-07T12:00:00+02:00"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/chores/", body)
+	var dst contracts.Chore
+
+	if err := DecodeBody(req, &dst); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+
+	assert.Equal(t, "2026-04-07T10:00:00Z", dst.CreatedAt.Format(time.RFC3339))
+}
+
+func TestWriteEmitsDateTimeAsUTCZulu(t *testing.T) {
+	t.Parallel()
+	rr := httptest.NewRecorder()
+	payload := contracts.Chore{
+		Id:            1,
+		Name:          "dishes",
+		CadenceInDays: 3,
+		CreatedAt:     utctime.Time{Time: time.Date(2026, time.April, 7, 12, 0, 0, 0, time.FixedZone("UTC+2", 2*60*60))},
+		UpdatedAt:     utctime.Time{Time: time.Date(2026, time.April, 7, 12, 0, 0, 0, time.FixedZone("UTC+2", 2*60*60))},
+	}
+
+	Write(rr, http.StatusOK, payload)
+
+	assert.Contains(t, rr.Body.String(), `"createdAt":"2026-04-07T10:00:00Z"`)
 }

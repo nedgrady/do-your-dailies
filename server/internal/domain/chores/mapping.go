@@ -1,6 +1,9 @@
 package chores
 
-import "do-your-dailies/server/internal/contracts"
+import (
+	"do-your-dailies/server/internal/contracts"
+	"do-your-dailies/server/internal/utctime"
+)
 
 func toAPIChores(chores []Chore) []contracts.Chore {
 	result := make([]contracts.Chore, 0, len(chores))
@@ -15,7 +18,7 @@ func toAPIChore(chore Chore) contracts.Chore {
 		Id:            uint64(chore.ID),
 		Name:          chore.Name,
 		CadenceInDays: chore.CadenceInDays,
-		CreatedAt:     chore.CreatedAt,
-		UpdatedAt:     chore.UpdatedAt,
+		CreatedAt:     utctime.Time{Time: chore.CreatedAt},
+		UpdatedAt:     utctime.Time{Time: chore.UpdatedAt},
 	}
 }
