@@ -1,7 +1,7 @@
 import type { PaletteMode } from '@mui/material'
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
 import type { ReactNode } from 'react'
-import React, { createContext } from 'react'
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 
 const colorModeStorageKey = 'dyd-color-mode-preference'
 
@@ -18,11 +18,6 @@ export const ColorModeContext = createContext<ColorModeContextValue>({
   preference: 'system',
   toggleMode: () => undefined,
 })
-
-interface ThemeProviderState {
-  preference: ColorModePreference
-  systemMode: PaletteMode
-}
 
 function getSystemMode(): PaletteMode {
   if (
@@ -54,21 +49,15 @@ function readStoredPreference(): ColorModePreference {
   return 'system'
 }
 
-export class AppThemeProvider extends React.Component<
-  { children: ReactNode },
-  ThemeProviderState
-> {
-  private mediaQuery?: MediaQueryList
+export function AppThemeProvider({ children }: { children: ReactNode }) {
+  const [preference, setPreference] = useState<ColorModePreference>(() =>
+    readStoredPreference(),
+  )
+  const [systemMode, setSystemMode] = useState<PaletteMode>(() =>
+    getSystemMode(),
+  )
 
-  public constructor(props: { children: ReactNode }) {
-    super(props)
-    this.state = {
-      preference: readStoredPreference(),
-      systemMode: getSystemMode(),
-    }
-  }
-
-  public componentDidMount() {
+  useEffect(() => {
     if (
       typeof window === 'undefined' ||
       typeof window.matchMedia !== 'function'
@@ -76,74 +65,68 @@ export class AppThemeProvider extends React.Component<
       return
     }
 
-    this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    this.setState({ systemMode: this.mediaQuery.matches ? 'dark' : 'light' })
-    this.mediaQuery.addEventListener('change', this.handleSystemModeChange)
-  }
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    setSystemMode(mediaQuery.matches ? 'dark' : 'light')
 
-  public componentDidUpdate(
-    _: { children: ReactNode },
-    prevState: ThemeProviderState,
-  ) {
+    const handleSystemModeChange = (event: MediaQueryListEvent) => {
+      setSystemMode(event.matches ? 'dark' : 'light')
+    }
+
+    mediaQuery.addEventListener('change', handleSystemModeChange)
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleSystemModeChange)
+    }
+  }, [])
+
+  useEffect(() => {
     if (typeof window === 'undefined') {
       return
     }
 
-    if (prevState.preference !== this.state.preference) {
-      window.localStorage.setItem(colorModeStorageKey, this.state.preference)
-    }
-  }
+    window.localStorage.setItem(colorModeStorageKey, preference)
+  }, [preference])
 
-  public componentWillUnmount() {
-    this.mediaQuery?.removeEventListener('change', this.handleSystemModeChange)
-  }
-
-  private readonly handleSystemModeChange = (event: MediaQueryListEvent) => {
-    this.setState({ systemMode: event.matches ? 'dark' : 'light' })
-  }
-
-  private readonly toggleMode = () => {
-    this.setState((currentState) => {
+  const toggleMode = useCallback(() => {
+    setPreference((currentPreference) => {
       const resolvedMode =
-        currentState.preference === 'system'
-          ? currentState.systemMode
-          : currentState.preference
+        currentPreference === 'system' ? systemMode : currentPreference
 
-      return {
-        preference: resolvedMode === 'dark' ? 'light' : 'dark',
-      }
+      return resolvedMode === 'dark' ? 'light' : 'dark'
     })
-  }
+  }, [systemMode])
 
-  public render() {
-    const mode =
-      this.state.preference === 'system'
-        ? this.state.systemMode
-        : this.state.preference
+  const mode = preference === 'system' ? systemMode : preference
 
-    const theme = createTheme({
-      palette: {
-        mode,
-      },
-      typography: {
-        fontFamily:
-          "'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
-      },
-    })
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode,
+        },
+        typography: {
+          fontFamily:
+            "'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
+        },
+      }),
+    [mode],
+  )
 
-    const contextValue: ColorModeContextValue = {
+  const contextValue = useMemo<ColorModeContextValue>(
+    () => ({
       mode,
-      preference: this.state.preference,
-      toggleMode: this.toggleMode,
-    }
+      preference,
+      toggleMode,
+    }),
+    [mode, preference, toggleMode],
+  )
 
-    return (
-      <ColorModeContext.Provider value={contextValue}>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          {this.props.children}
-        </ThemeProvider>
-      </ColorModeContext.Provider>
-    )
-  }
+  return (
+    <ColorModeContext.Provider value={contextValue}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        {children}
+      </ThemeProvider>
+    </ColorModeContext.Provider>
+  )
 }
