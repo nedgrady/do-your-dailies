@@ -21,7 +21,9 @@ function RootComponent() {
   return (
     <AppThemeProvider>
       <Header />
-      <Outlet />
+      <main>
+        <Outlet />
+      </main>
       <Footer />
       <TanStackDevtools
         config={{

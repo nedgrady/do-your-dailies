@@ -1,56 +1,92 @@
+import {
+  QueryErrorResetBoundary,
+  useSuspenseQuery,
+} from '@tanstack/react-query'
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import { Suspense } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
+import { z } from 'zod'
+
+const apiChoreSchema = z.object({
+  id: z.number().int().nonnegative(),
+  name: z.string(),
+  cadenceInDays: z.number().int().positive(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+})
+
+const apiChoreQueueSchema = z.array(apiChoreSchema)
 
 type Chore = {
   id: number
   name: string
   cadenceInDays: number
-  createdAt: string
-  updatedAt: string
+  createdAt: Date
+  updatedAt: Date
 }
 
-export default function ChoreQueuePage() {
-  const [chores, setChores] = useState<Chore[]>([])
-  const [hasError, setHasError] = useState(false)
+function mapApiChoreToDomain(apiChore: z.infer<typeof apiChoreSchema>): Chore {
+  return {
+    id: apiChore.id,
+    name: apiChore.name,
+    cadenceInDays: apiChore.cadenceInDays,
+    createdAt: new Date(apiChore.createdAt),
+    updatedAt: new Date(apiChore.updatedAt),
+  }
+}
 
-  useEffect(() => {
-    let isMounted = true
+async function fetchCurrentDayChoreQueue(): Promise<Chore[]> {
+  const response = await axios.get('/api/chore-queue')
+  const apiChores = apiChoreQueueSchema.parse(response.data)
 
-    async function loadQueue() {
-      try {
-        const response = await axios.get<Chore[]>('/api/chore-queue', {
-          headers: {
-            Accept: 'application/json',
-          },
-        })
+  return apiChores.map(mapApiChoreToDomain)
+}
 
-        const queue = response.data
-        if (isMounted) {
-          setChores(queue)
-        }
-      } catch {
-        if (isMounted) {
-          setHasError(true)
-        }
-      }
-    }
+function useCurrentDayChoreQueueQuery() {
+  return useSuspenseQuery({
+    queryKey: ['chore-queue', 'current-day'],
+    queryFn: fetchCurrentDayChoreQueue,
+  })
+}
 
-    void loadQueue()
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
+function ChoreQueueContent() {
+  const { data: chores } = useCurrentDayChoreQueueQuery()
 
   return (
-    <main>
-      <h1>Required Chores</h1>
-      {hasError ? <p>Unable to load chore queue.</p> : null}
+    <>
       <ul aria-label="Current day chore queue">
         {chores.map((chore) => (
           <li key={chore.id}>{chore.name}</li>
         ))}
       </ul>
-    </main>
+      {chores.length === 0 ? <p>No chores due today.</p> : null}
+    </>
+  )
+}
+
+export default function ChoreQueuePage() {
+  return (
+    <>
+      <h1>Required Chores</h1>
+      <QueryErrorResetBoundary>
+        {({ reset }) => (
+          <ErrorBoundary
+            onReset={reset}
+            fallbackRender={({ resetErrorBoundary }) => (
+              <>
+                <p>Could not load chore queue.</p>
+                <button type="button" onClick={resetErrorBoundary}>
+                  Retry
+                </button>
+              </>
+            )}
+          >
+            <Suspense fallback={<p>Loading chore queue...</p>}>
+              <ChoreQueueContent />
+            </Suspense>
+          </ErrorBoundary>
+        )}
+      </QueryErrorResetBoundary>
+    </>
   )
 }

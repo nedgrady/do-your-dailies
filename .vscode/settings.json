@@ -14,5 +14,6 @@
   "chat.tools.terminal.autoApprove": {
     ".\\validate.ps1": true,
     "go": true
-  }
+  },
+  "chat.tools.terminal.enableAutoApprove": true
 }
