@@ -15,6 +15,7 @@ import (
 func (app *Application) setupRoutes() *chi.Mux {
 	router := chi.NewRouter()
 	logging.Apply(router)
+	router.Use(corsMiddleware)
 	router.Use(middleware.Recoverer)
 
 	router.Get("/health", healthCheck)
