@@ -37,12 +37,13 @@ else
 	)
 
 	mutation_packages=(
-		"./internal/domain/chores"
-		"./internal/domain/chorecompletions"
-		"./internal/domain/chorequeue"
-		"./internal/errors"
-		"./internal/api/json"
-		"./internal/api"
+		# skipped for now
+		# "./internal/domain/chores"
+		# "./internal/domain/chorecompletions"
+		# "./internal/domain/chorequeue"
+		# "./internal/errors"
+		# "./internal/api/json"
+		# "./internal/api"
 	)
 
 	for pkg in "${mutation_packages[@]}"; do

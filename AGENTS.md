@@ -24,3 +24,5 @@ Keep migrations outside per-test transactions to avoid DDL-in-transaction behavi
 Whenever you are writing a unit test you MUST use your `unit-test-writing` skill.
 
 Whenever you are adding frontend data fetching for a new endpoint you MUST use your `fetch-frontend-endpoint` skill.
+
+You may NOT use reflection without asking the user first.
