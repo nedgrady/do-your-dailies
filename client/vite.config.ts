@@ -6,7 +6,10 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 
 const config = defineConfig({
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    tsconfigPaths: true,
+    dedupe: ['react', 'react-dom'],
+  },
   plugins: [devtools(), tanstackStart(), viteReact()],
 })
 
