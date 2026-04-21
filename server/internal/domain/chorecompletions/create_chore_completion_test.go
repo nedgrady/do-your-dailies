@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"do-your-dailies/server/internal/domain/chores"
 	"do-your-dailies/server/internal/testhelpers"
@@ -101,4 +102,8 @@ type failingChoreCompletionStore struct{}
 
 func (failingChoreCompletionStore) Create(CreateRequest) (ChoreCompletion, error) {
 	return ChoreCompletion{}, errors.New("boom")
+}
+
+func (failingChoreCompletionStore) ListByDay(time.Time) ([]ChoreCompletion, error) {
+	return nil, errors.New("boom")
 }

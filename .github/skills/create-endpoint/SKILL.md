@@ -32,6 +32,13 @@ Use this workflow when implementing or extending a CRUD API resource.
 4. Use generated OpenAPI types in handlers.
 5. Keep JSON casing and strict decode behavior aligned with existing API conventions.
 
+## Date Query Rules
+
+1. When an endpoint accepts a day-based filter, use ISO 8601 date-only format (`YYYY-MM-DD`) in query parameters.
+2. Do not use time portions in date filters unless the user explicitly requests timestamp filtering.
+3. For list endpoints with optional date filters, default to today when omitted.
+4. Treat invalid date formats as bad request errors.
+
 ## Error Semantics
 
 1. Invalid JSON or unknown fields: return 422.

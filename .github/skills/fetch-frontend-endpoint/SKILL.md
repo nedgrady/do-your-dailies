@@ -128,6 +128,12 @@ Model rules:
 - API model: raw JSON shape, primitives only
 - Domain model: UI-friendly; may include Date, enums, derived fields
 
+Date handling rules:
+
+- For any date manipulation, use date-fns or standard JavaScript Date/Intl APIs.
+- Do not manually manipulate date strings (for example, no `slice`, substring slicing, or ad-hoc string parsing for date logic).
+- Prefer explicit formatting/parsing helpers over inline string transformations.
+
 ## 6. Component Rules (STRICT)
 
 ```tsx

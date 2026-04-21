@@ -25,3 +25,27 @@ a {
 main {
   min-height: 100vh;
 }
+
+.chore-queue-item {
+  list-style: none;
+  margin-bottom: 0.75rem;
+}
+
+.chore-queue-button {
+  width: 100%;
+  min-height: 4.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #d5d9df;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  color: #1f2a37;
+  text-align: left;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.chore-queue-button.is-complete {
+  color: #6b7280;
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}

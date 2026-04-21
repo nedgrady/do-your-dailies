@@ -10,10 +10,5 @@
       "source.organizeImports": "explicit"
     }
   },
-  "go.formatTool": "gofmt",
-  "chat.tools.terminal.autoApprove": {
-    ".\\validate.ps1": true,
-    "go": true
-  },
-  "chat.tools.terminal.enableAutoApprove": true
+  "go.formatTool": "gofmt"
 }

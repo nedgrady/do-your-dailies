@@ -13,3 +13,12 @@ func toAPIChoreCompletion(choreCompletion ChoreCompletion) contracts.ChoreComple
 		UpdatedAt: utctime.Time{Time: choreCompletion.UpdatedAt},
 	}
 }
+
+func toAPIChoreCompletions(choreCompletions []ChoreCompletion) []contracts.ChoreCompletion {
+	result := make([]contracts.ChoreCompletion, 0, len(choreCompletions))
+	for _, choreCompletion := range choreCompletions {
+		result = append(result, toAPIChoreCompletion(choreCompletion))
+	}
+
+	return result
+}
