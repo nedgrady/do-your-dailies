@@ -21,8 +21,12 @@ Do not rely on exact sequence values in Postgres-backed tests; sequence counters
 
 Keep migrations outside per-test transactions to avoid DDL-in-transaction behavior differences and noise.
 
-Whenever you are writing a unit test you MUST use your `unit-test-writing` skill.
+Whenever you are writing a Go unit test you MUST use your `golang-unit-test-writing` skill.
+
+Whenever you are writing a TypeScript unit test you MUST use your `typescript-unit-test-writing` skill.
 
 Whenever you are adding frontend data fetching for a new endpoint you MUST use your `fetch-frontend-endpoint` skill.
 
 You may NOT use reflection without asking the user first.
+
+Before any changes are done you MUST come up with a list of refactors for the user to consider to implement next.
