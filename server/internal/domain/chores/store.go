@@ -1,12 +1,16 @@
 package chores
 
-import "gorm.io/gorm"
+import (
+	"do-your-dailies/server/internal/domain/models"
+
+	"gorm.io/gorm"
+)
 
 type Store interface {
-	List() ([]Chore, error)
-	Create(req CreateRequest) (Chore, error)
-	Get(id uint) (Chore, error)
-	Update(id uint, req UpdateRequest) (Chore, error)
+	List() ([]models.Chore, error)
+	Create(req CreateRequest) (models.Chore, error)
+	Get(id uint) (models.Chore, error)
+	Update(id uint, req UpdateRequest) (models.Chore, error)
 	Delete(id uint) error
 }
 
@@ -18,14 +22,14 @@ func NewGormStore(db *gorm.DB) *GormStore {
 	return &GormStore{db: db}
 }
 
-func (store *GormStore) List() ([]Chore, error) {
-	var chores []Chore
+func (store *GormStore) List() ([]models.Chore, error) {
+	var chores []models.Chore
 	result := store.db.Find(&chores)
 	return chores, result.Error
 }
 
-func (store *GormStore) Create(req CreateRequest) (Chore, error) {
-	chore := Chore{
+func (store *GormStore) Create(req CreateRequest) (models.Chore, error) {
+	chore := models.Chore{
 		Name:          req.Name,
 		CadenceInDays: req.CadenceInDays,
 	}
@@ -33,14 +37,14 @@ func (store *GormStore) Create(req CreateRequest) (Chore, error) {
 	return chore, result.Error
 }
 
-func (store *GormStore) Get(id uint) (Chore, error) {
-	var chore Chore
+func (store *GormStore) Get(id uint) (models.Chore, error) {
+	var chore models.Chore
 	result := store.db.First(&chore, id)
 	return chore, result.Error
 }
 
-func (store *GormStore) Update(id uint, req UpdateRequest) (Chore, error) {
-	var chore Chore
+func (store *GormStore) Update(id uint, req UpdateRequest) (models.Chore, error) {
+	var chore models.Chore
 	if err := store.db.First(&chore, id).Error; err != nil {
 		return chore, err
 	}
@@ -55,7 +59,7 @@ func (store *GormStore) Update(id uint, req UpdateRequest) (Chore, error) {
 }
 
 func (store *GormStore) Delete(id uint) error {
-	result := store.db.Delete(&Chore{}, id)
+	result := store.db.Delete(&models.Chore{}, id)
 	if result.Error != nil {
 		return result.Error
 	}

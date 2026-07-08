@@ -9,12 +9,13 @@ import (
 	"time"
 
 	"do-your-dailies/server/internal/domain/chores"
+	"do-your-dailies/server/internal/domain/models"
 
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
-func TestListChoreCompletionsReturns200(t *testing.T) {
+func TestListmodesReturns200(t *testing.T) {
 	t.Parallel()
 	router, _ := newPostgresTestRouter(t)
 
@@ -24,7 +25,7 @@ func TestListChoreCompletionsReturns200(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
-func TestListChoreCompletionsReturnsJSONContentType(t *testing.T) {
+func TestListmodesReturnsJSONContentType(t *testing.T) {
 	t.Parallel()
 	router, _ := newPostgresTestRouter(t)
 
@@ -34,7 +35,7 @@ func TestListChoreCompletionsReturnsJSONContentType(t *testing.T) {
 	assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
 }
 
-func TestListChoreCompletionsFiltersByDate(t *testing.T) {
+func TestListmodesFiltersByDate(t *testing.T) {
 	t.Parallel()
 	router, database := newPostgresTestRouter(t)
 	chore := seedChore(t, database, "dishes", 1)
@@ -47,7 +48,7 @@ func TestListChoreCompletionsFiltersByDate(t *testing.T) {
 	assert.Equal(t, []uint64{uint64(chore.ID)}, choreIDsFromCompletionsBody(t, rr.Body.String()))
 }
 
-func TestListChoreCompletionsDefaultsToTodayUTC(t *testing.T) {
+func TestListmodesDefaultsToTodayUTC(t *testing.T) {
 	t.Parallel()
 	router, database := newPostgresTestRouter(t)
 	choreToday := seedChore(t, database, "dishes", 1)
@@ -63,7 +64,7 @@ func TestListChoreCompletionsDefaultsToTodayUTC(t *testing.T) {
 	assert.Equal(t, []uint64{uint64(choreToday.ID)}, choreIDsFromCompletionsBody(t, rr.Body.String()))
 }
 
-func TestListChoreCompletionsReturns400OnInvalidDate(t *testing.T) {
+func TestListmodesReturns400OnInvalidDate(t *testing.T) {
 	t.Parallel()
 	router, _ := newPostgresTestRouter(t)
 
@@ -73,7 +74,7 @@ func TestListChoreCompletionsReturns400OnInvalidDate(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
-func TestListChoreCompletionsReturns500OnStoreError(t *testing.T) {
+func TestListmodesReturns500OnStoreError(t *testing.T) {
 	t.Parallel()
 	_, database := newPostgresTestRouter(t)
 	router := newTestRouter(chores.NewGormStore(database), failingListStore{})
@@ -105,7 +106,7 @@ func choreIDsFromCompletionsBody(t *testing.T, body string) []uint64 {
 func seedCompletion(t *testing.T, database *gorm.DB, choreID uint, completedAt time.Time) {
 	t.Helper()
 
-	completion := ChoreCompletion{ChoreID: choreID}
+	completion := models.ChoreCompletion{ChoreID: choreID}
 	if err := database.Create(&completion).Error; err != nil {
 		t.Fatalf("seed chore completion: %v", err)
 	}
@@ -119,10 +120,10 @@ func seedCompletion(t *testing.T, database *gorm.DB, choreID uint, completedAt t
 
 type failingListStore struct{}
 
-func (failingListStore) Create(CreateRequest) (ChoreCompletion, error) {
-	return ChoreCompletion{}, nil
+func (failingListStore) Create(CreateRequest) (models.ChoreCompletion, error) {
+	return models.ChoreCompletion{}, nil
 }
 
-func (failingListStore) ListByDay(time.Time) ([]ChoreCompletion, error) {
+func (failingListStore) ListByDay(time.Time) ([]models.ChoreCompletion, error) {
 	return nil, errors.New("boom")
 }

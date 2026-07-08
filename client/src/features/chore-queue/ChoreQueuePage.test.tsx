@@ -2,7 +2,8 @@
 
 import { apiBaseUrl } from '#/lib/axios'
 import { server } from '#/mocks/server'
-import { fireEvent, render, screen } from '#/test-utils'
+import { render, screen } from '#/test-utils'
+import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import ChoreQueuePage from './ChoreQueuePage'
@@ -168,11 +169,13 @@ describe('chore queue page', () => {
     )
 
     render(<ChoreQueuePage />)
+    const user = userEvent.setup()
 
-    const dishesButton = await screen.findByRole('button', {
-      name: 'Mark Dishes as done',
-    })
-    fireEvent.click(dishesButton)
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'Mark Dishes as done',
+      }),
+    )
 
     expect(
       await screen.findByRole('button', { name: 'Dishes completed' }),
@@ -213,13 +216,14 @@ describe('chore queue page', () => {
     )
 
     render(<ChoreQueuePage />)
+    const user = userEvent.setup()
 
-    fireEvent.click(
+    await user.click(
       await screen.findByRole('button', { name: 'Mark Dishes as done' }),
     )
 
-    expect(
-      await screen.findByText('Could not mark this chore as done.'),
-    ).toBeTruthy()
+    expect((await screen.findByRole('alert')).textContent).toEqual(
+      'Could not mark this chore as done.',
+    )
   })
 })

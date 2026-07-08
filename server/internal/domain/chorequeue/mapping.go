@@ -2,11 +2,11 @@ package chorequeue
 
 import (
 	"do-your-dailies/server/internal/contracts"
-	"do-your-dailies/server/internal/domain/chores"
+	"do-your-dailies/server/internal/domain/models"
 	"do-your-dailies/server/internal/utctime"
 )
 
-func toAPIChores(queue []chores.Chore) []contracts.Chore {
+func toAPIChores(queue []models.Chore) []contracts.Chore {
 	result := make([]contracts.Chore, 0, len(queue))
 	for _, chore := range queue {
 		result = append(result, contracts.Chore{

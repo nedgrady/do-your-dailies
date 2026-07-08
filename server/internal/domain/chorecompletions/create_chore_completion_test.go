@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"do-your-dailies/server/internal/domain/chores"
+	"do-your-dailies/server/internal/domain/models"
 	"do-your-dailies/server/internal/testhelpers"
 
 	"github.com/stretchr/testify/assert"
@@ -100,10 +101,10 @@ func TestCreateChoreCompletionReturns404WhenChoreDoesNotExist(t *testing.T) {
 
 type failingChoreCompletionStore struct{}
 
-func (failingChoreCompletionStore) Create(CreateRequest) (ChoreCompletion, error) {
-	return ChoreCompletion{}, errors.New("boom")
+func (failingChoreCompletionStore) Create(CreateRequest) (models.ChoreCompletion, error) {
+	return models.ChoreCompletion{}, errors.New("boom")
 }
 
-func (failingChoreCompletionStore) ListByDay(time.Time) ([]ChoreCompletion, error) {
+func (failingChoreCompletionStore) ListByDay(time.Time) ([]models.ChoreCompletion, error) {
 	return nil, errors.New("boom")
 }

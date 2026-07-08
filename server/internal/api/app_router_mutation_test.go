@@ -6,8 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"do-your-dailies/server/internal/domain/chorecompletions"
-	"do-your-dailies/server/internal/domain/chores"
+	"do-your-dailies/server/internal/domain/models"
 	"do-your-dailies/server/internal/testhelpers"
 
 	"github.com/stretchr/testify/assert"
@@ -96,5 +95,5 @@ func TestRouterRecoversWhenChoreStoreIsNil(t *testing.T) {
 }
 
 func migrateForAPITests(database *gorm.DB) error {
-	return database.AutoMigrate(&chores.Chore{}, &chorecompletions.ChoreCompletion{})
+	return database.AutoMigrate(&models.Chore{}, &models.ChoreCompletion{})
 }

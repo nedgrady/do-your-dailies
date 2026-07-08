@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"do-your-dailies/server/internal/domain/chores"
+	"do-your-dailies/server/internal/domain/models"
 	"do-your-dailies/server/internal/testhelpers"
 
 	"github.com/go-chi/chi/v5"
@@ -23,10 +24,10 @@ func newPostgresTestRouter(t *testing.T) (*chi.Mux, *gorm.DB) {
 	return newTestRouter(chores.NewGormStore(database), NewGormStore(database)), database
 }
 
-func seedChore(t *testing.T, database *gorm.DB, name string, cadenceInDays int) chores.Chore {
+func seedChore(t *testing.T, database *gorm.DB, name string, cadenceInDays int) models.Chore {
 	t.Helper()
 
-	chore := chores.Chore{Name: name, CadenceInDays: cadenceInDays}
+	chore := models.Chore{Name: name, CadenceInDays: cadenceInDays}
 	if err := database.Create(&chore).Error; err != nil {
 		t.Fatalf("seed chore: %v", err)
 	}
@@ -39,5 +40,5 @@ func itoa(input uint) string {
 }
 
 func migrate(database *gorm.DB) error {
-	return database.AutoMigrate(&chores.Chore{}, &ChoreCompletion{})
+	return database.AutoMigrate(&models.Chore{}, &models.ChoreCompletion{})
 }

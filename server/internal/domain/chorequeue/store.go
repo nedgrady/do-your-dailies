@@ -1,15 +1,14 @@
 package chorequeue
 
 import (
+	"do-your-dailies/server/internal/domain/models"
 	"time"
-
-	"do-your-dailies/server/internal/domain/chores"
 
 	"gorm.io/gorm"
 )
 
 type Store interface {
-	List(targetDay time.Time, maxChores int) ([]chores.Chore, error)
+	List(targetDay time.Time, maxChores int) ([]models.Chore, error)
 }
 
 type GormStore struct {
@@ -20,8 +19,8 @@ func NewGormStore(db *gorm.DB) *GormStore {
 	return &GormStore{db: db}
 }
 
-func (store *GormStore) List(targetDay time.Time, maxChores int) ([]chores.Chore, error) {
-	var choreRows []chores.Chore
+func (store *GormStore) List(targetDay time.Time, maxChores int) ([]models.Chore, error) {
+	var choreRows []models.Chore
 	if err := store.db.Find(&choreRows).Error; err != nil {
 		return nil, err
 	}

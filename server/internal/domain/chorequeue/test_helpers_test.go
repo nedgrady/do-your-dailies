@@ -4,8 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"do-your-dailies/server/internal/domain/chorecompletions"
-	"do-your-dailies/server/internal/domain/chores"
+	"do-your-dailies/server/internal/domain/models"
 	"do-your-dailies/server/internal/testhelpers"
 
 	"github.com/go-chi/chi/v5"
@@ -23,19 +22,19 @@ func newTestRouter(store Store, now func() time.Time) *chi.Mux {
 func newPostgresTestRouter(t *testing.T) (*chi.Mux, *gorm.DB) {
 	t.Helper()
 	database := testhelpers.NewTransactionDB(t, migrate)
-	if err := database.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&chorecompletions.ChoreCompletion{}).Error; err != nil {
+	if err := database.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&models.ChoreCompletion{}).Error; err != nil {
 		t.Fatalf("clear chore completions: %v", err)
 	}
-	if err := database.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&chores.Chore{}).Error; err != nil {
+	if err := database.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&models.Chore{}).Error; err != nil {
 		t.Fatalf("clear chores: %v", err)
 	}
 	return newTestRouter(NewGormStore(database), fixedNow), database
 }
 
-func seedChoreWithCompletion(t *testing.T, database *gorm.DB, name string, cadenceInDays int, createdDayOffset int, completedDayOffset *int) {
+func seedChoreWithCompletion(t *testing.T, database *gorm.DB, name string, cadenceInDays int, createdDayOffset int, completedDayOffset int) {
 	t.Helper()
 
-	chore := chores.Chore{Name: name, CadenceInDays: cadenceInDays}
+	chore := models.Chore{Name: name, CadenceInDays: cadenceInDays}
 	if err := database.Create(&chore).Error; err != nil {
 		t.Fatalf("seed chore: %v", err)
 	}
@@ -44,15 +43,15 @@ func seedChoreWithCompletion(t *testing.T, database *gorm.DB, name string, caden
 		t.Fatalf("set chore timestamps: %v", err)
 	}
 
-	if completedDayOffset == nil {
+	if completedDayOffset == 0 {
 		return
 	}
 
-	completion := chorecompletions.ChoreCompletion{ChoreID: chore.ID}
+	completion := models.ChoreCompletion{ChoreID: chore.ID}
 	if err := database.Create(&completion).Error; err != nil {
 		t.Fatalf("seed chore completion: %v", err)
 	}
-	completedAt := day(*completedDayOffset)
+	completedAt := day(completedDayOffset)
 	if err := database.Model(&completion).Updates(map[string]any{"created_at": completedAt, "updated_at": completedAt}).Error; err != nil {
 		t.Fatalf("set completion timestamps: %v", err)
 	}
@@ -63,5 +62,5 @@ func fixedNow() time.Time {
 }
 
 func migrate(database *gorm.DB) error {
-	return database.AutoMigrate(&chores.Chore{}, &chorecompletions.ChoreCompletion{})
+	return database.AutoMigrate(&models.Chore{}, &models.ChoreCompletion{})
 }

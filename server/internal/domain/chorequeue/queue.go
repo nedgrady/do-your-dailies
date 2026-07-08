@@ -1,18 +1,17 @@
 package chorequeue
 
 import (
+	"do-your-dailies/server/internal/domain/models"
 	"sort"
 	"time"
-
-	"do-your-dailies/server/internal/domain/chores"
 )
 
 type Candidate struct {
-	Chore           chores.Chore
+	Chore           models.Chore
 	LastCompletedAt *time.Time
 }
 
-func BuildQueue(candidates []Candidate, targetDay time.Time, maxChores int) []chores.Chore {
+func BuildQueue(candidates []Candidate, targetDay time.Time, maxChores int) []models.Chore {
 	targetDay = startOfDayUTC(targetDay)
 	ranked := make([]rankedChore, 0, len(candidates))
 
@@ -57,7 +56,7 @@ func BuildQueue(candidates []Candidate, targetDay time.Time, maxChores int) []ch
 		ranked = ranked[:maxChores]
 	}
 
-	queue := make([]chores.Chore, 0, len(ranked))
+	queue := make([]models.Chore, 0, len(ranked))
 	for _, item := range ranked {
 		queue = append(queue, item.chore)
 	}
@@ -66,7 +65,7 @@ func BuildQueue(candidates []Candidate, targetDay time.Time, maxChores int) []ch
 }
 
 type rankedChore struct {
-	chore        chores.Chore
+	chore        models.Chore
 	dueDay       time.Time
 	overdueScore float64
 }

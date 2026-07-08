@@ -1,6 +1,7 @@
 package chorequeue
 
 import (
+	"do-your-dailies/server/internal/domain/models"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,8 +9,6 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
-
-	"do-your-dailies/server/internal/domain/chores"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -37,9 +36,9 @@ func TestListChoreQueueReturnsJSONContentType(t *testing.T) {
 func TestListChoreQueueReturnsOrderedChores(t *testing.T) {
 	t.Parallel()
 	router, database := newPostgresTestRouter(t)
-	seedChoreWithCompletion(t, database, "bathroom", 30, -100, intPtr(-40))
-	seedChoreWithCompletion(t, database, "dishes", 1, -100, intPtr(-1))
-	seedChoreWithCompletion(t, database, "vacuum", 7, -100, intPtr(-8))
+	seedChoreWithCompletion(t, database, "bathroom", 30, -100, -40)
+	seedChoreWithCompletion(t, database, "dishes", 1, -100, -1)
+	seedChoreWithCompletion(t, database, "vacuum", 7, -100, -8)
 
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chore-queue/", nil))
@@ -50,10 +49,10 @@ func TestListChoreQueueReturnsOrderedChores(t *testing.T) {
 func TestListChoreQueueAppliesMaxChores(t *testing.T) {
 	t.Parallel()
 	router, database := newPostgresTestRouter(t)
-	seedChoreWithCompletion(t, database, "bathroom", 30, -100, intPtr(-40))
-	seedChoreWithCompletion(t, database, "dishes", 1, -100, intPtr(-1))
-	seedChoreWithCompletion(t, database, "vacuum", 7, -100, intPtr(-8))
-	seedChoreWithCompletion(t, database, "bins", 7, -100, intPtr(-20))
+	seedChoreWithCompletion(t, database, "bathroom", 30, -100, -40)
+	seedChoreWithCompletion(t, database, "dishes", 1, -100, -1)
+	seedChoreWithCompletion(t, database, "vacuum", 7, -100, -8)
+	seedChoreWithCompletion(t, database, "bins", 7, -100, -20)
 
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chore-queue/?maxChores=2", nil))
@@ -93,7 +92,7 @@ func TestListChoreQueueReturns500OnStoreError(t *testing.T) {
 
 type failingStore struct{}
 
-func (failingStore) List(targetDay time.Time, maxChores int) ([]chores.Chore, error) {
+func (failingStore) List(targetDay time.Time, maxChores int) ([]models.Chore, error) {
 	return nil, errors.New("boom")
 }
 
@@ -122,7 +121,7 @@ func TestListChoreQueueRespectsDefaultMaxChores(t *testing.T) {
 	// seed more than defaultMaxChores chores that are due
 	total := defaultMaxChores + 2
 	for i := 0; i < total; i++ {
-		seedChoreWithCompletion(t, database, fmt.Sprintf("task-%d", i), 1, -100, intPtr(-1))
+		seedChoreWithCompletion(t, database, fmt.Sprintf("task-%d", i), 1, -100, -1)
 	}
 
 	rr := httptest.NewRecorder()
