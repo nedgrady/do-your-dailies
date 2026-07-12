@@ -2,18 +2,21 @@ package chorecompletions
 
 import (
 	"net/http"
+	"slices"
 	"time"
 
 	apijson "do-your-dailies/server/internal/api/json"
 	"do-your-dailies/server/internal/contracts"
+	chorequeue "do-your-dailies/server/internal/domain/chorequeue"
 	"do-your-dailies/server/internal/domain/chores"
 	apperrors "do-your-dailies/server/internal/errors"
 )
 
 type Handler struct {
-	ChoreStore chores.Store
-	Now        func() time.Time
-	Store      Store
+	ChoreStore      chores.Store
+	ChoreQueueStore chorequeue.Store
+	Now             func() time.Time
+	Store           Store
 }
 
 func NewHandler(choreStore chores.Store, store Store) Handler {
@@ -46,6 +49,20 @@ func (handler Handler) create(w http.ResponseWriter, r *http.Request) {
 	if _, err := handler.ChoreStore.Get(uint(req.ChoreId)); err != nil {
 		apperrors.Write(w, apperrors.MapStoreError(err))
 		return
+	}
+
+	choreQueue, err := handler.ChoreQueueStore.ListForCapacityFirstUser(5)
+	if err != nil {
+		apperrors.Write(w, apperrors.Internal(err))
+		return
+	}
+
+	isChoreInQueue := slices.ContainsFunc(choreQueue, func(choreInQueue chorequeue.ChoreInQueue) bool {
+		return choreInQueue.ChoreID == uint(req.ChoreId)
+	})
+
+	if isChoreInQueue  {
+		
 	}
 
 	choreCompletion, err := handler.Store.Create(CreateRequest{ChoreID: uint(req.ChoreId)})

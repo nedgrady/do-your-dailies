@@ -96,6 +96,10 @@ func (failingStore) List(targetDay time.Time, maxChores int) ([]models.Chore, er
 	return nil, errors.New("boom")
 }
 
+func (failingStore) ListForCapacityFirstUser(maxChores int) ([]ChoreInQueue, error) {
+	return nil, errors.New("boom")
+}
+
 func queueNamesFromBody(t *testing.T, body string) []string {
 	t.Helper()
 
@@ -134,7 +138,7 @@ func TestListChoreQueueRespectsDefaultMaxChores(t *testing.T) {
 func TestDefaultMaxChoresValue(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, 10, defaultMaxChores)
+	assert.Equal(t, 5, defaultMaxChores)
 }
 
 func TestListChoreQueueAcceptsMaxChoresOne(t *testing.T) {

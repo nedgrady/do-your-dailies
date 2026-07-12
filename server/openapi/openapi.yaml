@@ -131,11 +131,6 @@ paths:
     get:
       operationId: listChoreQueue
       parameters:
-        - name: dayOffset
-          in: query
-          required: false
-          schema:
-            type: integer
         - name: maxChores
           in: query
           required: false
@@ -149,7 +144,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Chore"
+                  $ref: "#/components/schemas/ChoreInQueue"
         "400":
           description: Invalid query parameter
 components:
@@ -175,6 +170,30 @@ components:
           type: string
           format: date-time
         updatedAt:
+          type: string
+          format: date-time
+    ChoreInQueue:
+      type: object
+      required:
+        - choreId
+        - choreName
+        - cadenceInDays
+        - priority
+      properties:
+        choreId:
+          type: integer
+          format: uint64
+        choreName:
+          type: string
+        cadenceInDays:
+          type: integer
+          minimum: 1
+        priority:
+          type: number
+        latestCompletionId:
+          type: integer
+          format: uint64
+        lastCompletedAt:
           type: string
           format: date-time
     CreateChoreRequest:

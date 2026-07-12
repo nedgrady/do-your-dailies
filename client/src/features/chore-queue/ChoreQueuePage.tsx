@@ -17,7 +17,17 @@ const apiChoreSchema = z.object({
   updatedAt: z.iso.datetime(),
 })
 
-const apiChoreQueueSchema = z.array(apiChoreSchema)
+const apiChoreInQueueSchema = z.object({
+  choreId: z.number().int().nonnegative(),
+  choreName: z.string(),
+  cadenceInDays: z.number().int().positive(),
+  priority: z.number(),
+  latestCompletionId: z.number().int().nonnegative().optional(),
+  lastCompletedAt: z.iso.datetime().optional(),
+})
+
+const apiChoresSchema = z.array(apiChoreSchema)
+const apiChoreQueueSchema = z.array(apiChoreInQueueSchema)
 
 const apiChoreCompletionSchema = z.object({
   id: z.number().int().nonnegative(),
@@ -41,6 +51,15 @@ type ChoreCompletion = {
   choreId: number
   createdAt: Date
   updatedAt: Date
+}
+
+type ChoreInQueue = {
+  cadenceInDays: number
+  choreId: number
+  choreName: string
+  lastCompletedAt?: Date
+  latestCompletionId?: number
+  priority: number
 }
 
 const utcDateFormatter = new Intl.DateTimeFormat('sv-SE', {
@@ -68,20 +87,35 @@ function mapApiChoreCompletionToDomain(
   }
 }
 
+function mapApiChoreInQueueToDomain(
+  apiChoreInQueue: z.infer<typeof apiChoreInQueueSchema>,
+): ChoreInQueue {
+  return {
+    cadenceInDays: apiChoreInQueue.cadenceInDays,
+    choreId: apiChoreInQueue.choreId,
+    choreName: apiChoreInQueue.choreName,
+    lastCompletedAt: apiChoreInQueue.lastCompletedAt
+      ? new Date(apiChoreInQueue.lastCompletedAt)
+      : undefined,
+    latestCompletionId: apiChoreInQueue.latestCompletionId,
+    priority: apiChoreInQueue.priority,
+  }
+}
+
 function formatUTCDateOnly(input: Date): string {
   return utcDateFormatter.format(input)
 }
 
-async function fetchCurrentDayChoreQueue(): Promise<Chore[]> {
+async function fetchCurrentDayChoreQueue(): Promise<ChoreInQueue[]> {
   const response = await axios.get('/api/chore-queue')
   const apiChores = apiChoreQueueSchema.parse(response.data)
 
-  return apiChores.map(mapApiChoreToDomain)
+  return apiChores.map(mapApiChoreInQueueToDomain)
 }
 
 async function fetchAllChores(): Promise<Chore[]> {
   const response = await axios.get('/api/chores')
-  const apiChores = apiChoreQueueSchema.parse(response.data)
+  const apiChores = apiChoresSchema.parse(response.data)
 
   return apiChores.map(mapApiChoreToDomain)
 }
@@ -156,7 +190,7 @@ function ChoreQueueContent() {
       choresByID.set(chore.id, chore)
     })
 
-    const queueChoreIDs = new Set<number>(chores.map((chore) => chore.id))
+    const queueChoreIDs = new Set<number>(chores.map((chore) => chore.choreId))
     const completedNotInQueue = completions
       .filter((completion) => !queueChoreIDs.has(completion.choreId))
       .map((completion) => choresByID.get(completion.choreId))
@@ -168,7 +202,7 @@ function ChoreQueueContent() {
   const isDayOff = displayedChores.length === 0
   const isAllDone =
     chores.length > 0 &&
-    chores.every((chore) => completedChoreIDs.has(chore.id))
+    chores.every((chore) => completedChoreIDs.has(chore.choreId))
 
   async function handleMarkDone(choreID: number) {
     setCompletionErrorsByChoreID((current) => ({ ...current, [choreID]: '' }))
@@ -198,7 +232,8 @@ function ChoreQueueContent() {
           </p>
         ) : null}
         <ul aria-label="Current day chore queue">
-          {displayedChores.map((chore) => (
+          <p>TODO</p>
+          {/* {displayedChores.map((chore) => (
             <li key={chore.id} className="chore-queue-item">
               <button
                 type="button"
@@ -221,7 +256,7 @@ function ChoreQueueContent() {
                 <p role="alert">{completionErrorsByChoreID[chore.id]}</p>
               ) : null}
             </li>
-          ))}
+          ))} */}
         </ul>
       </section>
     </main>

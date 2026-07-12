@@ -69,11 +69,10 @@ describe('chore queue page', () => {
       http.get(`${apiBaseUrl}/api/chore-queue`, () => {
         return HttpResponse.json([
           {
-            id: 1,
-            name: 'Dishes',
+            choreId: 1,
+            choreName: 'Dishes',
             cadenceInDays: 1,
-            createdAt: '2026-04-01T00:00:00Z',
-            updatedAt: '2026-04-01T00:00:00Z',
+            priority: 1,
           },
         ])
       }),
@@ -114,11 +113,10 @@ describe('chore queue page', () => {
       http.get(`${apiBaseUrl}/api/chore-queue`, () => {
         return HttpResponse.json([
           {
-            id: 1,
-            name: 'Dishes',
+            choreId: 1,
+            choreName: 'Dishes',
             cadenceInDays: 1,
-            createdAt: '2026-04-01T00:00:00Z',
-            updatedAt: '2026-04-01T00:00:00Z',
+            priority: 1,
           },
         ])
       }),
@@ -188,11 +186,10 @@ describe('chore queue page', () => {
       http.get(`${apiBaseUrl}/api/chore-queue`, () => {
         return HttpResponse.json([
           {
-            id: 1,
-            name: 'Dishes',
+            choreId: 1,
+            choreName: 'Dishes',
             cadenceInDays: 1,
-            createdAt: '2026-04-01T00:00:00Z',
-            updatedAt: '2026-04-01T00:00:00Z',
+            priority: 1,
           },
         ])
       }),

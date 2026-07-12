@@ -7,8 +7,47 @@ import (
 	"gorm.io/gorm"
 )
 
+type QueueItem interface {
+	GetChore() models.Chore
+	GetLatestCompletion() models.ChoreCompletion
+	CompletionRatio() float64
+	DueDate() time.Time
+}
+
+type choreQueueItem struct {
+	chore            *models.Chore
+	latestCompletion *models.ChoreCompletion
+}
+
+func (item *choreQueueItem) GetChore() models.Chore {
+	return *item.chore
+}
+
+func (item *choreQueueItem) GetLatestCompletion() models.ChoreCompletion {
+	if item.latestCompletion != nil {
+		return *item.latestCompletion
+	}
+	return models.ChoreCompletion{}
+}
+
+func (item *choreQueueItem) CompletionRatio() float64 {
+	if item.latestCompletion == nil {
+		return 0.0
+	}
+	daysSinceLastCompletion := time.Since(item.latestCompletion.CreatedAt).Hours() / 24.0
+	return daysSinceLastCompletion / float64(item.chore.CadenceInDays)
+}
+
+func (item *choreQueueItem) DueDate() time.Time {
+	if item.latestCompletion == nil {
+		return item.chore.CreatedAt.AddDate(0, 0, item.chore.CadenceInDays)
+	}
+	return item.latestCompletion.CreatedAt.AddDate(0, 0, item.chore.CadenceInDays)
+}
+
 type Store interface {
 	List(targetDay time.Time, maxChores int) ([]models.Chore, error)
+	ListForCapacityFirstUser(maxChores int) ([]ChoreInQueue, error)
 }
 
 type GormStore struct {
@@ -20,37 +59,54 @@ func NewGormStore(db *gorm.DB) *GormStore {
 }
 
 func (store *GormStore) List(targetDay time.Time, maxChores int) ([]models.Chore, error) {
-	var choreRows []models.Chore
-	if err := store.db.Find(&choreRows).Error; err != nil {
-		return nil, err
-	}
-
-	latestCompletionByChoreID := map[uint]time.Time{}
-	var completionRows []latestCompletionRow
-	if err := store.db.Table("chore_completions").
-		Select("chore_id, MAX(created_at) AS last_completed_at").
-		Group("chore_id").
-		Scan(&completionRows).Error; err != nil {
-		return nil, err
-	}
-	for _, row := range completionRows {
-		latestCompletionByChoreID[row.ChoreID] = row.LastCompletedAt
-	}
-
-	candidates := make([]Candidate, 0, len(choreRows))
-	for _, chore := range choreRows {
-		candidate := Candidate{Chore: chore}
-		if lastCompletedAt, ok := latestCompletionByChoreID[chore.ID]; ok {
-			completedAt := lastCompletedAt
-			candidate.LastCompletedAt = &completedAt
-		}
-		candidates = append(candidates, candidate)
-	}
-
-	return BuildQueue(candidates, targetDay, maxChores), nil
+	return make([]models.Chore, 0), nil
 }
 
-type latestCompletionRow struct {
-	ChoreID         uint
-	LastCompletedAt time.Time
+type ChoreInQueue struct {
+	ChoreID            uint      `gorm:"column:id"`
+	ChoreName          string    `gorm:"column:name"`
+	CadenceInDays      int       `gorm:"column:cadence_in_days"`
+	Priority           float64   `gorm:"column:priority"`
+	LatestCompletionID uint      `gorm:"column:latest_completion_id"`
+	LastCompletedAt    time.Time `gorm:"column:latest_completion_created_at"`
+}
+
+func (store *GormStore) ListForCapacityFirstUser(maxChores int) ([]ChoreInQueue, error) {
+
+	// first get all the chores
+	var allChoresForUserWithLatestCompletion []ChoreInQueue
+
+	err := store.db.Raw(`
+SELECT
+    chores.id,
+    chores.name,
+    chores.cadence_in_days,
+    latest_completion.id AS latest_completion_id,
+    latest_completion.created_at AS latest_completion_created_at,
+    (
+        EXTRACT(EPOCH FROM COALESCE(
+            latest_completion.duration_since_last_completed,
+            NOW() - chores.created_at
+        )) / (chores.cadence_in_days * 86400)
+    ) AS priority
+FROM chores
+LEFT JOIN LATERAL (
+    SELECT
+        id,
+        created_at,
+        NOW() - created_at AS duration_since_last_completed
+    FROM chore_completions
+    WHERE chore_id = chores.id
+    ORDER BY created_at DESC
+    LIMIT 1
+) latest_completion ON true
+ORDER BY priority DESC
+LIMIT ?;
+	`, maxChores).Scan(&allChoresForUserWithLatestCompletion).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return allChoresForUserWithLatestCompletion, nil
 }
