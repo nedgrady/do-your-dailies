@@ -31,7 +31,7 @@ func (app *Application) setupRoutes() *chi.Mux {
 		app.Db,
 	)
 
-	choreQueueHandler := chorequeue.NewHandler(app.ChoreQueueStore)
+	choreQueueHandler := chorequeue.NewHandler(app.ChoreQueueStore, app.ChoreInQueueCompletionStore)
 
 	router.Route("/api", func(router chi.Router) {
 		router.Route("/chores", choreHandler.RegisterRoutes)

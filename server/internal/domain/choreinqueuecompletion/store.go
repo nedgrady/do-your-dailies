@@ -2,6 +2,7 @@ package choreinqueuecompletion
 
 import (
 	"do-your-dailies/server/internal/domain/models"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -12,6 +13,7 @@ type CreateRequest struct {
 
 type Store interface {
 	Create(req CreateRequest) (models.ChoreInQueueCompletion, error)
+	ListBetween(from time.Time, to time.Time) ([]models.ChoreInQueueCompletion, error)
 }
 
 type GormStore struct {
@@ -29,4 +31,14 @@ func (store *GormStore) Create(req CreateRequest) (models.ChoreInQueueCompletion
 	}
 
 	return record, nil
+}
+
+func (store *GormStore) ListBetween(from time.Time, to time.Time) ([]models.ChoreInQueueCompletion, error) {
+	var records []models.ChoreInQueueCompletion
+
+	if err := store.db.Where("created_at >= ? AND created_at < ?", from, to).Find(&records).Error; err != nil {
+		return []models.ChoreInQueueCompletion{}, err
+	}
+
+	return records, nil
 }

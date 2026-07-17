@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"do-your-dailies/server/internal/domain/choreinqueuecompletion"
 	"do-your-dailies/server/internal/domain/models"
 	"do-your-dailies/server/internal/testhelpers"
 
@@ -11,9 +12,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func newTestRouter(store Store, now func() time.Time) *chi.Mux {
+func newTestRouter(store Store, now func() time.Time, choreInQueueCompletionStore choreinqueuecompletion.Store) *chi.Mux {
 	router := chi.NewRouter()
-	handler := NewHandler(store)
+	handler := NewHandler(store, choreInQueueCompletionStore)
 	handler.Now = now
 	router.Route("/api/chore-queue", handler.RegisterRoutes)
 	return router
@@ -28,7 +29,7 @@ func newPostgresTestRouter(t *testing.T) (*chi.Mux, *gorm.DB) {
 	if err := database.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&models.Chore{}).Error; err != nil {
 		t.Fatalf("clear chores: %v", err)
 	}
-	return newTestRouter(NewGormStore(database), fixedNow), database
+	return newTestRouter(NewGormStore(database), fixedNow, choreinqueuecompletion.NewGormStore(database)), database
 }
 
 func seedChoreWithCompletion(t *testing.T, database *gorm.DB, name string, cadenceInDays int, createdDayOffset int, completedDayOffset int) {

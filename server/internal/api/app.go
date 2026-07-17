@@ -21,6 +21,11 @@ type Application struct {
 
 func New(db *gorm.DB) *Application {
 	app := &Application{}
+
+	if db == nil {
+		panic("db is nil")
+	}
+
 	if db != nil {
 		app.ChoreStore = chores.NewGormStore(db)
 		app.ChoreCompletionStore = chorecompletions.NewGormStore(db)

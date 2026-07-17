@@ -1,6 +1,7 @@
 package chorequeue
 
 import (
+	"do-your-dailies/server/internal/domain/choreinqueuecompletion"
 	"do-your-dailies/server/internal/domain/models"
 	"encoding/json"
 	"errors"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func TestListChoreQueueReturns200(t *testing.T) {
@@ -82,7 +84,7 @@ func TestListChoreQueueReturns400OnInvalidMaxChores(t *testing.T) {
 
 func TestListChoreQueueReturns500OnStoreError(t *testing.T) {
 	t.Parallel()
-	router := newTestRouter(failingStore{}, fixedNow)
+	router := newTestRouter(failingStore{}, fixedNow, choreinqueuecompletion.NewGormStore(&gorm.DB{}))
 
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chore-queue/", nil))
