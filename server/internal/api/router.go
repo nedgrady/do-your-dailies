@@ -23,7 +23,14 @@ func (app *Application) setupRoutes() *chi.Mux {
 	swagger.RegisterRoutes(router)
 
 	choreHandler := chores.NewHandler(app.ChoreStore)
-	choreCompletionHandler := chorecompletions.NewHandler(app.ChoreStore, app.ChoreCompletionStore)
+
+	choreCompletionHandler := chorecompletions.NewHandler(
+		app.ChoreStore,
+		app.ChoreCompletionStore,
+		app.ChoreInQueueCompletionStore,
+		app.Db,
+	)
+
 	choreQueueHandler := chorequeue.NewHandler(app.ChoreQueueStore)
 
 	router.Route("/api", func(router chi.Router) {

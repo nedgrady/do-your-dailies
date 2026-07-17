@@ -7,20 +7,25 @@ import (
 
 	apijson "do-your-dailies/server/internal/api/json"
 	"do-your-dailies/server/internal/contracts"
+	"do-your-dailies/server/internal/domain/choreinqueuecompletion"
 	chorequeue "do-your-dailies/server/internal/domain/chorequeue"
 	"do-your-dailies/server/internal/domain/chores"
 	apperrors "do-your-dailies/server/internal/errors"
+
+	"gorm.io/gorm"
 )
 
 type Handler struct {
-	ChoreStore      chores.Store
-	ChoreQueueStore chorequeue.Store
-	Now             func() time.Time
-	Store           Store
+	ChoreStore                  chores.Store
+	ChoreQueueStore             chorequeue.Store
+	ChoreInQueueCompletionStore choreinqueuecompletion.Store
+	Now                         func() time.Time
+	Store                       Store
+	Db                          *gorm.DB
 }
 
-func NewHandler(choreStore chores.Store, store Store) Handler {
-	return Handler{ChoreStore: choreStore, Now: time.Now, Store: store}
+func NewHandler(choreStore chores.Store, store Store, choreInQueueCompletionStore choreinqueuecompletion.Store, db *gorm.DB) Handler {
+	return Handler{ChoreStore: choreStore, Now: time.Now, Store: store, ChoreInQueueCompletionStore: choreInQueueCompletionStore, Db: db}
 }
 
 func (handler Handler) list(w http.ResponseWriter, r *http.Request) {
@@ -61,8 +66,8 @@ func (handler Handler) create(w http.ResponseWriter, r *http.Request) {
 		return choreInQueue.ChoreID == uint(req.ChoreId)
 	})
 
-	if isChoreInQueue  {
-		
+	if isChoreInQueue {
+		handler.ChoreInQueueCompletionStore.Create(choreinqueuecompletion.CreateRequest{ChoreCompletionID: uint(req.ChoreId)})
 	}
 
 	choreCompletion, err := handler.Store.Create(CreateRequest{ChoreID: uint(req.ChoreId)})

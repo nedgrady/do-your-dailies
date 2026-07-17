@@ -13,6 +13,7 @@ func main() {
 	dsn := "host=localhost user=postgres password=postgres dbname=dailies port=5432 sslmode=disable"
 
 	database, err := db.New(dsn)
+
 	if err != nil {
 		log.Fatal("failed to connect to database:", err)
 	}
