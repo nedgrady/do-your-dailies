@@ -9,7 +9,6 @@ import {
   Typography,
 } from '@mui/material'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
-import { sub } from 'date-fns'
 import { Suspense } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { nullChore, useAllChoresQuery, type Chore } from '../../domain/chore'
@@ -21,11 +20,6 @@ import {
   useCurrentDayChoreQueueQuery,
   type ChoreInQueue,
 } from '../../domain/choreQueue'
-
-const lastDayRange = {
-  from: sub(new Date(), { days: 1 }),
-  to: new Date(),
-}
 
 function ChoreQueueContent() {
   const { data: allChoresLookup = [] } = useAllChoresQuery()

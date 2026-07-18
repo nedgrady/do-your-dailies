@@ -91,15 +91,21 @@ paths:
     get:
       operationId: listChoreCompletions
       parameters:
-        - name: date
+        - name: start
           in: query
-          required: false
+          required: true
           schema:
             type: string
-            format: date
+            format: date-time
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
       responses:
         "200":
-          description: List chore completions for a date
+          description: List chore completions created between start and end
           content:
             application/json:
               schema:
@@ -107,7 +113,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/ChoreCompletion"
         "400":
-          description: Invalid date query parameter
+          description: Missing or invalid start/end query parameters
     post:
       operationId: createChoreCompletion
       requestBody:
