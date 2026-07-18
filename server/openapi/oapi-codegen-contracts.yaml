@@ -1,6 +1,8 @@
 package: contracts
 generate:
   models: true
+  chi-server: true
+  strict-server: true
 output: ../contracts/openapi_types.gen.go
 output-options:
   skip-prune: true

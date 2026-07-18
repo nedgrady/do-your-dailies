@@ -1,118 +1,89 @@
 package chores
 
 import (
+	"context"
 	"errors"
-	"net/http"
-	"strconv"
 
-	apijson "do-your-dailies/server/internal/api/json"
 	"do-your-dailies/server/internal/contracts"
-	apperrors "do-your-dailies/server/internal/errors"
 
-	"github.com/go-chi/chi/v5"
+	"gorm.io/gorm"
 )
 
-type Handler struct {
+type ChoreHandler struct {
 	Store Store
 }
 
-func NewHandler(store Store) Handler {
-	return Handler{Store: store}
+func NewHandler(store Store) ChoreHandler {
+	return ChoreHandler{Store: store}
 }
 
-func (handler Handler) list(w http.ResponseWriter, r *http.Request) {
+func (handler ChoreHandler) ListChores(ctx context.Context, request contracts.ListChoresRequestObject) (contracts.ListChoresResponseObject, error) {
 	chores, err := handler.Store.List()
 	if err != nil {
-		apperrors.Write(w, apperrors.MapStoreError(err))
-		return
+		return nil, err
 	}
 
-	apijson.Write(w, http.StatusOK, toAPIChores(chores))
+	return contracts.ListChores200JSONResponse(toAPIChores(chores)), nil
 }
 
-func (handler Handler) create(w http.ResponseWriter, r *http.Request) {
-	var req contracts.CreateChoreRequest
-	if err := apijson.DecodeBody(r, &req); err != nil {
-		apperrors.Write(w, err)
-		return
-	}
-	if err := validateCadence(req.CadenceInDays); err != nil {
-		apperrors.Write(w, apperrors.BadRequest(err))
-		return
+func (handler ChoreHandler) CreateChore(ctx context.Context, request contracts.CreateChoreRequestObject) (contracts.CreateChoreResponseObject, error) {
+	if err := validateCadence(request.Body.CadenceInDays); err != nil {
+		return contracts.CreateChore422Response{}, nil
 	}
 
 	chore, err := handler.Store.Create(CreateRequest{
-		Name:          req.Name,
-		CadenceInDays: req.CadenceInDays,
+		Name:          request.Body.Name,
+		CadenceInDays: request.Body.CadenceInDays,
 	})
 	if err != nil {
-		apperrors.Write(w, apperrors.Internal(err))
-		return
+		return nil, err
 	}
 
-	apijson.Write(w, http.StatusCreated, toAPIChore(chore))
+	return contracts.CreateChore201JSONResponse(toAPIChore(chore)), nil
 }
 
-func (handler Handler) get(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
+func (handler ChoreHandler) GetChore(ctx context.Context, request contracts.GetChoreRequestObject) (contracts.GetChoreResponseObject, error) {
+	chore, err := handler.Store.Get(uint(request.Id))
 	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return contracts.GetChore404Response{}, nil
+		}
+		return nil, err
 	}
 
-	chore, err := handler.Store.Get(uint(id))
-	if err != nil {
-		apperrors.Write(w, apperrors.MapStoreError(err))
-		return
-	}
-
-	apijson.Write(w, http.StatusOK, toAPIChore(chore))
+	return contracts.GetChore200JSONResponse(toAPIChore(chore)), nil
 }
 
-func (handler Handler) update(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
-	}
-
-	var req contracts.UpdateChoreRequest
-	if err := apijson.DecodeBody(r, &req); err != nil {
-		apperrors.Write(w, err)
-		return
-	}
-	if req.CadenceInDays != nil {
-		if err := validateCadence(*req.CadenceInDays); err != nil {
-			apperrors.Write(w, apperrors.BadRequest(err))
-			return
+func (handler ChoreHandler) UpdateChore(ctx context.Context, request contracts.UpdateChoreRequestObject) (contracts.UpdateChoreResponseObject, error) {
+	if request.Body.CadenceInDays != nil {
+		if err := validateCadence(*request.Body.CadenceInDays); err != nil {
+			return contracts.UpdateChore422Response{}, nil
 		}
 	}
 
-	chore, err := handler.Store.Update(uint(id), UpdateRequest{
-		Name:          req.Name,
-		CadenceInDays: req.CadenceInDays,
+	chore, err := handler.Store.Update(uint(request.Id), UpdateRequest{
+		Name:          request.Body.Name,
+		CadenceInDays: request.Body.CadenceInDays,
 	})
 	if err != nil {
-		apperrors.Write(w, apperrors.MapStoreError(err))
-		return
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return contracts.UpdateChore404Response{}, nil
+		}
+		return nil, err
 	}
 
-	apijson.Write(w, http.StatusOK, toAPIChore(chore))
+	return contracts.UpdateChore200JSONResponse(toAPIChore(chore)), nil
 }
 
-func (handler Handler) delete(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 64)
-	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
+func (handler ChoreHandler) DeleteChore(ctx context.Context, request contracts.DeleteChoreRequestObject) (contracts.DeleteChoreResponseObject, error) {
+	if err := handler.Store.Delete(uint(request.Id)); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return contracts.DeleteChore404Response{}, nil
+		}
+		return nil, err
 	}
 
-	if err := handler.Store.Delete(uint(id)); err != nil {
-		apperrors.Write(w, apperrors.MapStoreError(err))
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
+	return contracts.DeleteChore204Response{}, nil
 }
 
 func validateCadence(cadenceInDays int) error {

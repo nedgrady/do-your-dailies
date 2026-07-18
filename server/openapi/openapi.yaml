@@ -13,7 +13,7 @@ paths:
             text/plain:
               schema:
                 type: string
-  /api/chores/:
+  /api/chores:
     get:
       operationId: listChores
       responses:
@@ -87,7 +87,7 @@ paths:
           description: Deleted chore
         "404":
           description: Chore not found
-  /api/chore-completions/:
+  /api/chore-completions:
     get:
       operationId: listChoreCompletions
       parameters:
@@ -133,7 +133,7 @@ paths:
           description: Chore not found
         "422":
           description: Invalid JSON payload
-  /api/chore-queue/:
+  /api/chore-queue:
     get:
       operationId: listChoreQueue
       parameters:
