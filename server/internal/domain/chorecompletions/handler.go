@@ -10,7 +10,6 @@ import (
 	"do-your-dailies/server/internal/domain/choreinqueuecompletion"
 	chorequeue "do-your-dailies/server/internal/domain/chorequeue"
 	"do-your-dailies/server/internal/domain/chores"
-	"do-your-dailies/server/internal/domain/models"
 	apperrors "do-your-dailies/server/internal/errors"
 
 	"gorm.io/gorm"
@@ -33,46 +32,29 @@ func (handler Handler) list(w http.ResponseWriter, r *http.Request) {
 	startValue := r.URL.Query().Get("start")
 	endValue := r.URL.Query().Get("end")
 
-	if startValue != "" || endValue != "" {
-		if startValue == "" || endValue == "" {
-			http.Error(w, "bad request", http.StatusBadRequest)
-			return
-		}
-
-		startTime, err := parseUTCDateTime(startValue)
-		if err != nil {
-			http.Error(w, "bad request", http.StatusBadRequest)
-			return
-		}
-
-		endTime, err := parseUTCDateTime(endValue)
-		if err != nil {
-			http.Error(w, "bad request", http.StatusBadRequest)
-			return
-		}
-
-		if endTime.Before(startTime) {
-			http.Error(w, "bad request", http.StatusBadRequest)
-			return
-		}
-
-		choreCompletions, listErr := handler.listByCreatedAtRange(startTime, endTime)
-		if listErr != nil {
-			apperrors.Write(w, apperrors.Internal(listErr))
-			return
-		}
-
-		apijson.Write(w, http.StatusOK, toAPIChoreCompletions(choreCompletions))
+	if startValue == "" || endValue == "" {
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
-	day, err := optionalDateQuery(r, "date", startOfDayUTC(handler.Now()))
+	startTime, err := parseUTCDateTime(startValue)
 	if err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
-	choreCompletions, listErr := handler.Store.ListByDay(day)
+	endTime, err := parseUTCDateTime(endValue)
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+
+	if endTime.Before(startTime) {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+
+	choreCompletions, listErr := handler.Store.ListByRange(startTime, endTime)
 	if listErr != nil {
 		apperrors.Write(w, apperrors.Internal(listErr))
 		return
@@ -114,45 +96,6 @@ func (handler Handler) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	apijson.Write(w, http.StatusCreated, toAPIChoreCompletion(choreCompletion))
-}
-
-func (handler Handler) listByCreatedAtRange(startTime, endTime time.Time) ([]models.ChoreCompletion, error) {
-	var choreCompletions []models.ChoreCompletion
-	currentDay := startOfDayUTC(startTime)
-	lastDay := startOfDayUTC(endTime)
-
-	for !currentDay.After(lastDay) {
-		dayCompletions, err := handler.Store.ListByDay(currentDay)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, completion := range dayCompletions {
-			createdAt := completion.CreatedAt.UTC()
-			if createdAt.Before(startTime) || createdAt.After(endTime) {
-				continue
-			}
-			choreCompletions = append(choreCompletions, completion)
-		}
-
-		currentDay = currentDay.AddDate(0, 0, 1)
-	}
-
-	return choreCompletions, nil
-}
-
-func optionalDateQuery(r *http.Request, key string, defaultValue time.Time) (time.Time, error) {
-	value := r.URL.Query().Get(key)
-	if value == "" {
-		return startOfDayUTC(defaultValue), nil
-	}
-
-	date, err := time.Parse("2006-01-02", value)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	return startOfDayUTC(date), nil
 }
 
 func parseUTCDateTime(value string) (time.Time, error) {

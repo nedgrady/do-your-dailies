@@ -9,7 +9,7 @@ import (
 
 type Store interface {
 	Create(req CreateRequest) (models.ChoreCompletion, error)
-	ListByDay(day time.Time) ([]models.ChoreCompletion, error)
+	ListByRange(start, end time.Time) ([]models.ChoreCompletion, error)
 }
 
 type GormStore struct {
@@ -26,13 +26,17 @@ func (store *GormStore) Create(req CreateRequest) (models.ChoreCompletion, error
 	return choreCompletion, result.Error
 }
 
-func (store *GormStore) ListByDay(day time.Time) ([]models.ChoreCompletion, error) {
-	dayStart := startOfDayUTC(day)
-	dayEnd := dayStart.AddDate(0, 0, 1)
+// func (store *GormStore) ListByDay(day time.Time) ([]models.ChoreCompletion, error) {
+// 	dayStart := startOfDayUTC(day)
+// 	dayEnd := dayStart.AddDate(0, 0, 1)
 
+// 	return store.ListByRange(dayStart, dayEnd)
+// }
+
+func (store *GormStore) ListByRange(start, end time.Time) ([]models.ChoreCompletion, error) {
 	var choreCompletions []models.ChoreCompletion
 	err := store.db.
-		Where("created_at >= ? AND created_at < ?", dayStart, dayEnd).
+		Where("created_at >= ? AND created_at <= ?", start, end).
 		Order("created_at ASC").
 		Find(&choreCompletions).Error
 

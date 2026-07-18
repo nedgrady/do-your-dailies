@@ -32,7 +32,7 @@ function mapApiChoreCompletionToDomain(
     updatedAt: new Date(apiChoreCompletion.updatedAt),
   }
 }
-async function fetchChoreCompletionsForDate(
+async function fetchChoreCompletionsBetween(
   start: Date,
   end: Date,
 ): Promise<ChoreCompletion[]> {
@@ -50,7 +50,7 @@ export async function createChoreCompletion(choreId: number): Promise<void> {
 export function useChoreCompletionsBetweenQuery(start: Date, end: Date) {
   return useSuspenseQuery({
     queryKey: ['chores', 'completions', 'by-date', start, end],
-    queryFn: () => fetchChoreCompletionsForDate(start, end),
+    queryFn: () => fetchChoreCompletionsBetween(start, end),
   })
 }
 
