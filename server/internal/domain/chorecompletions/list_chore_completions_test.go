@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"do-your-dailies/server/internal/domain/choreinqueuecompletion"
+	chorequeue "do-your-dailies/server/internal/domain/chorequeue"
 	"do-your-dailies/server/internal/domain/chores"
 	"do-your-dailies/server/internal/domain/models"
 
@@ -78,7 +79,7 @@ func TestListmodesReturns400OnInvalidDate(t *testing.T) {
 func TestListmodesReturns500OnStoreError(t *testing.T) {
 	t.Parallel()
 	_, database := newPostgresTestRouter(t)
-	router := newTestRouter(chores.NewGormStore(database), failingListStore{}, choreinqueuecompletion.NewGormStore(database), database)
+	router := newTestRouter(chores.NewGormStore(database), failingListStore{}, chorequeue.NewGormStore(database), choreinqueuecompletion.NewGormStore(database), database)
 
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/api/chore-completions/?date=2026-04-15", nil))

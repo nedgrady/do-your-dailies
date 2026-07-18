@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"do-your-dailies/server/internal/domain/choreinqueuecompletion"
+	chorequeue "do-your-dailies/server/internal/domain/chorequeue"
 	"do-your-dailies/server/internal/domain/chores"
 	"do-your-dailies/server/internal/domain/models"
 	"do-your-dailies/server/internal/testhelpers"
@@ -13,16 +14,16 @@ import (
 	"gorm.io/gorm"
 )
 
-func newTestRouter(choreStore chores.Store, store Store, choreInQueueCompletionStore choreinqueuecompletion.Store, db *gorm.DB) *chi.Mux {
+func newTestRouter(choreStore chores.Store, store Store, choreQueueStore chorequeue.Store, choreInQueueCompletionStore choreinqueuecompletion.Store, db *gorm.DB) *chi.Mux {
 	router := chi.NewRouter()
-	router.Route("/api/chore-completions", NewHandler(choreStore, store, choreInQueueCompletionStore, db).RegisterRoutes)
+	router.Route("/api/chore-completions", NewHandler(choreStore, store, choreQueueStore, choreInQueueCompletionStore, db).RegisterRoutes)
 	return router
 }
 
 func newPostgresTestRouter(t *testing.T) (*chi.Mux, *gorm.DB) {
 	t.Helper()
 	database := testhelpers.NewTransactionDB(t, migrate)
-	return newTestRouter(chores.NewGormStore(database), NewGormStore(database), choreinqueuecompletion.NewGormStore(database), database), database
+	return newTestRouter(chores.NewGormStore(database), NewGormStore(database), chorequeue.NewGormStore(database), choreinqueuecompletion.NewGormStore(database), database), database
 }
 
 func seedChore(t *testing.T, database *gorm.DB, name string, cadenceInDays int) models.Chore {

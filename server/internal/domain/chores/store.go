@@ -24,7 +24,7 @@ func NewGormStore(db *gorm.DB) *GormStore {
 
 func (store *GormStore) List() ([]models.Chore, error) {
 	var chores []models.Chore
-	result := store.db.Find(&chores)
+	result := store.db.Find(&chores).Where("deleted_at IS NULL")
 	return chores, result.Error
 }
 

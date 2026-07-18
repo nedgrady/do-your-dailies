@@ -27,6 +27,7 @@ func (app *Application) setupRoutes() *chi.Mux {
 	choreCompletionHandler := chorecompletions.NewHandler(
 		app.ChoreStore,
 		app.ChoreCompletionStore,
+		app.ChoreQueueStore,
 		app.ChoreInQueueCompletionStore,
 		app.Db,
 	)

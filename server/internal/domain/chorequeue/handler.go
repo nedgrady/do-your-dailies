@@ -24,9 +24,16 @@ func NewHandler(store Store, choreInQueueCompletionStore choreinqueuecompletion.
 
 func (handler Handler) list(w http.ResponseWriter, r *http.Request) {
 
+	// TODO: How to make sure this is the same timezone as the user's timezone?
+	// (when the chore queue is loaded, the FE makes a request in user timezone for 'todays' completions)
+	// we want to find 'ttoday's' completions in the chore queue, but we are using UTC time here
+	// so we need to unify these timezones somehow
+	// add a 'Today' concept?
+	previousMidnight := time.Date(handler.Now().Year(), handler.Now().Month(), handler.Now().Day(), 0, 0, 0, 0, time.UTC)
+	nextMidnight := previousMidnight.Add(24 * time.Hour)
 	requiredChoresCompletedToday, err := handler.ChoreInQueueCompletionStore.ListBetween(
-		time.Now().Add(-24*time.Hour),
-		time.Now(),
+		previousMidnight,
+		nextMidnight,
 	)
 
 	if err != nil {

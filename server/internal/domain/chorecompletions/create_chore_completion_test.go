@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"do-your-dailies/server/internal/domain/choreinqueuecompletion"
+	chorequeue "do-your-dailies/server/internal/domain/chorequeue"
 	"do-your-dailies/server/internal/domain/chores"
 	"do-your-dailies/server/internal/domain/models"
 	"do-your-dailies/server/internal/testhelpers"
@@ -67,7 +68,7 @@ func TestCreateChoreCompletionReturns500OnStoreError(t *testing.T) {
 	t.Parallel()
 	database := testhelpers.NewTransactionDB(t, migrate)
 	chore := seedChore(t, database, "dishes", 1)
-	router := newTestRouter(chores.NewGormStore(database), failingChoreCompletionStore{}, choreinqueuecompletion.NewGormStore(database), database)
+	router := newTestRouter(chores.NewGormStore(database), failingChoreCompletionStore{}, chorequeue.NewGormStore(database), choreinqueuecompletion.NewGormStore(database), database)
 
 	body := strings.NewReader(`{"choreId":` + itoa(chore.ID) + `}`)
 	rr := httptest.NewRecorder()
@@ -80,7 +81,7 @@ func TestCreateChoreCompletionStoreErrorBody(t *testing.T) {
 	t.Parallel()
 	database := testhelpers.NewTransactionDB(t, migrate)
 	chore := seedChore(t, database, "dishes", 1)
-	router := newTestRouter(chores.NewGormStore(database), failingChoreCompletionStore{}, choreinqueuecompletion.NewGormStore(database), database)
+	router := newTestRouter(chores.NewGormStore(database), failingChoreCompletionStore{}, chorequeue.NewGormStore(database), choreinqueuecompletion.NewGormStore(database), database)
 
 	body := strings.NewReader(`{"choreId":` + itoa(chore.ID) + `}`)
 	rr := httptest.NewRecorder()

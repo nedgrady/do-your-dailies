@@ -44,7 +44,7 @@ async function fetchCurrentDayChoreQueue(): Promise<ChoreInQueue[]> {
 
 export function useCurrentDayChoreQueueQuery() {
   return useSuspenseQuery({
-    queryKey: ['chore-queue', 'current-day'],
+    queryKey: ['chores', 'queue'],
     queryFn: fetchCurrentDayChoreQueue,
   })
 }

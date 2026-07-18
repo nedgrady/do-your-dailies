@@ -25,8 +25,8 @@ type Handler struct {
 	Db                          *gorm.DB
 }
 
-func NewHandler(choreStore chores.Store, store Store, choreInQueueCompletionStore choreinqueuecompletion.Store, db *gorm.DB) Handler {
-	return Handler{ChoreStore: choreStore, Now: time.Now, Store: store, ChoreInQueueCompletionStore: choreInQueueCompletionStore, Db: db}
+func NewHandler(choreStore chores.Store, store Store, choreQueueStore chorequeue.Store, choreInQueueCompletionStore choreinqueuecompletion.Store, db *gorm.DB) Handler {
+	return Handler{ChoreStore: choreStore, Now: time.Now, Store: store, ChoreQueueStore: choreQueueStore, ChoreInQueueCompletionStore: choreInQueueCompletionStore, Db: db}
 }
 
 func (handler Handler) list(w http.ResponseWriter, r *http.Request) {
