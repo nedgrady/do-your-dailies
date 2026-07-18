@@ -8,5 +8,5 @@ import (
 
 func Migrate(database *gorm.DB) error {
 	println("Running migrations...")
-	return database.AutoMigrate(&models.Chore{}, &models.ChoreCompletion{}, &models.ChoreInQueueCompletion{})
+	return database.AutoMigrate(&models.User{}, &models.Chore{}, &models.ChoreCompletion{}, &models.ChoreInQueueCompletion{})
 }

@@ -1,8 +1,10 @@
 package chorequeue
 
 import (
-	"do-your-dailies/server/internal/domain/models"
+	"context"
 	"time"
+
+	"do-your-dailies/server/internal/domain/models"
 
 	"gorm.io/gorm"
 )
@@ -46,8 +48,8 @@ func (item *choreQueueItem) DueDate() time.Time {
 }
 
 type Store interface {
-	List(targetDay time.Time, maxChores int) ([]models.Chore, error)
-	ListForCapacityFirstUser(maxChores int) ([]ChoreInQueue, error)
+	List(ctx context.Context, userID uint, targetDay time.Time, maxChores int) ([]models.Chore, error)
+	ListForCapacityFirstUser(ctx context.Context, userID uint, maxChores int) ([]ChoreInQueue, error)
 }
 
 type GormStore struct {
@@ -58,7 +60,7 @@ func NewGormStore(db *gorm.DB) *GormStore {
 	return &GormStore{db: db}
 }
 
-func (store *GormStore) List(targetDay time.Time, maxChores int) ([]models.Chore, error) {
+func (store *GormStore) List(ctx context.Context, userID uint, targetDay time.Time, maxChores int) ([]models.Chore, error) {
 	return make([]models.Chore, 0), nil
 }
 
@@ -71,12 +73,11 @@ type ChoreInQueue struct {
 	LastCompletedAt    time.Time `gorm:"column:latest_completion_created_at"`
 }
 
-func (store *GormStore) ListForCapacityFirstUser(maxChores int) ([]ChoreInQueue, error) {
+func (store *GormStore) ListForCapacityFirstUser(ctx context.Context, userID uint, maxChores int) ([]ChoreInQueue, error) {
 
-	// first get all the chores
 	var allChoresForUserWithLatestCompletion []ChoreInQueue
 
-	err := store.db.Raw(`
+	err := store.db.WithContext(ctx).Raw(`
 SELECT
     chores.id,
     chores.name,
@@ -101,9 +102,10 @@ LEFT JOIN LATERAL (
     LIMIT 1
 ) latest_completion ON true
 WHERE chores.deleted_at IS NULL
+  AND chores.user_id = ?
 ORDER BY priority DESC
 LIMIT ?;
-	`, maxChores).Scan(&allChoresForUserWithLatestCompletion).Error
+	`, userID, maxChores).Scan(&allChoresForUserWithLatestCompletion).Error
 
 	if err != nil {
 		return nil, err

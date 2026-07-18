@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"do-your-dailies/server/internal/auth"
 	"do-your-dailies/server/internal/contracts"
 
 	"gorm.io/gorm"
@@ -18,7 +19,12 @@ func NewHandler(store Store) ChoreHandler {
 }
 
 func (handler ChoreHandler) ListChores(ctx context.Context, request contracts.ListChoresRequestObject) (contracts.ListChoresResponseObject, error) {
-	chores, err := handler.Store.List()
+	userID, err := auth.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	chores, err := handler.Store.List(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -27,11 +33,16 @@ func (handler ChoreHandler) ListChores(ctx context.Context, request contracts.Li
 }
 
 func (handler ChoreHandler) CreateChore(ctx context.Context, request contracts.CreateChoreRequestObject) (contracts.CreateChoreResponseObject, error) {
+	userID, err := auth.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := validateCadence(request.Body.CadenceInDays); err != nil {
 		return contracts.CreateChore422Response{}, nil
 	}
 
-	chore, err := handler.Store.Create(CreateRequest{
+	chore, err := handler.Store.Create(ctx, userID, CreateRequest{
 		Name:          request.Body.Name,
 		CadenceInDays: request.Body.CadenceInDays,
 	})
@@ -43,7 +54,12 @@ func (handler ChoreHandler) CreateChore(ctx context.Context, request contracts.C
 }
 
 func (handler ChoreHandler) GetChore(ctx context.Context, request contracts.GetChoreRequestObject) (contracts.GetChoreResponseObject, error) {
-	chore, err := handler.Store.Get(uint(request.Id))
+	userID, err := auth.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	chore, err := handler.Store.Get(ctx, userID, uint(request.Id))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return contracts.GetChore404Response{}, nil
@@ -55,13 +71,18 @@ func (handler ChoreHandler) GetChore(ctx context.Context, request contracts.GetC
 }
 
 func (handler ChoreHandler) UpdateChore(ctx context.Context, request contracts.UpdateChoreRequestObject) (contracts.UpdateChoreResponseObject, error) {
+	userID, err := auth.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if request.Body.CadenceInDays != nil {
 		if err := validateCadence(*request.Body.CadenceInDays); err != nil {
 			return contracts.UpdateChore422Response{}, nil
 		}
 	}
 
-	chore, err := handler.Store.Update(uint(request.Id), UpdateRequest{
+	chore, err := handler.Store.Update(ctx, userID, uint(request.Id), UpdateRequest{
 		Name:          request.Body.Name,
 		CadenceInDays: request.Body.CadenceInDays,
 	})
@@ -76,7 +97,12 @@ func (handler ChoreHandler) UpdateChore(ctx context.Context, request contracts.U
 }
 
 func (handler ChoreHandler) DeleteChore(ctx context.Context, request contracts.DeleteChoreRequestObject) (contracts.DeleteChoreResponseObject, error) {
-	if err := handler.Store.Delete(uint(request.Id)); err != nil {
+	userID, err := auth.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := handler.Store.Delete(ctx, userID, uint(request.Id)); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return contracts.DeleteChore404Response{}, nil
 		}

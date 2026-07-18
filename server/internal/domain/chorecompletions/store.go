@@ -1,15 +1,17 @@
 package chorecompletions
 
 import (
-	"do-your-dailies/server/internal/domain/models"
+	"context"
 	"time"
+
+	"do-your-dailies/server/internal/domain/models"
 
 	"gorm.io/gorm"
 )
 
 type Store interface {
-	Create(req CreateRequest) (models.ChoreCompletion, error)
-	ListByRange(start, end time.Time) ([]models.ChoreCompletion, error)
+	Create(ctx context.Context, req CreateRequest) (models.ChoreCompletion, error)
+	ListByRange(ctx context.Context, userID uint, start, end time.Time) ([]models.ChoreCompletion, error)
 }
 
 type GormStore struct {
@@ -20,24 +22,19 @@ func NewGormStore(db *gorm.DB) *GormStore {
 	return &GormStore{db: db}
 }
 
-func (store *GormStore) Create(req CreateRequest) (models.ChoreCompletion, error) {
+func (store *GormStore) Create(ctx context.Context, req CreateRequest) (models.ChoreCompletion, error) {
 	choreCompletion := models.ChoreCompletion{ChoreID: req.ChoreID}
-	result := store.db.Create(&choreCompletion)
+	result := store.db.WithContext(ctx).Create(&choreCompletion)
 	return choreCompletion, result.Error
 }
 
-// func (store *GormStore) ListByDay(day time.Time) ([]models.ChoreCompletion, error) {
-// 	dayStart := startOfDayUTC(day)
-// 	dayEnd := dayStart.AddDate(0, 0, 1)
-
-// 	return store.ListByRange(dayStart, dayEnd)
-// }
-
-func (store *GormStore) ListByRange(start, end time.Time) ([]models.ChoreCompletion, error) {
+func (store *GormStore) ListByRange(ctx context.Context, userID uint, start, end time.Time) ([]models.ChoreCompletion, error) {
 	var choreCompletions []models.ChoreCompletion
-	err := store.db.
-		Where("created_at >= ? AND created_at <= ?", start, end).
-		Order("created_at ASC").
+	err := store.db.WithContext(ctx).
+		Joins("Chore").
+		Where(`"Chore".user_id = ?`, userID).
+		Where("chore_completions.created_at >= ? AND chore_completions.created_at <= ?", start, end).
+		Order("chore_completions.created_at ASC").
 		Find(&choreCompletions).Error
 
 	return choreCompletions, err

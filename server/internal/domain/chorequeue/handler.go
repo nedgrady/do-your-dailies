@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"do-your-dailies/server/internal/auth"
 	"do-your-dailies/server/internal/contracts"
 	"do-your-dailies/server/internal/domain/choreinqueuecompletion"
 )
@@ -21,6 +22,10 @@ func NewHandler(store Store, choreInQueueCompletionStore choreinqueuecompletion.
 }
 
 func (handler ChoreQueueHandler) ListChoreQueue(ctx context.Context, request contracts.ListChoreQueueRequestObject) (contracts.ListChoreQueueResponseObject, error) {
+	userID, err := auth.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	// TODO: How to make sure this is the same timezone as the user's timezone?
 	// (when the chore queue is loaded, the FE makes a request in user timezone for 'todays' completions)
@@ -30,6 +35,8 @@ func (handler ChoreQueueHandler) ListChoreQueue(ctx context.Context, request con
 	previousMidnight := time.Date(handler.Now().Year(), handler.Now().Month(), handler.Now().Day(), 0, 0, 0, 0, time.UTC)
 	nextMidnight := previousMidnight.Add(24 * time.Hour)
 	requiredChoresCompletedToday, err := handler.ChoreInQueueCompletionStore.ListBetween(
+		ctx,
+		userID,
 		previousMidnight,
 		nextMidnight,
 	)
@@ -44,7 +51,7 @@ func (handler ChoreQueueHandler) ListChoreQueue(ctx context.Context, request con
 	}
 
 	choresRemainingToComplete := maxChores - len(requiredChoresCompletedToday)
-	queue, err := handler.Store.ListForCapacityFirstUser(choresRemainingToComplete)
+	queue, err := handler.Store.ListForCapacityFirstUser(ctx, userID, choresRemainingToComplete)
 	if err != nil {
 		return nil, err
 	}

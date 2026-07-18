@@ -5,6 +5,7 @@ import (
 
 	apijson "do-your-dailies/server/internal/api/json"
 	"do-your-dailies/server/internal/apidocs"
+	"do-your-dailies/server/internal/auth"
 	"do-your-dailies/server/internal/contracts"
 	"do-your-dailies/server/internal/domain/chorecompletions"
 	"do-your-dailies/server/internal/domain/chorequeue"
@@ -21,6 +22,7 @@ func (app *Application) setupRoutes() *chi.Mux {
 	logging.Apply(router)
 	router.Use(corsMiddleware)
 	router.Use(middleware.Recoverer)
+	router.Use(auth.Middleware)
 
 	apidocs.RegisterRoutes(router)
 	swagger.RegisterRoutes(router)

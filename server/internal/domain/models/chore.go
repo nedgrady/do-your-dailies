@@ -7,4 +7,5 @@ type Chore struct {
 	Name             string             `json:"name" gorm:"not null"`
 	CadenceInDays    int                `json:"cadence_in_days" gorm:"not null"`
 	ChoreCompletions []*ChoreCompletion `json:"chore_completions" gorm:"foreignKey:ChoreID"`
+	UserID           uint               `json:"user_id" gorm:"not null"`
 }
