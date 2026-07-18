@@ -28,11 +28,11 @@ func NewHandler(choreStore chores.Store, store Store, choreQueueStore chorequeue
 }
 
 func (handler ChoreCompletionHandler) ListChoreCompletions(ctx context.Context, request contracts.ListChoreCompletionsRequestObject) (contracts.ListChoreCompletionsResponseObject, error) {
-	if request.Params.End.Before(request.Params.Start.Time) {
+	if request.Params.End.Before(request.Params.Start) {
 		return contracts.ListChoreCompletions400Response{}, nil
 	}
 
-	choreCompletions, err := handler.Store.ListByRange(request.Params.Start.Time, request.Params.End.Time)
+	choreCompletions, err := handler.Store.ListByRange(request.Params.Start, request.Params.End)
 	if err != nil {
 		return nil, err
 	}

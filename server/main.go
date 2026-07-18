@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"do-your-dailies/server/internal/api"
 	"do-your-dailies/server/internal/db"
@@ -10,6 +11,7 @@ import (
 )
 
 func main() {
+	time.Local = time.UTC
 	dsn := "host=localhost user=postgres password=postgres dbname=dailies port=5432 sslmode=disable"
 
 	database, err := db.New(dsn)

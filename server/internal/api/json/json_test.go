@@ -10,7 +10,6 @@ import (
 
 	"do-your-dailies/server/internal/contracts"
 	apperrors "do-your-dailies/server/internal/errors"
-	"do-your-dailies/server/internal/utctime"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -99,8 +98,8 @@ func TestWriteEmitsDateTimeAsUTCZulu(t *testing.T) {
 		Id:            1,
 		Name:          "dishes",
 		CadenceInDays: 3,
-		CreatedAt:     utctime.Time{Time: time.Date(2026, time.April, 7, 12, 0, 0, 0, time.FixedZone("UTC+2", 2*60*60))},
-		UpdatedAt:     utctime.Time{Time: time.Date(2026, time.April, 7, 12, 0, 0, 0, time.FixedZone("UTC+2", 2*60*60))},
+		CreatedAt:     time.Date(2026, time.April, 7, 12, 0, 0, 0, time.FixedZone("UTC+2", 2*60*60)),
+		UpdatedAt:     time.Date(2026, time.April, 7, 12, 0, 0, 0, time.FixedZone("UTC+2", 2*60*60)),
 	}
 
 	Write(rr, http.StatusOK, payload)

@@ -6,11 +6,11 @@ package contracts
 import (
 	"bytes"
 	"context"
-	"do-your-dailies/server/internal/utctime"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/oapi-codegen/runtime"
@@ -18,29 +18,29 @@ import (
 
 // Chore defines model for Chore.
 type Chore struct {
-	CadenceInDays int          `json:"cadenceInDays"`
-	CreatedAt     utctime.Time `json:"createdAt"`
-	Id            uint64       `json:"id"`
-	Name          string       `json:"name"`
-	UpdatedAt     utctime.Time `json:"updatedAt"`
+	CadenceInDays int       `json:"cadenceInDays"`
+	CreatedAt     time.Time `json:"createdAt"`
+	Id            uint64    `json:"id"`
+	Name          string    `json:"name"`
+	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
 // ChoreCompletion defines model for ChoreCompletion.
 type ChoreCompletion struct {
-	ChoreId   uint64       `json:"choreId"`
-	CreatedAt utctime.Time `json:"createdAt"`
-	Id        uint64       `json:"id"`
-	UpdatedAt utctime.Time `json:"updatedAt"`
+	ChoreId   uint64    `json:"choreId"`
+	CreatedAt time.Time `json:"createdAt"`
+	Id        uint64    `json:"id"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // ChoreInQueue defines model for ChoreInQueue.
 type ChoreInQueue struct {
-	CadenceInDays      int           `json:"cadenceInDays"`
-	ChoreId            uint64        `json:"choreId"`
-	ChoreName          string        `json:"choreName"`
-	LastCompletedAt    *utctime.Time `json:"lastCompletedAt,omitempty"`
-	LatestCompletionId *uint64       `json:"latestCompletionId,omitempty"`
-	Priority           float32       `json:"priority"`
+	CadenceInDays      int        `json:"cadenceInDays"`
+	ChoreId            uint64     `json:"choreId"`
+	ChoreName          string     `json:"choreName"`
+	LastCompletedAt    *time.Time `json:"lastCompletedAt,omitempty"`
+	LatestCompletionId *uint64    `json:"latestCompletionId,omitempty"`
+	Priority           float32    `json:"priority"`
 }
 
 // CreateChoreCompletionRequest defines model for CreateChoreCompletionRequest.
@@ -62,8 +62,8 @@ type UpdateChoreRequest struct {
 
 // ListChoreCompletionsParams defines parameters for ListChoreCompletions.
 type ListChoreCompletionsParams struct {
-	Start utctime.Time `form:"start" json:"start"`
-	End   utctime.Time `form:"end" json:"end"`
+	Start time.Time `form:"start" json:"start"`
+	End   time.Time `form:"end" json:"end"`
 }
 
 // ListChoreQueueParams defines parameters for ListChoreQueue.
