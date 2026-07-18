@@ -9,12 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ChoreQueueRouteImport } from './routes/chore-queue'
+import { Route as TodayRouteImport } from './routes/today'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ChoresManageRouteImport } from './routes/chores/manage'
 
-const ChoreQueueRoute = ChoreQueueRouteImport.update({
-  id: '/chore-queue',
-  path: '/chore-queue',
+const TodayRoute = TodayRouteImport.update({
+  id: '/today',
+  path: '/today',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -22,40 +23,49 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChoresManageRoute = ChoresManageRouteImport.update({
+  id: '/chores/manage',
+  path: '/chores/manage',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/chore-queue': typeof ChoreQueueRoute
+  '/today': typeof TodayRoute
+  '/chores/manage': typeof ChoresManageRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/chore-queue': typeof ChoreQueueRoute
+  '/today': typeof TodayRoute
+  '/chores/manage': typeof ChoresManageRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/chore-queue': typeof ChoreQueueRoute
+  '/today': typeof TodayRoute
+  '/chores/manage': typeof ChoresManageRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/chore-queue'
+  fullPaths: '/' | '/today' | '/chores/manage'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chore-queue'
-  id: '__root__' | '/' | '/chore-queue'
+  to: '/' | '/today' | '/chores/manage'
+  id: '__root__' | '/' | '/today' | '/chores/manage'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ChoreQueueRoute: typeof ChoreQueueRoute
+  TodayRoute: typeof TodayRoute
+  ChoresManageRoute: typeof ChoresManageRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/chore-queue': {
-      id: '/chore-queue'
-      path: '/chore-queue'
-      fullPath: '/chore-queue'
-      preLoaderRoute: typeof ChoreQueueRouteImport
+    '/today': {
+      id: '/today'
+      path: '/today'
+      fullPath: '/today'
+      preLoaderRoute: typeof TodayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chores/manage': {
+      id: '/chores/manage'
+      path: '/chores/manage'
+      fullPath: '/chores/manage'
+      preLoaderRoute: typeof ChoresManageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ChoreQueueRoute: ChoreQueueRoute,
+  TodayRoute: TodayRoute,
+  ChoresManageRoute: ChoresManageRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

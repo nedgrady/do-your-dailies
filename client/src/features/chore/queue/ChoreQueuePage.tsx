@@ -11,15 +11,15 @@ import {
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
 import { Suspense } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { nullChore, useAllChoresQuery, type Chore } from '../../domain/chore'
+import { nullChore, useAllChoresQuery, type Chore } from '../../../domain/chore'
 import {
   useChoreCompletionsBetweenQuery,
   useCreateChoreCompletionMutation,
-} from '../../domain/choreCompletion'
+} from '../../../domain/choreCompletion'
 import {
   useCurrentDayChoreQueueQuery,
   type ChoreInQueue,
-} from '../../domain/choreQueue'
+} from '../../../domain/choreQueue'
 
 function ChoreQueueContent() {
   const { data: allChoresLookup = [] } = useAllChoresQuery()
