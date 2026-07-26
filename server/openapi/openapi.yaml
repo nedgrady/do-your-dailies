@@ -87,6 +87,16 @@ paths:
           description: Deleted chore
         "404":
           description: Chore not found
+  /api/chore-insights:
+    get:
+      operationId: getChoreInsights
+      responses:
+        "200":
+          description: Chore capacity and utilization insights
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChoreInsights"
   /api/chore-completions:
     get:
       operationId: listChoreCompletions
@@ -249,3 +259,18 @@ components:
         choreId:
           type: integer
           format: uint64
+    ChoreInsights:
+      type: object
+      required:
+        - userDesiredCapacity
+        - utilizationRatio
+        - minCapacityToKeepUtilizationRatioGreaterThanOne
+      properties:
+        userDesiredCapacity:
+          type: integer
+        utilizationRatio:
+          type: number
+          format: double
+        minCapacityToKeepUtilizationRatioGreaterThanOne:
+          type: number
+          format: double

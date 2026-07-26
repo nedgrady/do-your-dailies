@@ -30,12 +30,6 @@ type Chore = {
 
 const CHORES_QUERY_KEY = ['chores']
 
-async function fetchChores(): Promise<Chore[]> {
-  const res = await fetch('/api/chores')
-  if (!res.ok) throw new Error('Failed to load chores')
-  return res.json()
-}
-
 async function updateChore(
   id: number,
   data: { name?: string; cadenceInDays?: number },
@@ -228,6 +222,7 @@ function ChoreList() {
   return (
     <Box sx={{ mt: 2, mx: 'auto' }}>
       <AddChoreForm />
+      <p>{isDesktop}</p>
       <DataGrid
         rows={chores}
         columns={columns}

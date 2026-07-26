@@ -43,6 +43,13 @@ type ChoreInQueue struct {
 	Priority           float32    `json:"priority"`
 }
 
+// ChoreInsights defines model for ChoreInsights.
+type ChoreInsights struct {
+	MinCapacityToKeepUtilizationRatioGreaterThanOne float64 `json:"minCapacityToKeepUtilizationRatioGreaterThanOne"`
+	UserDesiredCapacity                             int     `json:"userDesiredCapacity"`
+	UtilizationRatio                                float64 `json:"utilizationRatio"`
+}
+
 // CreateChoreCompletionRequest defines model for CreateChoreCompletionRequest.
 type CreateChoreCompletionRequest struct {
 	ChoreId uint64 `json:"choreId"`
@@ -89,6 +96,9 @@ type ServerInterface interface {
 	// (POST /api/chore-completions)
 	CreateChoreCompletion(w http.ResponseWriter, r *http.Request)
 
+	// (GET /api/chore-insights)
+	GetChoreInsights(w http.ResponseWriter, r *http.Request)
+
 	// (GET /api/chore-queue)
 	ListChoreQueue(w http.ResponseWriter, r *http.Request, params ListChoreQueueParams)
 
@@ -122,6 +132,11 @@ func (_ Unimplemented) ListChoreCompletions(w http.ResponseWriter, r *http.Reque
 
 // (POST /api/chore-completions)
 func (_ Unimplemented) CreateChoreCompletion(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/chore-insights)
+func (_ Unimplemented) GetChoreInsights(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -220,6 +235,20 @@ func (siw *ServerInterfaceWrapper) CreateChoreCompletion(w http.ResponseWriter, 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateChoreCompletion(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetChoreInsights operation middleware
+func (siw *ServerInterfaceWrapper) GetChoreInsights(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetChoreInsights(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -502,6 +531,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/api/chore-completions", wrapper.CreateChoreCompletion)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/chore-insights", wrapper.GetChoreInsights)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/chore-queue", wrapper.ListChoreQueue)
 	})
 	r.Group(func(r chi.Router) {
@@ -592,6 +624,27 @@ type CreateChoreCompletion422Response struct {
 func (response CreateChoreCompletion422Response) VisitCreateChoreCompletionResponse(w http.ResponseWriter) error {
 	w.WriteHeader(422)
 	return nil
+}
+
+type GetChoreInsightsRequestObject struct {
+}
+
+type GetChoreInsightsResponseObject interface {
+	VisitGetChoreInsightsResponse(w http.ResponseWriter) error
+}
+
+type GetChoreInsights200JSONResponse ChoreInsights
+
+func (response GetChoreInsights200JSONResponse) VisitGetChoreInsightsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
 }
 
 type ListChoreQueueRequestObject struct {
@@ -795,6 +848,9 @@ type StrictServerInterface interface {
 	// (POST /api/chore-completions)
 	CreateChoreCompletion(ctx context.Context, request CreateChoreCompletionRequestObject) (CreateChoreCompletionResponseObject, error)
 
+	// (GET /api/chore-insights)
+	GetChoreInsights(ctx context.Context, request GetChoreInsightsRequestObject) (GetChoreInsightsResponseObject, error)
+
 	// (GET /api/chore-queue)
 	ListChoreQueue(ctx context.Context, request ListChoreQueueRequestObject) (ListChoreQueueResponseObject, error)
 
@@ -896,6 +952,30 @@ func (sh *strictHandler) CreateChoreCompletion(w http.ResponseWriter, r *http.Re
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CreateChoreCompletionResponseObject); ok {
 		if err := validResponse.VisitCreateChoreCompletionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetChoreInsights operation middleware
+func (sh *strictHandler) GetChoreInsights(w http.ResponseWriter, r *http.Request) {
+	var request GetChoreInsightsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetChoreInsights(ctx, request.(GetChoreInsightsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetChoreInsights")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetChoreInsightsResponseObject); ok {
+		if err := validResponse.VisitGetChoreInsightsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
