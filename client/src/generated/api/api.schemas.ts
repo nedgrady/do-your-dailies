@@ -46,10 +46,16 @@ export interface CreateChoreCompletionRequest {
   choreId: number;
 }
 
+export interface ChoreProjection {
+  chore: Chore;
+  projectedCadence: number;
+}
+
 export interface ChoreInsights {
   userDesiredCapacity: number;
   utilizationRatio: number;
   minCapacityToKeepUtilizationRatioGreaterThanOne: number;
+  choreProjections: ChoreProjection[];
 }
 
 export type ListChoreCompletionsParams = {

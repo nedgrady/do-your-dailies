@@ -84,10 +84,23 @@ export const DeleteChoreParams = zod.object({
 
 export const DeleteChoreResponse = zod.void()
 
+
+
+
 export const GetChoreInsightsResponse = zod.object({
   "userDesiredCapacity": zod.int(),
   "utilizationRatio": zod.number(),
-  "minCapacityToKeepUtilizationRatioGreaterThanOne": zod.number()
+  "minCapacityToKeepUtilizationRatioGreaterThanOne": zod.number(),
+  "choreProjections": zod.array(zod.object({
+  "chore": zod.object({
+  "id": zod.int(),
+  "name": zod.string(),
+  "cadenceInDays": zod.int().min(1),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "updatedAt": zod.iso.datetime({"offset":true})
+}),
+  "projectedCadence": zod.int()
+}))
 })
 
 export const ListChoreCompletionsQueryParams = zod.object({

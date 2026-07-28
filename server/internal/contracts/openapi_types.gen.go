@@ -45,9 +45,16 @@ type ChoreInQueue struct {
 
 // ChoreInsights defines model for ChoreInsights.
 type ChoreInsights struct {
-	MinCapacityToKeepUtilizationRatioGreaterThanOne float64 `json:"minCapacityToKeepUtilizationRatioGreaterThanOne"`
-	UserDesiredCapacity                             int     `json:"userDesiredCapacity"`
-	UtilizationRatio                                float64 `json:"utilizationRatio"`
+	ChoreProjections                                []ChoreProjection `json:"choreProjections"`
+	MinCapacityToKeepUtilizationRatioGreaterThanOne float64           `json:"minCapacityToKeepUtilizationRatioGreaterThanOne"`
+	UserDesiredCapacity                             int               `json:"userDesiredCapacity"`
+	UtilizationRatio                                float64           `json:"utilizationRatio"`
+}
+
+// ChoreProjection defines model for ChoreProjection.
+type ChoreProjection struct {
+	Chore            Chore `json:"chore"`
+	ProjectedCadence int   `json:"projectedCadence"`
 }
 
 // CreateChoreCompletionRequest defines model for CreateChoreCompletionRequest.

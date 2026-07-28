@@ -259,12 +259,23 @@ components:
         choreId:
           type: integer
           format: uint64
+    ChoreProjection:
+      type: object
+      required:
+        - chore
+        - projectedCadence
+      properties:
+        chore:
+          $ref: "#/components/schemas/Chore"
+        projectedCadence:
+          type: integer
     ChoreInsights:
       type: object
       required:
         - userDesiredCapacity
         - utilizationRatio
         - minCapacityToKeepUtilizationRatioGreaterThanOne
+        - choreProjections
       properties:
         userDesiredCapacity:
           type: integer
@@ -274,3 +285,7 @@ components:
         minCapacityToKeepUtilizationRatioGreaterThanOne:
           type: number
           format: double
+        choreProjections:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChoreProjection"
