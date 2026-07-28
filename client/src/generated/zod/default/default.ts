@@ -99,7 +99,7 @@ export const GetChoreInsightsResponse = zod.object({
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 }),
-  "projectedCadence": zod.int()
+  "projectedCadence": zod.number()
 }))
 })
 

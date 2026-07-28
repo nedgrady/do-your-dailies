@@ -29,7 +29,7 @@ func (handler ChoreHandler) ListChores(ctx context.Context, request contracts.Li
 		return nil, err
 	}
 
-	return contracts.ListChores200JSONResponse(toAPIChores(chores)), nil
+	return contracts.ListChores200JSONResponse(ToAPIChores(chores)), nil
 }
 
 func (handler ChoreHandler) CreateChore(ctx context.Context, request contracts.CreateChoreRequestObject) (contracts.CreateChoreResponseObject, error) {
@@ -50,7 +50,7 @@ func (handler ChoreHandler) CreateChore(ctx context.Context, request contracts.C
 		return nil, err
 	}
 
-	return contracts.CreateChore201JSONResponse(toAPIChore(chore)), nil
+	return contracts.CreateChore201JSONResponse(ToAPIChore(chore)), nil
 }
 
 func (handler ChoreHandler) GetChore(ctx context.Context, request contracts.GetChoreRequestObject) (contracts.GetChoreResponseObject, error) {
@@ -67,7 +67,7 @@ func (handler ChoreHandler) GetChore(ctx context.Context, request contracts.GetC
 		return nil, err
 	}
 
-	return contracts.GetChore200JSONResponse(toAPIChore(chore)), nil
+	return contracts.GetChore200JSONResponse(ToAPIChore(chore)), nil
 }
 
 func (handler ChoreHandler) UpdateChore(ctx context.Context, request contracts.UpdateChoreRequestObject) (contracts.UpdateChoreResponseObject, error) {
@@ -93,7 +93,7 @@ func (handler ChoreHandler) UpdateChore(ctx context.Context, request contracts.U
 		return nil, err
 	}
 
-	return contracts.UpdateChore200JSONResponse(toAPIChore(chore)), nil
+	return contracts.UpdateChore200JSONResponse(ToAPIChore(chore)), nil
 }
 
 func (handler ChoreHandler) DeleteChore(ctx context.Context, request contracts.DeleteChoreRequestObject) (contracts.DeleteChoreResponseObject, error) {

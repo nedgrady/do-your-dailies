@@ -268,7 +268,8 @@ components:
         chore:
           $ref: "#/components/schemas/Chore"
         projectedCadence:
-          type: integer
+          type: number
+          format: double
     ChoreInsights:
       type: object
       required:

@@ -15,6 +15,7 @@ import {
 } from '@mui/material'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
+import { orderBy } from 'es-toolkit'
 import { Suspense, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import {
@@ -165,9 +166,33 @@ function ChoreInsights() {
     minCapacityToKeepUtilizationRatioGreaterThanOne,
     userDesiredCapacity,
     utilizationRatio,
+    choreProjections,
   } = data
 
   const willBeSippage = utilizationRatio > 1
+
+  const sorted = orderBy(
+    choreProjections,
+    [
+      (proctedChore) => proctedChore.chore.cadenceInDays,
+      (proctedChore) => proctedChore.chore.createdAt,
+    ],
+    ['asc', 'asc'],
+  )
+
+  const first = sorted[0]
+  const last = sorted[sorted.length - 1]
+  const middle = sorted[Math.floor((sorted.length - 1) / 2)]
+
+  // Dedupe by chore id, preserving order: first -> middle -> last
+  const picked = [first, middle, last]
+  const seen = new Set<Chore['id']>()
+  const deduped = picked.filter((p) => {
+    if (!p) return false
+    if (seen.has(p.chore.id)) return false
+    seen.add(p.chore.id)
+    return true
+  })
 
   return (
     <Box>
@@ -183,6 +208,11 @@ function ChoreInsights() {
         <>
           <Typography>This means there will be slippage.</Typography>
           <Typography>Example:</Typography>
+          {deduped.map((choreProjection) => (
+            <Typography>
+              {choreProjection.chore.name}: {choreProjection.projectedCadence}
+            </Typography>
+          ))}
         </>
       )}
       {!willBeSippage && (

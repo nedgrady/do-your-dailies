@@ -33,9 +33,22 @@ func (handler ChoreInsightsHandler) GetChoreInsights(ctx context.Context, reques
 		return nil, err
 	}
 
+	choreProjections, err := handler.Service.ChoreProjections(userChores, insights.UtilizationRatio)
+	if err != nil {
+		return nil, err
+	}
+
+	choreProjectionsDto := make([]contracts.ChoreProjection, 0, len(choreProjections))
+	for _, projection := range choreProjections {
+		choreProjectionsDto = append(choreProjectionsDto, contracts.ChoreProjection{
+			Chore:            chores.ToAPIChore(projection.Chore),
+			ProjectedCadence: projection.ProjectedCadence,
+		})
+	}
 	return contracts.GetChoreInsights200JSONResponse{
-		UserDesiredCapacity: insights.UserDesiredCapacity,
-		UtilizationRatio:    insights.UtilizationRatio,
-		MinCapacityToKeepUtilizationRatioGreaterThanOne: insights.MinCapacityToKeepUtilizationRatioGreaterThanOne,
+		UserDesiredCapacity: int(insights.UserDesiredCapacity),
+		UtilizationRatio:    float64(insights.UtilizationRatio),
+		MinCapacityToKeepUtilizationRatioGreaterThanOne: float64(insights.MinCapacityToKeepUtilizationRatioGreaterThanOne),
+		ChoreProjections: choreProjectionsDto,
 	}, nil
 }

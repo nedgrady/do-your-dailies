@@ -53,8 +53,8 @@ type ChoreInsights struct {
 
 // ChoreProjection defines model for ChoreProjection.
 type ChoreProjection struct {
-	Chore            Chore `json:"chore"`
-	ProjectedCadence int   `json:"projectedCadence"`
+	Chore            Chore   `json:"chore"`
+	ProjectedCadence float64 `json:"projectedCadence"`
 }
 
 // CreateChoreCompletionRequest defines model for CreateChoreCompletionRequest.
