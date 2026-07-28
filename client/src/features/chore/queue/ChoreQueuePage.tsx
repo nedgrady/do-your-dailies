@@ -46,7 +46,11 @@ function ChoreQueueContent() {
 
   // TODO: wire this up to your actual "complete chore" mutation
   const handleChoreClick = (choreInQueue: ChoreInQueue) => {
-    createChoreCompletion(choreInQueue.choreId)
+    createChoreCompletion({
+      data: {
+        choreId: choreInQueue.choreId,
+      },
+    })
   }
 
   return (

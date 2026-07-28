@@ -35,3 +35,5 @@ go.work.sum
 
 tmp
 server/report.json
+
+__debug*

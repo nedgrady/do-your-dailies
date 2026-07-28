@@ -1,69 +1,40 @@
+import { useQueryClient } from '@tanstack/react-query'
+import { z } from 'zod'
 import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from '@tanstack/react-query'
-import z from 'zod'
-import axios from '../lib/axios'
+  useCreateChoreCompletion,
+  useListChoreCompletionsSuspense,
+} from '../generated/api/default/default'
+import { ListChoreCompletionsResponseItem } from '../generated/zod/default/default'
+import { isoDateTime } from './dateCoercion'
+import { queryKeys } from './queryKeys'
 
-export type ChoreCompletion = {
-  id: number
-  choreId: number
-  createdAt: Date
-  updatedAt: Date
-}
-
-const apiChoreCompletionSchema = z.object({
-  id: z.number().int().nonnegative(),
-  choreId: z.number().int().nonnegative(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
+const choreCompletionSchema = ListChoreCompletionsResponseItem.extend({
+  createdAt: isoDateTime,
+  updatedAt: isoDateTime,
 })
 
-const apiChoreCompletionsSchema = z.array(apiChoreCompletionSchema)
-
-function mapApiChoreCompletionToDomain(
-  apiChoreCompletion: z.infer<typeof apiChoreCompletionSchema>,
-): ChoreCompletion {
-  return {
-    id: apiChoreCompletion.id,
-    choreId: apiChoreCompletion.choreId,
-    createdAt: new Date(apiChoreCompletion.createdAt),
-    updatedAt: new Date(apiChoreCompletion.updatedAt),
-  }
-}
-async function fetchChoreCompletionsBetween(
-  start: Date,
-  end: Date,
-): Promise<ChoreCompletion[]> {
-  const response = await axios.get('/api/chore-completions', {
-    params: { start, end },
-  })
-  const apiChoreCompletions = apiChoreCompletionsSchema.parse(response.data)
-
-  return apiChoreCompletions.map(mapApiChoreCompletionToDomain)
-}
-export async function createChoreCompletion(choreId: number): Promise<void> {
-  await axios.post('/api/chore-completions', { choreId })
-}
+export type ChoreCompletion = z.infer<typeof choreCompletionSchema>
 
 export function useChoreCompletionsBetweenQuery(start: Date, end: Date) {
-  return useSuspenseQuery({
-    queryKey: ['chores', 'completions', 'by-date', start, end],
-    queryFn: () => fetchChoreCompletionsBetween(start, end),
-  })
+  return useListChoreCompletionsSuspense(
+    { start: start.toISOString(), end: end.toISOString() },
+    {
+      query: {
+        queryKey: queryKeys.chores.completions(start, end),
+        select: (data) => z.array(choreCompletionSchema).parse(data),
+      },
+    },
+  )
 }
 
 export function useCreateChoreCompletionMutation() {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: createChoreCompletion,
-    onSuccess: async () => {
-      // TODO - invalidate completed query
-      await queryClient.invalidateQueries({
-        queryKey: ['chores'],
-      })
+  return useCreateChoreCompletion({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.chores.all() })
+      },
     },
   })
 }

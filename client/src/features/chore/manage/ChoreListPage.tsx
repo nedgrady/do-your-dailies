@@ -9,77 +9,42 @@ import {
   IconButton,
   Stack,
   TextField,
+  Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
-import {
-  QueryErrorResetBoundary,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { QueryErrorResetBoundary } from '@tanstack/react-query'
 import { Suspense, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { nullChore, useAllChoresQuery } from '../../../domain/chore'
-
-type Chore = {
-  id: number
-  name: string
-  cadenceInDays: number
-}
-
-const CHORES_QUERY_KEY = ['chores']
-
-async function updateChore(
-  id: number,
-  data: { name?: string; cadenceInDays?: number },
-): Promise<Chore> {
-  const res = await fetch(`/api/chores/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  })
-  if (!res.ok) throw new Error('Failed to update chore')
-  return res.json()
-}
-
-async function deleteChore(id: number): Promise<void> {
-  const res = await fetch(`/api/chores/${id}`, { method: 'DELETE' })
-  if (!res.ok) throw new Error('Failed to delete chore')
-}
-
-async function createChore(data: {
-  name: string
-  cadenceInDays: number
-}): Promise<Chore> {
-  const res = await fetch('/api/chores', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  })
-  if (!res.ok) throw new Error('Failed to create chore')
-  return res.json()
-}
+import {
+  type Chore,
+  nullChore,
+  useAllChoresQuery,
+  useCreateChoreMutation,
+  useDeleteChoreMutation,
+  useUpdateChoreMutation,
+} from '../../../domain/chore'
+import { useChoreInsightsQuery } from '../../../domain/insights'
 
 function AddChoreForm() {
   const [name, setName] = useState('')
   const [cadenceInDays, setCadenceInDays] = useState('')
-  const queryClient = useQueryClient()
-
-  const createMutation = useMutation({
-    mutationFn: createChore,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: CHORES_QUERY_KEY })
-      setName('')
-      setCadenceInDays('')
-    },
-  })
+  const createMutation = useCreateChoreMutation()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const cadence = Number(cadenceInDays)
     if (!name.trim() || !cadence || cadence <= 0) return
-    createMutation.mutate({ name: name.trim(), cadenceInDays: cadence })
+    createMutation.mutate(
+      { data: { name: name.trim(), cadenceInDays: cadence } },
+      {
+        onSuccess: () => {
+          setName('')
+          setCadenceInDays('')
+        },
+      },
+    )
   }
 
   return (
@@ -115,35 +80,21 @@ function EditChoreDialog({
   chore,
   onClose,
 }: {
-  chore: Chore | null
+  chore: Chore
   onClose: () => void
 }) {
   const [name, setName] = useState('')
   const [cadenceInDays, setCadenceInDays] = useState('')
-  const queryClient = useQueryClient()
+  const isOpen = chore.id !== nullChore.id
 
   // sync local state whenever a new chore is opened
-  if (chore && name === '' && cadenceInDays === '') {
+  if (isOpen && name === '' && cadenceInDays === '') {
     setName(chore.name)
     setCadenceInDays(String(chore.cadenceInDays))
   }
 
-  const updateMutation = useMutation({
-    mutationFn: (data: { name?: string; cadenceInDays?: number }) =>
-      updateChore(chore!.id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: CHORES_QUERY_KEY })
-      handleClose()
-    },
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteChore(chore!.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: CHORES_QUERY_KEY })
-      handleClose()
-    },
-  })
+  const updateMutation = useUpdateChoreMutation()
+  const deleteMutation = useDeleteChoreMutation()
 
   const handleClose = () => {
     setName('')
@@ -154,16 +105,18 @@ function EditChoreDialog({
   const handleSave = () => {
     const cadence = Number(cadenceInDays)
     if (!name.trim() || !cadence || cadence <= 0) return
-    updateMutation.mutate({ name: name.trim(), cadenceInDays: cadence })
+    updateMutation.mutate(
+      { id: chore.id, data: { name: name.trim(), cadenceInDays: cadence } },
+      { onSuccess: handleClose },
+    )
+  }
+
+  const handleDelete = () => {
+    deleteMutation.mutate({ id: chore.id }, { onSuccess: handleClose })
   }
 
   return (
-    <Dialog
-      open={chore !== nullChore}
-      onClose={handleClose}
-      fullWidth
-      maxWidth="xs"
-    >
+    <Dialog open={isOpen} onClose={handleClose} fullWidth maxWidth="xs">
       <DialogTitle>Edit chore</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
@@ -185,7 +138,7 @@ function EditChoreDialog({
         <IconButton
           aria-label="delete chore"
           color="error"
-          onClick={() => deleteMutation.mutate()}
+          onClick={handleDelete}
         >
           <DeleteIcon />
         </IconButton>
@@ -200,6 +153,44 @@ function EditChoreDialog({
         </Button>
       </DialogActions>
     </Dialog>
+  )
+}
+
+function ChoreInsights() {
+  const { data } = useChoreInsightsQuery()
+
+  if (!data) return <>Loading...</>
+
+  const {
+    minCapacityToKeepUtilizationRatioGreaterThanOne,
+    userDesiredCapacity,
+    utilizationRatio,
+  } = data
+
+  const willBeSippage = utilizationRatio > 1
+
+  return (
+    <Box>
+      <Typography>
+        You want to do {userDesiredCapacity} chores per day
+      </Typography>
+      <Typography>
+        Your chore list would require{' '}
+        {minCapacityToKeepUtilizationRatioGreaterThanOne.toFixed(1)} chores per
+        day
+      </Typography>
+      {willBeSippage && (
+        <>
+          <Typography>This means there will be slippage.</Typography>
+          <Typography>Example:</Typography>
+        </>
+      )}
+      {!willBeSippage && (
+        <Typography>
+          This means you will complete all your chores in good time.
+        </Typography>
+      )}
+    </Box>
   )
 }
 
@@ -222,7 +213,7 @@ function ChoreList() {
   return (
     <Box sx={{ mt: 2, mx: 'auto' }}>
       <AddChoreForm />
-      <p>{isDesktop}</p>
+      <ChoreInsights />
       <DataGrid
         rows={chores}
         columns={columns}

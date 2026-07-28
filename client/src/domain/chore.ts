@@ -1,53 +1,68 @@
-import { useSuspenseQuery } from '@tanstack/react-query'
-import z from 'zod'
-import axios from '../lib/axios'
+import { useQueryClient } from '@tanstack/react-query'
+import { z } from 'zod'
+import {
+  useCreateChore,
+  useDeleteChore,
+  useListChoresSuspense,
+  useUpdateChore,
+} from '../generated/api/default/default'
+import { ListChoresResponseItem } from '../generated/zod/default/default'
+import { isoDateTime } from './dateCoercion'
+import { queryKeys } from './queryKeys'
+
+const choreSchema = ListChoresResponseItem.extend({
+  createdAt: isoDateTime,
+  updatedAt: isoDateTime,
+})
+
+export type Chore = z.infer<typeof choreSchema>
 
 export const nullChore: Chore = {
   id: -1,
   name: '?',
   cadenceInDays: 0,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-}
-
-export type Chore = {
-  id: number
-  name: string
-  cadenceInDays: number
-  createdAt: Date
-  updatedAt: Date
-}
-
-const apiChoreSchema = z.object({
-  id: z.number().int().nonnegative(),
-  name: z.string(),
-  cadenceInDays: z.number().int().positive(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-})
-
-const apiChoresSchema = z.array(apiChoreSchema)
-
-function mapApiChoreToDomain(apiChore: z.infer<typeof apiChoreSchema>): Chore {
-  return {
-    id: apiChore.id,
-    name: apiChore.name,
-    cadenceInDays: apiChore.cadenceInDays,
-    createdAt: new Date(apiChore.createdAt),
-    updatedAt: new Date(apiChore.updatedAt),
-  }
-}
-
-async function fetchAllChores(): Promise<Chore[]> {
-  const response = await axios.get('/api/chores')
-  const apiChores = apiChoresSchema.parse(response.data)
-
-  return apiChores.map(mapApiChoreToDomain)
+  createdAt: new Date(0),
+  updatedAt: new Date(0),
 }
 
 export function useAllChoresQuery() {
-  return useSuspenseQuery({
-    queryKey: ['chores', 'all'],
-    queryFn: fetchAllChores,
+  return useListChoresSuspense({
+    query: {
+      queryKey: queryKeys.chores.list(),
+      select: (data) => z.array(choreSchema).parse(data),
+    },
+  })
+}
+
+export function useCreateChoreMutation() {
+  const queryClient = useQueryClient()
+  return useCreateChore({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.chores.all() })
+      },
+    },
+  })
+}
+
+export function useUpdateChoreMutation() {
+  const queryClient = useQueryClient()
+  return useUpdateChore({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.chores.all() })
+      },
+    },
+  })
+}
+
+export function useDeleteChoreMutation() {
+  const queryClient = useQueryClient()
+  return useDeleteChore({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.chores.all() })
+      },
+    },
   })
 }
