@@ -34,7 +34,6 @@ import type {
   CreateChoreCompletionRequest,
   CreateChoreRequest,
   ListChoreCompletionsParams,
-  ListChoreQueueParams,
   UpdateChoreRequest
 } from '../api.schemas.ts';
 
@@ -981,14 +980,13 @@ const {mutation: mutationOptions} = options ?
       return useMutation(getCreateChoreCompletionMutationOptions(options), queryClient);
     }
     export const listChoreQueue = (
-    params?: ListChoreQueueParams,
+
  signal?: AbortSignal
 ) => {
 
 
       return customInstance<ChoreInQueue[]>(
-      {url: `/api/chore-queue`, method: 'GET',
-        params, signal
+      {url: `/api/chore-queue`, method: 'GET', signal
     },
       );
     }
@@ -996,23 +994,23 @@ const {mutation: mutationOptions} = options ?
 
 
 
-export const getListChoreQueueQueryKey = (params?: ListChoreQueueParams,) => {
+export const getListChoreQueueQueryKey = () => {
     return [
-    `/api/chore-queue`, ...(params ? [params] : [])
+    `/api/chore-queue`
     ] as const;
     }
 
 
-export const getListChoreQueueQueryOptions = <TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = void>(params?: ListChoreQueueParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
+export const getListChoreQueueQueryOptions = <TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListChoreQueueQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getListChoreQueueQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listChoreQueue>>> = ({ signal }) => listChoreQueue(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listChoreQueue>>> = ({ signal }) => listChoreQueue(signal);
 
 
 
@@ -1022,11 +1020,11 @@ const {query: queryOptions} = options ?? {};
 }
 
 export type ListChoreQueueQueryResult = NonNullable<Awaited<ReturnType<typeof listChoreQueue>>>
-export type ListChoreQueueQueryError = void
+export type ListChoreQueueQueryError = unknown
 
 
-export function useListChoreQueue<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = void>(
- params: undefined |  ListChoreQueueParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>> & Pick<
+export function useListChoreQueue<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listChoreQueue>>,
           TError,
@@ -1035,8 +1033,8 @@ export function useListChoreQueue<TData = Awaited<ReturnType<typeof listChoreQue
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListChoreQueue<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = void>(
- params?: ListChoreQueueParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>> & Pick<
+export function useListChoreQueue<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listChoreQueue>>,
           TError,
@@ -1045,17 +1043,17 @@ export function useListChoreQueue<TData = Awaited<ReturnType<typeof listChoreQue
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListChoreQueue<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = void>(
- params?: ListChoreQueueParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
+export function useListChoreQueue<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useListChoreQueue<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = void>(
- params?: ListChoreQueueParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
+export function useListChoreQueue<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListChoreQueueQueryOptions(params,options)
+  const queryOptions = getListChoreQueueQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1067,16 +1065,16 @@ export function useListChoreQueue<TData = Awaited<ReturnType<typeof listChoreQue
 
 
 
-export const getListChoreQueueSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = void>(params?: ListChoreQueueParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
+export const getListChoreQueueSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListChoreQueueQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getListChoreQueueQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listChoreQueue>>> = ({ signal }) => listChoreQueue(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listChoreQueue>>> = ({ signal }) => listChoreQueue(signal);
 
 
 
@@ -1086,28 +1084,28 @@ const {query: queryOptions} = options ?? {};
 }
 
 export type ListChoreQueueSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listChoreQueue>>>
-export type ListChoreQueueSuspenseQueryError = void
+export type ListChoreQueueSuspenseQueryError = unknown
 
 
-export function useListChoreQueueSuspense<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = void>(
- params: undefined |  ListChoreQueueParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
+export function useListChoreQueueSuspense<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListChoreQueueSuspense<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = void>(
- params?: ListChoreQueueParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
+export function useListChoreQueueSuspense<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListChoreQueueSuspense<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = void>(
- params?: ListChoreQueueParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
+export function useListChoreQueueSuspense<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useListChoreQueueSuspense<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = void>(
- params?: ListChoreQueueParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
+export function useListChoreQueueSuspense<TData = Awaited<ReturnType<typeof listChoreQueue>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreQueue>>, TError, TData>>, }
  , queryClient?: QueryClient
  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListChoreQueueSuspenseQueryOptions(params,options)
+  const queryOptions = getListChoreQueueSuspenseQueryOptions(options)
 
   const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

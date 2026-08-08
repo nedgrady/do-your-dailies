@@ -11,7 +11,7 @@ const choreInQueueSchema = ListChoreQueueResponseItem.extend({
 export type ChoreInQueue = z.infer<typeof choreInQueueSchema>
 
 export function useCurrentDayChoreQueueQuery() {
-  return useListChoreQueueSuspense(undefined, {
+  return useListChoreQueueSuspense({
     query: {
       queryKey: queryKeys.chores.queue(),
       select: (data) => z.array(choreInQueueSchema).parse(data),

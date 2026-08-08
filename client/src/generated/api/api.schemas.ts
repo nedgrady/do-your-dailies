@@ -63,7 +63,3 @@ start: string;
 end: string;
 };
 
-export type ListChoreQueueParams = {
-maxChores?: number;
-};
-

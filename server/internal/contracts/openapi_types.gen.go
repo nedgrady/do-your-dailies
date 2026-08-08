@@ -80,11 +80,6 @@ type ListChoreCompletionsParams struct {
 	End   time.Time `form:"end" json:"end"`
 }
 
-// ListChoreQueueParams defines parameters for ListChoreQueue.
-type ListChoreQueueParams struct {
-	MaxChores *int `form:"maxChores,omitempty" json:"maxChores,omitempty"`
-}
-
 // CreateChoreCompletionJSONRequestBody defines body for CreateChoreCompletion for application/json ContentType.
 type CreateChoreCompletionJSONRequestBody = CreateChoreCompletionRequest
 
@@ -107,7 +102,7 @@ type ServerInterface interface {
 	GetChoreInsights(w http.ResponseWriter, r *http.Request)
 
 	// (GET /api/chore-queue)
-	ListChoreQueue(w http.ResponseWriter, r *http.Request, params ListChoreQueueParams)
+	ListChoreQueue(w http.ResponseWriter, r *http.Request)
 
 	// (GET /api/chores)
 	ListChores(w http.ResponseWriter, r *http.Request)
@@ -148,7 +143,7 @@ func (_ Unimplemented) GetChoreInsights(w http.ResponseWriter, r *http.Request) 
 }
 
 // (GET /api/chore-queue)
-func (_ Unimplemented) ListChoreQueue(w http.ResponseWriter, r *http.Request, params ListChoreQueueParams) {
+func (_ Unimplemented) ListChoreQueue(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -268,27 +263,8 @@ func (siw *ServerInterfaceWrapper) GetChoreInsights(w http.ResponseWriter, r *ht
 // ListChoreQueue operation middleware
 func (siw *ServerInterfaceWrapper) ListChoreQueue(w http.ResponseWriter, r *http.Request) {
 
-	var err error
-	_ = err
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params ListChoreQueueParams
-
-	// ------------- Optional query parameter "maxChores" -------------
-
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "maxChores", r.URL.Query(), &params.MaxChores, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
-	if err != nil {
-		var requiredError *runtime.RequiredParameterError
-		if errors.As(err, &requiredError) {
-			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "maxChores"})
-		} else {
-			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "maxChores", Err: err})
-		}
-		return
-	}
-
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.ListChoreQueue(w, r, params)
+		siw.Handler.ListChoreQueue(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -655,7 +631,6 @@ func (response GetChoreInsights200JSONResponse) VisitGetChoreInsightsResponse(w 
 }
 
 type ListChoreQueueRequestObject struct {
-	Params ListChoreQueueParams
 }
 
 type ListChoreQueueResponseObject interface {
@@ -674,14 +649,6 @@ func (response ListChoreQueue200JSONResponse) VisitListChoreQueueResponse(w http
 	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
-}
-
-type ListChoreQueue400Response struct {
-}
-
-func (response ListChoreQueue400Response) VisitListChoreQueueResponse(w http.ResponseWriter) error {
-	w.WriteHeader(400)
-	return nil
 }
 
 type ListChoresRequestObject struct {
@@ -991,10 +958,8 @@ func (sh *strictHandler) GetChoreInsights(w http.ResponseWriter, r *http.Request
 }
 
 // ListChoreQueue operation middleware
-func (sh *strictHandler) ListChoreQueue(w http.ResponseWriter, r *http.Request, params ListChoreQueueParams) {
+func (sh *strictHandler) ListChoreQueue(w http.ResponseWriter, r *http.Request) {
 	var request ListChoreQueueRequestObject
-
-	request.Params = params
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
 		return sh.ssi.ListChoreQueue(ctx, request.(ListChoreQueueRequestObject))

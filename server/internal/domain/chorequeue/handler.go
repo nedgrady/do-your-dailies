@@ -44,13 +44,7 @@ func (handler ChoreQueueHandler) ListChoreQueue(ctx context.Context, request con
 		return nil, err
 	}
 
-	// TODO: remove maxChores
-	maxChores := defaultMaxChores
-	if request.Params.MaxChores != nil {
-		maxChores = *request.Params.MaxChores
-	}
-
-	choresRemainingToComplete := maxChores - len(requiredChoresCompletedToday)
+	choresRemainingToComplete := defaultMaxChores - len(requiredChoresCompletedToday)
 	queue, err := handler.Store.ListForCapacityFirstUser(ctx, userID, choresRemainingToComplete)
 	if err != nil {
 		return nil, err

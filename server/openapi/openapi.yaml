@@ -146,12 +146,6 @@ paths:
   /api/chore-queue:
     get:
       operationId: listChoreQueue
-      parameters:
-        - name: maxChores
-          in: query
-          required: false
-          schema:
-            type: integer
       responses:
         "200":
           description: Ordered chores due for the requested day
@@ -161,8 +155,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ChoreInQueue"
-        "400":
-          description: Invalid query parameter
 components:
   schemas:
     Chore:

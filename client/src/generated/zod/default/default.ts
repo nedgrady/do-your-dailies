@@ -127,10 +127,6 @@ export const CreateChoreCompletionResponse = zod.object({
   "updatedAt": zod.iso.datetime({"offset":true})
 })
 
-export const ListChoreQueueQueryParams = zod.object({
-  "maxChores": zod.int().optional()
-})
-
 
 
 
