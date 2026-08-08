@@ -6,35 +6,45 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Grid,
   IconButton,
   Stack,
   TextField,
-  Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
-import { DataGrid, type GridColDef } from '@mui/x-data-grid'
+import {
+  DataGrid,
+  type GridColDef,
+  type GridPreProcessEditCellProps,
+  type GridRowModel,
+  type GridRowModesModel,
+} from '@mui/x-data-grid'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
-import { orderBy } from 'es-toolkit'
 import { Suspense, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import {
-  type Chore,
   nullChore,
   useAllChoresQuery,
   useCreateChoreMutation,
   useDeleteChoreMutation,
   useUpdateChoreMutation,
+  type Chore,
 } from '../../../domain/chore'
-import { useChoreInsightsQuery } from '../../../domain/insights'
+import {
+  mutationStatus,
+  SaveStatusIndicator,
+} from '../../../forms/SaveStatusIndicator'
+import { UnsavedChangesGuard } from '../../../forms/UnsavedChangesGuard'
+import { ChoreInsights } from './ChoreInsights'
 
 function AddChoreForm() {
   const [name, setName] = useState('')
   const [cadenceInDays, setCadenceInDays] = useState('')
   const createMutation = useCreateChoreMutation()
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = (e: React.SubmitEvent) => {
+    // e.preventDefault()
     const cadence = Number(cadenceInDays)
     if (!name.trim() || !cadence || cadence <= 0) return
     createMutation.mutate(
@@ -157,106 +167,117 @@ function EditChoreDialog({
   )
 }
 
-function ChoreInsights() {
-  const { data } = useChoreInsightsQuery()
-
-  if (!data) return <>Loading...</>
-
-  const {
-    minCapacityToKeepUtilizationRatioGreaterThanOne,
-    userDesiredCapacity,
-    utilizationRatio,
-    choreProjections,
-  } = data
-
-  const willBeSippage = utilizationRatio > 1
-
-  const sorted = orderBy(
-    choreProjections,
-    [
-      (proctedChore) => proctedChore.chore.cadenceInDays,
-      (proctedChore) => proctedChore.chore.createdAt,
-    ],
-    ['asc', 'asc'],
-  )
-
-  const first = sorted[0]
-  const last = sorted[sorted.length - 1]
-  const middle = sorted[Math.floor((sorted.length - 1) / 2)]
-
-  // Dedupe by chore id, preserving order: first -> middle -> last
-  const picked = [first, middle, last]
-  const seen = new Set<Chore['id']>()
-  const deduped = picked.filter((p) => {
-    if (!p) return false
-    if (seen.has(p.chore.id)) return false
-    seen.add(p.chore.id)
-    return true
-  })
-
-  return (
-    <Box>
-      <Typography>
-        You want to do {userDesiredCapacity} chores per day
-      </Typography>
-      <Typography>
-        Your chore list would require{' '}
-        {minCapacityToKeepUtilizationRatioGreaterThanOne.toFixed(1)} chores per
-        day
-      </Typography>
-      {willBeSippage && (
-        <>
-          <Typography>This means there will be slippage.</Typography>
-          <Typography>Example:</Typography>
-          {deduped.map((choreProjection) => (
-            <Typography>
-              {choreProjection.chore.name}: {choreProjection.projectedCadence}
-            </Typography>
-          ))}
-        </>
-      )}
-      {!willBeSippage && (
-        <Typography>
-          This means you will complete all your chores in good time.
-        </Typography>
-      )}
-    </Box>
-  )
-}
-
 function ChoreList() {
   const theme = useTheme()
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
   const { data: chores } = useAllChoresQuery()
   const [selectedChore, setSelectedChore] = useState<Chore>(nullChore)
+  const updateMutation = useUpdateChoreMutation()
 
-  const columns: GridColDef[] = [
-    { field: 'name', headerName: 'Chore', flex: 1, editable: isDesktop },
+  const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({})
+  const [editing, setEditing] = useState(0)
+
+  const processRowUpdate = async (
+    newRow: GridRowModel<Chore>,
+    oldRow: GridRowModel<Chore>,
+  ): Promise<GridRowModel<Chore>> => {
+    const name = String(newRow.name ?? '').trim()
+    const cadenceInDays = Number(newRow.cadenceInDays)
+
+    if (!name || !cadenceInDays || cadenceInDays <= 0) {
+      // Shouldn't normally hit this — preProcessEditCellProps below stops
+      // Save from running while a field is invalid — but guard anyway.
+      throw new Error('Chore name and a positive cadence are required')
+    }
+
+    if (name === oldRow.name && cadenceInDays === oldRow.cadenceInDays) {
+      return oldRow
+    }
+
+    await updateMutation.mutateAsync({
+      id: oldRow.id,
+      data: { name, cadenceInDays },
+    })
+
+    // Only name/cadenceInDays are editable. id/createdAt/updatedAt always
+    // come from oldRow, never from newRow or the mutation response.
+    return { ...oldRow, name, cadenceInDays }
+  }
+
+  const validateName = ({ props }: GridPreProcessEditCellProps) => {
+    const value = String(props.value ?? '').trim()
+    return {
+      ...props,
+      error: value.length === 0 ? 'Name is required' : undefined,
+    }
+  }
+
+  const validateCadence = ({ props }: GridPreProcessEditCellProps) => {
+    const value = Number(props.value)
+    return {
+      ...props,
+      error: !value || value <= 0 ? 'Must be a positive number' : undefined,
+    }
+  }
+
+  const columns: GridColDef<Chore>[] = [
+    {
+      field: 'name',
+      headerName: 'Chore',
+      flex: 1,
+      editable: isDesktop,
+      preProcessEditCellProps: validateName,
+    },
     {
       field: 'cadenceInDays',
       headerName: 'Cadence (days)',
       width: 160,
+      type: 'number',
       editable: isDesktop,
+      preProcessEditCellProps: validateCadence,
     },
   ]
 
   return (
     <Box sx={{ mt: 2, mx: 'auto' }}>
+      <UnsavedChangesGuard hasUnsavedChanges={editing > 0} />
       <AddChoreForm />
-      <ChoreInsights />
+      <Grid container sx={{ alignItems: 'stretch', mb: 0.5 }}>
+        <Grid>
+          <ChoreInsights />
+        </Grid>
+
+        <Grid
+          size="grow"
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            alignItems: 'flex-end',
+            pb: 0.5,
+          }}
+        >
+          <SaveStatusIndicator status={mutationStatus(updateMutation)} />
+        </Grid>
+      </Grid>
       <DataGrid
         rows={chores}
         columns={columns}
         showToolbar
-        slotProps={{ toolbar: { showQuickFilter: true } }}
         rowHeight={isDesktop ? 40 : 80}
+        rowModesModel={rowModesModel}
+        onRowModesModelChange={setRowModesModel}
         onRowClick={
           isDesktop
             ? undefined
             : (params) => setSelectedChore(params.row as Chore)
         }
+        onCellEditStart={() => setEditing((x) => x + 1)}
+        onCellEditStop={() => setEditing((x) => x - 1)}
         disableRowSelectionOnClick
+        processRowUpdate={processRowUpdate}
       />
+
       <EditChoreDialog
         chore={selectedChore}
         onClose={() => setSelectedChore(nullChore)}
