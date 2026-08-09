@@ -1,0 +1,78 @@
+name: Mutation Testing
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  mutation:
+    name: Run go-mutesting per package
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    timeout-minutes: 360
+    concurrency:
+      group: mutation-testing
+      cancel-in-progress: true
+    env:
+      TEST_POSTGRES_DSN: host=127.0.0.1 port=5432 user=postgres password=postgres dbname=dailies sslmode=disable
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dailies
+        options: >-
+          --health-cmd "pg_isready -U postgres -d dailies"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    strategy:
+      matrix:
+        pkg:
+          [
+            "./internal/domain/chores",
+            "./internal/domain/chorecompletions",
+            "./internal/domain/chorequeue",
+            "./internal/errors",
+            "./internal/api/json",
+            "./internal/api",
+          ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.25.5"
+      - name: Cache Go modules and build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: go-mut-${{ runner.os }}-${{ matrix.pkg }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            go-mod-${{ runner.os }}-
+      - name: Install go-mutesting
+        run: |
+          go install github.com/avito-tech/go-mutesting/cmd/go-mutesting@latest
+          export PATH=$PATH:$(go env GOPATH)/bin
+      - name: Wait for Postgres
+        run: |
+          for i in {1..30}; do
+            pg_isready -h 127.0.0.1 -p 5432 -U postgres && break
+            sleep 1
+          done
+      - name: Run go-mutesting
+        run: |
+          go-mutesting -format json -o "mutations-${{ matrix.pkg }}.json" ${{ matrix.pkg }}
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report-${{ matrix.pkg }}
+          path: mutations-${{ matrix.pkg }}.json

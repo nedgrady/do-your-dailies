@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-04-21T21:42:50Z",
+  "entries": [
+    "bug-hunter",
+    "codebase-audit-pre-push",
+    "create-endpoint",
+    "docs",
+    "fetch-frontend-endpoint",
+    "golang-unit-test-writing",
+    "global-chat-agent-discovery",
+    "jq",
+    "k6-load-testing",
+    "lambdatest-agent-skills",
+    "mutation-failure-resolution",
+    "performance-optimizer",
+    "skill-check",
+    "technical-change-tracker",
+    "typescript-unit-test-writing"
+  ]
+}
