@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "do-your-dailies",
+      "Group": "aiven",
+      "Host": "do-your-dailies-do-your-dailies.k.aivencloud.com",
+      "Port": 27654,
+      "MaintenanceDB": "defaultdb",
+      "Username": "avnadmin",
+      "SSLMode": "require"
+    }
+  }
+}
