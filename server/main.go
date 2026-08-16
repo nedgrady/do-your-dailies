@@ -9,6 +9,7 @@ import (
 
 	"do-your-dailies/server/internal/api"
 	"do-your-dailies/server/internal/db"
+	"do-your-dailies/server/internal/migrations"
 )
 
 func resolveDSN(getenv func(string) string) (string, error) {
@@ -40,11 +41,9 @@ func main() {
 		log.Fatal("failed to connect to database:", err)
 	}
 
-	// Migrations are run manually for now, not on API boot, since Cloud Run
-	// can start multiple/concurrent instances.
-	// if err := migrations.Migrate(database); err != nil {
-	// 	log.Fatal("failed to run migrations:", err)
-	// }
+	if err := migrations.Migrate(database); err != nil {
+		log.Fatal("failed to run migrations:", err)
+	}
 
 	app := api.New(database)
 

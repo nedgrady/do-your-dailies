@@ -36,4 +36,4 @@ docker run --rm -p 8080:8080 -e DATABASE_URL="host=host.docker.internal user=pos
 
 ### Migrations
 
-Migrations are **not** run automatically on API startup (Cloud Run can start multiple/concurrent instances, and GORM's `AutoMigrate` has no locking). There is currently no dedicated migrate command — run them manually when the schema changes by temporarily uncommenting the `migrations.Migrate(database)` call in `main.go`, running the app once against the target `DATABASE_URL`, then re-commenting it. A dedicated `cmd/migrate` binary is a planned follow-up.
+Migrations run automatically on every API boot (`migrations.Migrate(database)` in `main.go`), including in the deployed Cloud Run service. Since Cloud Run can start multiple/concurrent instances, `Migrate` serializes itself with a Postgres transaction-scoped advisory lock (`server/internal/migrations/migrate.go`) so only one instance runs the schema DDL at a time — others block briefly, then their own (idempotent) `AutoMigrate` is a no-op.
