@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import {
+  useBulkCreateChores,
   useCreateChore,
   useDeleteChore,
   useListChoresSuspense,
@@ -37,6 +38,17 @@ export function useAllChoresQuery() {
 export function useCreateChoreMutation() {
   const queryClient = useQueryClient()
   return useCreateChore({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.chores.all() })
+      },
+    },
+  })
+}
+
+export function useBulkCreateChoresMutation() {
+  const queryClient = useQueryClient()
+  return useBulkCreateChores({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.chores.all() })

@@ -53,6 +53,38 @@ func (handler ChoreHandler) CreateChore(ctx context.Context, request contracts.C
 	return contracts.CreateChore201JSONResponse(ToAPIChore(chore)), nil
 }
 
+func (handler ChoreHandler) BulkCreateChores(ctx context.Context, request contracts.BulkCreateChoresRequestObject) (contracts.BulkCreateChoresResponseObject, error) {
+	userID, err := auth.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var rowErrors []contracts.BulkCreateChoresRowError
+	requests := make([]CreateRequest, 0, len(request.Body.Chores))
+	for i, chore := range request.Body.Chores {
+		if err := validateCadence(chore.CadenceInDays); err != nil {
+			rowErrors = append(rowErrors, contracts.BulkCreateChoresRowError{Index: i, Message: err.Error()})
+			continue
+		}
+		if chore.Name == "" {
+			rowErrors = append(rowErrors, contracts.BulkCreateChoresRowError{Index: i, Message: "name must not be empty"})
+			continue
+		}
+		requests = append(requests, CreateRequest{Name: chore.Name, CadenceInDays: chore.CadenceInDays})
+	}
+
+	if len(rowErrors) > 0 {
+		return contracts.BulkCreateChores422JSONResponse{Errors: rowErrors}, nil
+	}
+
+	created, err := handler.Store.CreateMany(ctx, userID, requests)
+	if err != nil {
+		return nil, err
+	}
+
+	return contracts.BulkCreateChores201JSONResponse(ToAPIChores(created)), nil
+}
+
 func (handler ChoreHandler) GetChore(ctx context.Context, request contracts.GetChoreRequestObject) (contracts.GetChoreResponseObject, error) {
 	userID, err := auth.UserIDFromContext(ctx)
 	if err != nil {

@@ -17,7 +17,8 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/server",
-      "cwd": "${workspaceFolder}/server"
+      "cwd": "${workspaceFolder}/server",
+      "envFile": "${workspaceFolder}/server/.env"
     }
   ]
 }

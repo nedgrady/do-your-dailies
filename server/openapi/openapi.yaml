@@ -42,6 +42,30 @@ paths:
                 $ref: "#/components/schemas/Chore"
         "422":
           description: Invalid JSON payload
+  /api/chores/bulk:
+    post:
+      operationId: bulkCreateChores
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkCreateChoresRequest"
+      responses:
+        "201":
+          description: Created chores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Chore"
+        "422":
+          description: One or more rows failed validation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkCreateChoresValidationError"
   /api/chores/{id}:
     parameters:
       - name: id
@@ -215,6 +239,34 @@ components:
         cadenceInDays:
           type: integer
           minimum: 1
+    BulkCreateChoresRequest:
+      type: object
+      required:
+        - chores
+      properties:
+        chores:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateChoreRequest"
+    BulkCreateChoresRowError:
+      type: object
+      required:
+        - index
+        - message
+      properties:
+        index:
+          type: integer
+        message:
+          type: string
+    BulkCreateChoresValidationError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/BulkCreateChoresRowError"
     UpdateChoreRequest:
       type: object
       properties:

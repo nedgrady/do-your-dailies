@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodayRouteImport } from './routes/today'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChoresManageRouteImport } from './routes/chores/manage'
+import { Route as ChoresImportRouteImport } from './routes/chores/import'
 
 const TodayRoute = TodayRouteImport.update({
   id: '/today',
@@ -28,34 +29,43 @@ const ChoresManageRoute = ChoresManageRouteImport.update({
   path: '/chores/manage',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChoresImportRoute = ChoresImportRouteImport.update({
+  id: '/chores/import',
+  path: '/chores/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/today': typeof TodayRoute
+  '/chores/import': typeof ChoresImportRoute
   '/chores/manage': typeof ChoresManageRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/today': typeof TodayRoute
+  '/chores/import': typeof ChoresImportRoute
   '/chores/manage': typeof ChoresManageRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/today': typeof TodayRoute
+  '/chores/import': typeof ChoresImportRoute
   '/chores/manage': typeof ChoresManageRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/today' | '/chores/manage'
+  fullPaths: '/' | '/today' | '/chores/import' | '/chores/manage'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/today' | '/chores/manage'
-  id: '__root__' | '/' | '/today' | '/chores/manage'
+  to: '/' | '/today' | '/chores/import' | '/chores/manage'
+  id: '__root__' | '/' | '/today' | '/chores/import' | '/chores/manage'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   TodayRoute: typeof TodayRoute
+  ChoresImportRoute: typeof ChoresImportRoute
   ChoresManageRoute: typeof ChoresManageRoute
 }
 
@@ -82,12 +92,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChoresManageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chores/import': {
+      id: '/chores/import'
+      path: '/chores/import'
+      fullPath: '/chores/import'
+      preLoaderRoute: typeof ChoresImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   TodayRoute: TodayRoute,
+  ChoresImportRoute: ChoresImportRoute,
   ChoresManageRoute: ChoresManageRoute,
 }
 export const routeTree = rootRouteImport

@@ -16,6 +16,22 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// BulkCreateChoresRequest defines model for BulkCreateChoresRequest.
+type BulkCreateChoresRequest struct {
+	Chores []CreateChoreRequest `json:"chores"`
+}
+
+// BulkCreateChoresRowError defines model for BulkCreateChoresRowError.
+type BulkCreateChoresRowError struct {
+	Index   int    `json:"index"`
+	Message string `json:"message"`
+}
+
+// BulkCreateChoresValidationError defines model for BulkCreateChoresValidationError.
+type BulkCreateChoresValidationError struct {
+	Errors []BulkCreateChoresRowError `json:"errors"`
+}
+
 // Chore defines model for Chore.
 type Chore struct {
 	CadenceInDays int       `json:"cadenceInDays"`
@@ -86,6 +102,9 @@ type CreateChoreCompletionJSONRequestBody = CreateChoreCompletionRequest
 // CreateChoreJSONRequestBody defines body for CreateChore for application/json ContentType.
 type CreateChoreJSONRequestBody = CreateChoreRequest
 
+// BulkCreateChoresJSONRequestBody defines body for BulkCreateChores for application/json ContentType.
+type BulkCreateChoresJSONRequestBody = BulkCreateChoresRequest
+
 // UpdateChoreJSONRequestBody defines body for UpdateChore for application/json ContentType.
 type UpdateChoreJSONRequestBody = UpdateChoreRequest
 
@@ -109,6 +128,9 @@ type ServerInterface interface {
 
 	// (POST /api/chores)
 	CreateChore(w http.ResponseWriter, r *http.Request)
+
+	// (POST /api/chores/bulk)
+	BulkCreateChores(w http.ResponseWriter, r *http.Request)
 
 	// (DELETE /api/chores/{id})
 	DeleteChore(w http.ResponseWriter, r *http.Request, id uint64)
@@ -154,6 +176,11 @@ func (_ Unimplemented) ListChores(w http.ResponseWriter, r *http.Request) {
 
 // (POST /api/chores)
 func (_ Unimplemented) CreateChore(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (POST /api/chores/bulk)
+func (_ Unimplemented) BulkCreateChores(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -293,6 +320,20 @@ func (siw *ServerInterfaceWrapper) CreateChore(w http.ResponseWriter, r *http.Re
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateChore(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// BulkCreateChores operation middleware
+func (siw *ServerInterfaceWrapper) BulkCreateChores(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.BulkCreateChores(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -526,6 +567,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/api/chores", wrapper.CreateChore)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/chores/bulk", wrapper.BulkCreateChores)
+	})
+	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/api/chores/{id}", wrapper.DeleteChore)
 	})
 	r.Group(func(r chi.Router) {
@@ -702,6 +746,42 @@ func (response CreateChore422Response) VisitCreateChoreResponse(w http.ResponseW
 	return nil
 }
 
+type BulkCreateChoresRequestObject struct {
+	Body *BulkCreateChoresJSONRequestBody
+}
+
+type BulkCreateChoresResponseObject interface {
+	VisitBulkCreateChoresResponse(w http.ResponseWriter) error
+}
+
+type BulkCreateChores201JSONResponse []Chore
+
+func (response BulkCreateChores201JSONResponse) VisitBulkCreateChoresResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type BulkCreateChores422JSONResponse BulkCreateChoresValidationError
+
+func (response BulkCreateChores422JSONResponse) VisitBulkCreateChoresResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type DeleteChoreRequestObject struct {
 	Id uint64 `json:"id"`
 }
@@ -833,6 +913,9 @@ type StrictServerInterface interface {
 
 	// (POST /api/chores)
 	CreateChore(ctx context.Context, request CreateChoreRequestObject) (CreateChoreResponseObject, error)
+
+	// (POST /api/chores/bulk)
+	BulkCreateChores(ctx context.Context, request BulkCreateChoresRequestObject) (BulkCreateChoresResponseObject, error)
 
 	// (DELETE /api/chores/{id})
 	DeleteChore(ctx context.Context, request DeleteChoreRequestObject) (DeleteChoreResponseObject, error)
@@ -1029,6 +1112,37 @@ func (sh *strictHandler) CreateChore(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CreateChoreResponseObject); ok {
 		if err := validResponse.VisitCreateChoreResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// BulkCreateChores operation middleware
+func (sh *strictHandler) BulkCreateChores(w http.ResponseWriter, r *http.Request) {
+	var request BulkCreateChoresRequestObject
+
+	var body BulkCreateChoresJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.BulkCreateChores(ctx, request.(BulkCreateChoresRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "BulkCreateChores")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(BulkCreateChoresResponseObject); ok {
+		if err := validResponse.VisitBulkCreateChoresResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

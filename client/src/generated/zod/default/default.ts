@@ -40,6 +40,28 @@ export const CreateChoreResponse = zod.object({
   "updatedAt": zod.iso.datetime({"offset":true})
 })
 
+
+
+
+export const BulkCreateChoresBody = zod.object({
+  "chores": zod.array(zod.object({
+  "name": zod.string(),
+  "cadenceInDays": zod.int().min(1)
+}))
+})
+
+
+
+
+export const BulkCreateChoresResponseItem = zod.object({
+  "id": zod.int(),
+  "name": zod.string(),
+  "cadenceInDays": zod.int().min(1),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "updatedAt": zod.iso.datetime({"offset":true})
+})
+export const BulkCreateChoresResponse = zod.array(BulkCreateChoresResponseItem)
+
 export const GetChoreParams = zod.object({
   "id": zod.int()
 })

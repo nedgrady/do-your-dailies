@@ -29,6 +29,19 @@ export interface CreateChoreRequest {
   cadenceInDays: number;
 }
 
+export interface BulkCreateChoresRequest {
+  chores: CreateChoreRequest[];
+}
+
+export interface BulkCreateChoresRowError {
+  index: number;
+  message: string;
+}
+
+export interface BulkCreateChoresValidationError {
+  errors: BulkCreateChoresRowError[];
+}
+
 export interface UpdateChoreRequest {
   name?: string;
   /** @minimum 1 */

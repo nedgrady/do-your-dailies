@@ -13,23 +13,24 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
-import {
-  DataGrid,
-  type GridColDef,
-  type GridPreProcessEditCellProps,
-  type GridRowModel,
-  type GridRowModesModel,
+import type {
+  GridColDef,
+  GridPreProcessEditCellProps,
+  GridRowModel,
+  GridRowModesModel,
 } from '@mui/x-data-grid'
+import { DataGrid } from '@mui/x-data-grid'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { Suspense, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
+import type { Chore } from '../../../domain/chore'
 import {
   nullChore,
   useAllChoresQuery,
   useCreateChoreMutation,
   useDeleteChoreMutation,
   useUpdateChoreMutation,
-  type Chore,
 } from '../../../domain/chore'
 import {
   mutationStatus,
@@ -239,9 +240,14 @@ function ChoreList() {
   ]
 
   return (
-    <Box sx={{ mt: 2, mx: 'auto' }}>
+    <Box sx={{ mt: 2, mx: 'auto', maxWidth: 720 }}>
       <UnsavedChangesGuard hasUnsavedChanges={editing > 0} />
       <AddChoreForm />
+      <Stack direction="row" sx={{ mb: 1 }}>
+        <Button component={Link} to="/chores/import" size="small">
+          Bulk import
+        </Button>
+      </Stack>
       <Grid container sx={{ alignItems: 'stretch', mb: 0.5 }}>
         <Grid>
           <ChoreInsights />

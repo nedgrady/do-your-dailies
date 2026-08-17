@@ -27,6 +27,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  BulkCreateChoresRequest,
+  BulkCreateChoresValidationError,
   Chore,
   ChoreCompletion,
   ChoreInQueue,
@@ -390,6 +392,64 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getCreateChoreMutationOptions(options), queryClient);
+    }
+    export const bulkCreateChores = (
+    bulkCreateChoresRequest: BulkCreateChoresRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<Chore[]>(
+      {url: `/api/chores/bulk`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: bulkCreateChoresRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getBulkCreateChoresMutationOptions = <TError = BulkCreateChoresValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkCreateChores>>, TError,{data: BulkCreateChoresRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof bulkCreateChores>>, TError,{data: BulkCreateChoresRequest}, TContext> => {
+
+const mutationKey = ['bulkCreateChores'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkCreateChores>>, {data: BulkCreateChoresRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bulkCreateChores(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BulkCreateChoresMutationResult = NonNullable<Awaited<ReturnType<typeof bulkCreateChores>>>
+    export type BulkCreateChoresMutationBody = BulkCreateChoresRequest
+    export type BulkCreateChoresMutationError = BulkCreateChoresValidationError
+
+    export const useBulkCreateChores = <TError = BulkCreateChoresValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkCreateChores>>, TError,{data: BulkCreateChoresRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof bulkCreateChores>>,
+        TError,
+        {data: BulkCreateChoresRequest},
+        TContext
+      > => {
+      return useMutation(getBulkCreateChoresMutationOptions(options), queryClient);
     }
     export const getChore = (
     id: number,

@@ -11,6 +11,7 @@ import (
 type Store interface {
 	List(ctx context.Context, userID uint) ([]models.Chore, error)
 	Create(ctx context.Context, userID uint, req CreateRequest) (models.Chore, error)
+	CreateMany(ctx context.Context, userID uint, reqs []CreateRequest) ([]models.Chore, error)
 	Get(ctx context.Context, userID uint, id uint) (models.Chore, error)
 	Update(ctx context.Context, userID uint, id uint, req UpdateRequest) (models.Chore, error)
 	Delete(ctx context.Context, userID uint, id uint) error
@@ -38,6 +39,22 @@ func (store *GormStore) Create(ctx context.Context, userID uint, req CreateReque
 	}
 	result := store.db.WithContext(ctx).Create(&chore)
 	return chore, result.Error
+}
+
+func (store *GormStore) CreateMany(ctx context.Context, userID uint, reqs []CreateRequest) ([]models.Chore, error) {
+	chores := make([]models.Chore, 0, len(reqs))
+	for _, req := range reqs {
+		chores = append(chores, models.Chore{
+			UserID:        userID,
+			Name:          req.Name,
+			CadenceInDays: req.CadenceInDays,
+		})
+	}
+
+	err := store.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return tx.Create(&chores).Error
+	})
+	return chores, err
 }
 
 func (store *GormStore) Get(ctx context.Context, userID uint, id uint) (models.Chore, error) {
