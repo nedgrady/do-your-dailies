@@ -245,7 +245,7 @@ function ChoreList() {
       <AddChoreForm />
       <Stack direction="row" sx={{ mb: 1 }}>
         <Button component={Link} to="/chores/import" size="small">
-          Bulk import
+          Bulk import (hello beauty)
         </Button>
       </Stack>
       <Grid container sx={{ alignItems: 'stretch', mb: 0.5 }}>
