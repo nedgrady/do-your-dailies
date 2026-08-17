@@ -240,7 +240,7 @@ function ChoreList() {
   ]
 
   return (
-    <Box sx={{ mt: 2, mx: 'auto', maxWidth: 720 }}>
+    <Box>
       <UnsavedChangesGuard hasUnsavedChanges={editing > 0} />
       <AddChoreForm />
       <Stack direction="row" sx={{ mb: 1 }}>

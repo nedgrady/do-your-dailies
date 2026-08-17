@@ -132,7 +132,7 @@ export default function ImportChoresPage() {
   }
 
   return (
-    <Box sx={{ mt: 2, mx: 'auto', maxWidth: 720 }}>
+    <Box>
       <Typography variant="h6" sx={{ mb: 1 }}>
         Bulk import chores
       </Typography>

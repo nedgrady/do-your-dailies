@@ -54,7 +54,7 @@ function ChoreQueueContent() {
   }
 
   return (
-    <Box sx={{ mt: 2 }}>
+    <Box>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>

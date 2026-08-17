@@ -1,3 +1,4 @@
+import { Box } from '@mui/material'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
@@ -24,7 +25,9 @@ function RootComponent() {
     <AppThemeProvider>
       <Header />
       <main>
-        <Outlet />
+        <Box sx={{ mt: 2, mx: 'auto', maxWidth: 720 }}>
+          <Outlet />
+        </Box>
       </main>
       <Footer />
       {devtoolsEnabled && (
