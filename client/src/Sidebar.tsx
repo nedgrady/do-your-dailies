@@ -1,14 +1,21 @@
 import ChecklistIcon from '@mui/icons-material/Checklist'
+import DarkModeRounded from '@mui/icons-material/DarkModeRounded'
+import LightModeRounded from '@mui/icons-material/LightModeRounded'
 import TodayIcon from '@mui/icons-material/Today'
 import {
+  Box,
   Drawer,
+  IconButton,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Toolbar,
+  Tooltip,
+  Typography,
 } from '@mui/material'
 import { Link } from '@tanstack/react-router'
+import { ColorModeContext } from './integrations/mui/theme-provider'
 
 export const drawerWidth = 220
 
@@ -25,7 +32,16 @@ export default function Sidebar() {
         },
       }}
     >
-      <Toolbar />
+      <Toolbar>
+        <Typography
+          component={Link}
+          to="/today"
+          variant="h6"
+          sx={{ color: 'inherit', textDecoration: 'none' }}
+        >
+          Do Your Dailies
+        </Typography>
+      </Toolbar>
       <List>
         <ListItemButton
           component={Link}
@@ -58,6 +74,22 @@ export default function Sidebar() {
           <ListItemText primary="Manage chores" />
         </ListItemButton>
       </List>
+
+      <ColorModeContext.Consumer>
+        {({ mode, toggleMode }) => (
+          <Box sx={{ mt: 'auto', p: 1 }}>
+            <Tooltip
+              title={
+                mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+              }
+            >
+              <IconButton aria-label="toggle color mode" onClick={toggleMode}>
+                {mode === 'dark' ? <LightModeRounded /> : <DarkModeRounded />}
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
+      </ColorModeContext.Consumer>
     </Drawer>
   )
 }
