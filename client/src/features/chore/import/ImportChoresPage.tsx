@@ -7,7 +7,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { DataGrid } from '@mui/x-data-grid'
 import type {
   GridColDef,
   GridPreProcessEditCellProps,
@@ -16,6 +15,7 @@ import type {
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useBulkCreateChoresMutation } from '../../../domain/chore'
+import { EditableDataGrid } from '../../../integrations/mui/EditableDataGrid'
 import { parseChoreRows } from './parseChoreRows'
 
 interface DraftRow {
@@ -162,7 +162,7 @@ export default function ImportChoresPage() {
 
       {rows.length > 0 && (
         <>
-          <DataGrid
+          <EditableDataGrid
             rows={rows}
             columns={columns}
             processRowUpdate={processRowUpdate}

@@ -10,7 +10,6 @@ import {
   IconButton,
   Stack,
   TextField,
-  Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
@@ -21,7 +20,6 @@ import type {
   GridRowModel,
   GridRowModesModel,
 } from '@mui/x-data-grid'
-import { DataGrid, useGridApiRef } from '@mui/x-data-grid'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Suspense, useState } from 'react'
@@ -39,6 +37,7 @@ import {
   SaveStatusIndicator,
 } from '../../../forms/SaveStatusIndicator'
 import { UnsavedChangesGuard } from '../../../forms/UnsavedChangesGuard'
+import { EditableDataGrid } from '../../../integrations/mui/EditableDataGrid'
 import { ChoreInsights } from './ChoreInsights'
 
 const validateName = ({ props }: GridPreProcessEditCellProps) => {
@@ -195,25 +194,11 @@ function ChoreList() {
 
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({})
   const [editing, setEditing] = useState(0)
-  const apiRef = useGridApiRef()
 
-  const handleCellClick = (
-    params: GridCellParams<Chore>,
-    event: React.MouseEvent,
-  ) => {
-    if (!params.isEditable || params.cellMode === 'edit') return
-
-    // Ignore clicks on portaled elements (e.g. a select menu) that bubble
-    // up from outside the cell's own DOM subtree.
-    if (
-      event.target instanceof Element &&
-      !event.currentTarget.contains(event.target)
-    ) {
-      return
+  const handleCellClick = (params: GridCellParams<Chore>) => {
+    if (params.isEditable && params.cellMode !== 'edit') {
+      setEditing((x) => x + 1)
     }
-
-    setEditing((x) => x + 1)
-    apiRef.current?.startCellEditMode({ id: params.id, field: params.field })
   }
 
   const processRowUpdate = async (
@@ -288,13 +273,7 @@ function ChoreList() {
           <SaveStatusIndicator status={mutationStatus(updateMutation)} />
         </Grid>
       </Grid>
-      {isDesktop && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          Click a cell to edit it &mdash; press Enter to save, Esc to cancel.
-        </Typography>
-      )}
-      <DataGrid
-        apiRef={apiRef}
+      <EditableDataGrid
         rows={chores}
         columns={columns}
         showToolbar
@@ -310,22 +289,6 @@ function ChoreList() {
         onCellEditStop={() => setEditing((x) => x - 1)}
         disableRowSelectionOnClick
         processRowUpdate={processRowUpdate}
-        sx={{
-          '& .MuiDataGrid-cell--editable': {
-            cursor: 'text',
-          },
-          '& .MuiDataGrid-cell--editable:hover': {
-            backgroundColor: 'action.hover',
-          },
-          '& .MuiDataGrid-cell--editing': {
-            backgroundColor: 'action.selected',
-            outline: (t) => `2px solid ${t.palette.primary.main}`,
-            outlineOffset: -2,
-          },
-          '& .MuiDataGrid-cell--editing:focus-within': {
-            outline: (t) => `2px solid ${t.palette.primary.main}`,
-          },
-        }}
       />
 
       <EditChoreDialog
