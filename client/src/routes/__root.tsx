@@ -7,6 +7,7 @@ import Header from '../Header'
 import AppConfigPanel from '../integrations/devtools/AppConfigPanel'
 import { AppThemeProvider } from '../integrations/mui/theme-provider'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
+import Sidebar from '../Sidebar'
 
 const devtoolsEnabled = import.meta.env.VITE_ENABLE_DEVTOOLS === 'true'
 
@@ -23,13 +24,18 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 function RootComponent() {
   return (
     <AppThemeProvider>
-      <Header />
-      <main>
-        <Box sx={{ mt: 2, mx: 'auto', maxWidth: 720 }}>
-          <Outlet />
+      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+        <Sidebar />
+        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+          <Header />
+          <main>
+            <Box sx={{ mt: 2, mx: 'auto', maxWidth: 720 }}>
+              <Outlet />
+            </Box>
+          </main>
+          <Footer />
         </Box>
-      </main>
-      <Footer />
+      </Box>
       {devtoolsEnabled && (
         <TanStackDevtools
           config={{
