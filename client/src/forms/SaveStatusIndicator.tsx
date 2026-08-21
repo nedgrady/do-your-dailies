@@ -145,7 +145,7 @@ export function SaveStatusIndicator({ status }: { status: SaveStatus }) {
           title={startedAt.toLocaleString()}
           sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}
         >
-          {relativeTime}
+          Saved {relativeTime}
         </Typography>
       )}
 
