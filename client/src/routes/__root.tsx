@@ -6,6 +6,7 @@ import Footer from '../Footer'
 import AppConfigPanel from '../integrations/devtools/AppConfigPanel'
 import { AppThemeProvider } from '../integrations/mui/theme-provider'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
+import MobileNav from '../MobileNav'
 import Sidebar, { drawerWidth } from '../Sidebar'
 
 const devtoolsEnabled = import.meta.env.VITE_ENABLE_DEVTOOLS === 'true'
@@ -27,14 +28,19 @@ function RootComponent() {
         <Sidebar />
         <Box
           component="main"
-          sx={{ flexGrow: 1, width: `calc(100% - ${drawerWidth}px)` }}
+          sx={{
+            flexGrow: 1,
+            width: { md: `calc(100% - ${drawerWidth}px)` },
+            pb: { xs: 8, md: 0 },
+          }}
         >
-          <Box sx={{ mt: 2, mx: 'auto', maxWidth: 720 }}>
+          <Box sx={{ mt: 2, mx: 'auto', maxWidth: 720, px: 2 }}>
             <Outlet />
           </Box>
           <Footer />
         </Box>
       </Box>
+      <MobileNav />
       {devtoolsEnabled && (
         <TanStackDevtools
           config={{

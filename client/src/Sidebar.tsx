@@ -24,6 +24,7 @@ export default function Sidebar() {
     <Drawer
       variant="permanent"
       sx={{
+        display: { xs: 'none', md: 'block' },
         width: drawerWidth,
         flexShrink: 0,
         '& .MuiDrawer-paper': {
