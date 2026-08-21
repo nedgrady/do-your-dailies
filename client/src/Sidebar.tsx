@@ -1,31 +1,31 @@
 import ChecklistIcon from '@mui/icons-material/Checklist'
 import TodayIcon from '@mui/icons-material/Today'
 import {
-  Box,
+  Drawer,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Toolbar,
 } from '@mui/material'
 import { Link } from '@tanstack/react-router'
 
-const drawerWidth = 220
+export const drawerWidth = 220
 
 export default function Sidebar() {
   return (
-    <Box
-      component="nav"
+    <Drawer
+      variant="permanent"
       sx={{
         width: drawerWidth,
         flexShrink: 0,
-        borderRight: 1,
-        borderColor: 'divider',
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-        overflowY: 'auto',
+        '& .MuiDrawer-paper': {
+          width: drawerWidth,
+          boxSizing: 'border-box',
+        },
       }}
     >
+      <Toolbar />
       <List>
         <ListItemButton
           component={Link}
@@ -58,6 +58,6 @@ export default function Sidebar() {
           <ListItemText primary="Manage chores" />
         </ListItemButton>
       </List>
-    </Box>
+    </Drawer>
   )
 }

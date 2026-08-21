@@ -1,4 +1,4 @@
-import { Box } from '@mui/material'
+import { Box, Toolbar } from '@mui/material'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
@@ -7,7 +7,7 @@ import Header from '../Header'
 import AppConfigPanel from '../integrations/devtools/AppConfigPanel'
 import { AppThemeProvider } from '../integrations/mui/theme-provider'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
-import Sidebar from '../Sidebar'
+import Sidebar, { drawerWidth } from '../Sidebar'
 
 const devtoolsEnabled = import.meta.env.VITE_ENABLE_DEVTOOLS === 'true'
 
@@ -24,15 +24,17 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 function RootComponent() {
   return (
     <AppThemeProvider>
-      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex' }}>
+        <Header />
         <Sidebar />
-        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-          <Header />
-          <main>
-            <Box sx={{ mt: 2, mx: 'auto', maxWidth: 720 }}>
-              <Outlet />
-            </Box>
-          </main>
+        <Box
+          component="main"
+          sx={{ flexGrow: 1, width: `calc(100% - ${drawerWidth}px)` }}
+        >
+          <Toolbar />
+          <Box sx={{ mt: 2, mx: 'auto', maxWidth: 720 }}>
+            <Outlet />
+          </Box>
           <Footer />
         </Box>
       </Box>
