@@ -203,7 +203,7 @@ function EditChoreDialog({
     <Dialog open={isOpen} onClose={handleClose} fullWidth maxWidth="sm">
       <DialogTitle>{isCreating ? 'Add chore' : 'Edit chore'}</DialogTitle>
       <DialogContent>
-        <Grid container spacing={2} sx={{ mt: 1 }}>
+        <Grid container spacing={4} sx={{ mt: 1 }}>
           <Grid size={12}>
             <TextField
               label="Chore name"
@@ -228,16 +228,20 @@ function EditChoreDialog({
             aria-label="delete chore"
             color="error"
             onClick={handleDelete}
+            size="large"
           >
             <DeleteIcon />
           </IconButton>
         )}
         <Box sx={{ flex: 1 }} />
-        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleClose} size="large">
+          Cancel
+        </Button>
         <Button
           variant="contained"
           onClick={handleSave}
           disabled={saveMutation.isPending}
+          size="large"
         >
           Save
         </Button>
