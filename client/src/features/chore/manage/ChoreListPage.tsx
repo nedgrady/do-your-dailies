@@ -1,3 +1,4 @@
+import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {
   Box,
@@ -342,12 +343,16 @@ function ChoreList() {
       getSortComparator: withDraftFirst(compareStrings),
       renderCell: (params) =>
         params.id === NEW_CHORE_ID && !params.value ? (
-          <Typography
-            component="span"
-            sx={{ color: 'text.disabled', fontStyle: 'italic' }}
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{ alignItems: 'center', height: '100%' }}
           >
-            + Add a chore…
-          </Typography>
+            <AddIcon fontSize="small" />
+            <Typography component="span" variant="body2">
+              Add a chore…
+            </Typography>
+          </Stack>
         ) : (
           params.value
         ),
@@ -435,7 +440,7 @@ function ChoreList() {
         }
         sx={{
           '& .draft-row .MuiDataGrid-cell:not(.MuiDataGrid-cell--editing)': {
-            color: 'text.disabled',
+            color: 'primary.main',
           },
         }}
         onRowClick={
