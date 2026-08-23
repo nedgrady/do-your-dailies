@@ -368,9 +368,15 @@ function ChoreList() {
   return (
     <Box>
       <UnsavedChangesGuard hasUnsavedChanges={editing > 0} />
-      <Stack direction="row" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
+      >
+        <Typography variant="h6" component="h2">
+          Manage chores
+        </Typography>
         <Button component={Link} to="/chores/import" size="small">
-          Bulk import (hello beauty)
+          Bulk import
         </Button>
       </Stack>
       <Grid container sx={{ alignItems: 'stretch', mb: 0.5 }}>

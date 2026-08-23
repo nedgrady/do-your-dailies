@@ -44,3 +44,29 @@ temporarily raise your daily cap until you're caught up, then drop it back down.
 - The queue is the interface. No planning required.
 - Compliance is a guarantee, not a goal. If you trust the queue, you never need
   to check a dashboard.
+
+## Types of user
+
+### CAF — Capacity-First
+
+“I have a fixed amount of effort I'm willing to spend.”
+
+User sets a target work rate, e.g. 2 chores/day.
+That capacity is treated as the constraint.
+The system determines what that means for their chores.
+Some slippage is acceptable if their capacity isn't enough.
+The key question is: “Given what I'm willing to do, how well can I maintain my chores?”
+
+So the important outputs are things like effective cadences, utilization, and slippage.
+
+### COF — Compliance-First
+
+“I will do what it takes to complete chores on their required cadences.”
+
+Chore cadences are treated as the constraint.
+The user is willing to vary their effort over time, within reason.
+The system determines how much work is required to remain compliant.
+Slippage is the thing they're trying to avoid.
+The key question is: “How much do I need to do to keep everything on schedule?”
+
+So the important output is required work rate/capacity.
