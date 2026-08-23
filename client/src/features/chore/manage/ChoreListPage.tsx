@@ -45,6 +45,41 @@ import { EditableDataGrid } from '../../../integrations/mui/EditableDataGrid'
 import { DISPLAY_UNITS, toAmount, toDays, unitLabel } from '../../Cadence'
 import { ChoreInsights } from './ChoreInsights'
 
+const NEW_CHORE_ID = -2
+
+const draftChore: Chore = {
+  id: NEW_CHORE_ID,
+  name: '',
+  cadenceInDays: toDays(1, 'DAY'),
+  displayUnit: 'DAY',
+  createdAt: new Date(0),
+  updatedAt: new Date(0),
+}
+
+const compareStrings = (a: unknown, b: unknown) =>
+  String(a).localeCompare(String(b))
+
+const compareNumbers = (a: unknown, b: unknown) => Number(a) - Number(b)
+
+// Column sort direction doesn't auto-negate our comparator when
+// getSortComparator is used (unlike a plain sortComparator), so we handle
+// 'desc' ourselves — which lets us keep the draft row pinned first
+// regardless of the chosen direction, not just flipped with everything else.
+const withDraftFirst =
+  (
+    compare: (a: unknown, b: unknown) => number,
+  ): NonNullable<GridColDef<Chore>['getSortComparator']> =>
+  (sortDirection) =>
+  (v1, v2, params1, params2) => {
+    const isDraft1 = params1.id === NEW_CHORE_ID
+    const isDraft2 = params2.id === NEW_CHORE_ID
+    if (isDraft1 || isDraft2) {
+      return isDraft1 === isDraft2 ? 0 : isDraft1 ? -1 : 1
+    }
+    const result = compare(v1, v2)
+    return sortDirection === 'desc' ? -result : result
+  }
+
 const validateName = ({ props }: GridPreProcessEditCellProps) => {
   const value = String(props.value ?? '').trim()
   return {
@@ -76,95 +111,38 @@ function AmountUnitInput({
   onUnitChange: (unit: DisplayUnit) => void
 }) {
   return (
-    <>
-      <Typography>every</Typography>
-      <TextField
-        label="Amount"
-        type="number"
-        sx={{ minWidth: 90 }}
-        value={amount}
-        onChange={(e) => onAmountChange(e.target.value)}
-        slotProps={{ htmlInput: { min: 1, step: 1 } }}
-      />
-      <ToggleButtonGroup
-        value={unit}
-        exclusive
-        onChange={(_e, value: DisplayUnit | null) => {
-          if (value) onUnitChange(value)
-        }}
-        aria-label="cadence unit"
-      >
-        {DISPLAY_UNITS.map((u) => (
-          <ToggleButton key={u} value={u} aria-label={unitLabel(u)}>
-            {unitLabel(u)}
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
-    </>
-  )
-}
-
-function AddChoreForm() {
-  const [name, setName] = useState('')
-  const [amount, setAmount] = useState('1')
-  const [unit, setUnit] = useState<DisplayUnit>('DAY')
-  const createMutation = useCreateChoreMutation()
-
-  const parsedAmount = Number(amount)
-  const isAmountValid = Number.isInteger(parsedAmount) && parsedAmount > 0
-
-  const handleSubmit = (e: React.SubmitEvent) => {
-    e.preventDefault()
-    if (!name.trim() || !isAmountValid) return
-    createMutation.mutate(
-      {
-        data: {
-          name: name.trim(),
-          cadenceInDays: toDays(parsedAmount, unit),
-          displayUnit: unit,
-        },
-      },
-      {
-        onSuccess: () => {
-          setName('')
-          setAmount('1')
-          setUnit('DAY')
-        },
-      },
-    )
-  }
-
-  return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mb: 2 }}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        sx={{ alignItems: { sm: 'center' } }}
-      >
-        <TextField
-          label="Chore name"
+    <Grid container spacing={2} sx={{ flexGrow: 1, alignItems: 'center' }}>
+      <Grid size={{ xs: 12, sm: 'auto' }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Typography>every</Typography>
+          <TextField
+            label="Amount"
+            type="number"
+            sx={{ minWidth: 90 }}
+            value={amount}
+            onChange={(e) => onAmountChange(e.target.value)}
+            slotProps={{ htmlInput: { min: 1, step: 1 } }}
+          />
+        </Stack>
+      </Grid>
+      <Grid size={{ xs: 12, sm: 'grow' }}>
+        <ToggleButtonGroup
+          value={unit}
+          exclusive
+          onChange={(_e, value: DisplayUnit | null) => {
+            if (value) onUnitChange(value)
+          }}
+          aria-label="cadence unit"
           fullWidth
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-
-        <AmountUnitInput
-          amount={amount}
-          onAmountChange={setAmount}
-          unit={unit}
-          onUnitChange={setUnit}
-        />
-
-        <Button
-          type="submit"
-          variant="contained"
-          size="large"
-          disabled={createMutation.isPending || !name.trim() || !isAmountValid}
         >
-          Add
-        </Button>
-      </Stack>
-    </Box>
+          {DISPLAY_UNITS.map((u) => (
+            <ToggleButton key={u} value={u} aria-label={unitLabel(u)}>
+              {unitLabel(u)}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Grid>
+    </Grid>
   )
 }
 
@@ -179,6 +157,7 @@ function EditChoreDialog({
   const [amount, setAmount] = useState('')
   const [unit, setUnit] = useState<DisplayUnit>('DAY')
   const isOpen = chore.id !== nullChore.id
+  const isCreating = chore.id === NEW_CHORE_ID
 
   // sync local state whenever a new chore is opened
   if (isOpen && name === '' && amount === '') {
@@ -187,8 +166,10 @@ function EditChoreDialog({
     setUnit(chore.displayUnit)
   }
 
+  const createMutation = useCreateChoreMutation()
   const updateMutation = useUpdateChoreMutation()
   const deleteMutation = useDeleteChoreMutation()
+  const saveMutation = isCreating ? createMutation : updateMutation
 
   const handleClose = () => {
     setName('')
@@ -202,17 +183,16 @@ function EditChoreDialog({
     if (!name.trim() || !Number.isInteger(parsedAmount) || parsedAmount <= 0) {
       return
     }
-    updateMutation.mutate(
-      {
-        id: chore.id,
-        data: {
-          name: name.trim(),
-          cadenceInDays: toDays(parsedAmount, unit),
-          displayUnit: unit,
-        },
-      },
-      { onSuccess: handleClose },
-    )
+    const data = {
+      name: name.trim(),
+      cadenceInDays: toDays(parsedAmount, unit),
+      displayUnit: unit,
+    }
+    if (isCreating) {
+      createMutation.mutate({ data }, { onSuccess: handleClose })
+    } else {
+      updateMutation.mutate({ id: chore.id, data }, { onSuccess: handleClose })
+    }
   }
 
   const handleDelete = () => {
@@ -220,40 +200,44 @@ function EditChoreDialog({
   }
 
   return (
-    <Dialog open={isOpen} onClose={handleClose} fullWidth maxWidth="xs">
-      <DialogTitle>Edit chore</DialogTitle>
+    <Dialog open={isOpen} onClose={handleClose} fullWidth maxWidth="sm">
+      <DialogTitle>{isCreating ? 'Add chore' : 'Edit chore'}</DialogTitle>
       <DialogContent>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          <TextField
-            label="Chore name"
-            fullWidth
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid size={12}>
+            <TextField
+              label="Chore name"
+              fullWidth
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </Grid>
+          <Grid size={12}>
             <AmountUnitInput
               amount={amount}
               onAmountChange={setAmount}
               unit={unit}
               onUnitChange={setUnit}
             />
-          </Stack>
-        </Stack>
+          </Grid>
+        </Grid>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <IconButton
-          aria-label="delete chore"
-          color="error"
-          onClick={handleDelete}
-        >
-          <DeleteIcon />
-        </IconButton>
+        {!isCreating && (
+          <IconButton
+            aria-label="delete chore"
+            color="error"
+            onClick={handleDelete}
+          >
+            <DeleteIcon />
+          </IconButton>
+        )}
         <Box sx={{ flex: 1 }} />
         <Button onClick={handleClose}>Cancel</Button>
         <Button
           variant="contained"
           onClick={handleSave}
-          disabled={updateMutation.isPending}
+          disabled={saveMutation.isPending}
         >
           Save
         </Button>
@@ -267,6 +251,7 @@ function ChoreList() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
   const { data: chores } = useAllChoresQuery()
   const [selectedChore, setSelectedChore] = useState<Chore>(nullChore)
+  const createMutation = useCreateChoreMutation()
   const updateMutation = useUpdateChoreMutation()
 
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({})
@@ -285,6 +270,18 @@ function ChoreList() {
     const name = String(newRow.name ?? '').trim()
     const cadenceInDays = Number(newRow.cadenceInDays)
     const displayUnit = newRow.displayUnit
+
+    if (oldRow.id === NEW_CHORE_ID) {
+      // Let partial edits accumulate across separate single-cell commits
+      // (e.g. cadence set before name) instead of resetting on each one.
+      if (!name || !cadenceInDays || cadenceInDays <= 0) {
+        return newRow
+      }
+      await createMutation.mutateAsync({
+        data: { name, cadenceInDays, displayUnit },
+      })
+      return draftChore
+    }
 
     if (!name || !cadenceInDays || cadenceInDays <= 0) {
       // Shouldn't normally hit this — preProcessEditCellProps below stops
@@ -317,6 +314,18 @@ function ChoreList() {
       flex: 1,
       editable: isDesktop,
       preProcessEditCellProps: validateName,
+      getSortComparator: withDraftFirst(compareStrings),
+      renderCell: (params) =>
+        params.id === NEW_CHORE_ID && !params.value ? (
+          <Typography
+            component="span"
+            sx={{ color: 'text.disabled', fontStyle: 'italic' }}
+          >
+            + Add a chore…
+          </Typography>
+        ) : (
+          params.value
+        ),
     },
     {
       field: 'cadenceAmount',
@@ -331,6 +340,7 @@ function ChoreList() {
         cadenceInDays: toDays(Number(value), row.displayUnit),
       }),
       preProcessEditCellProps: validateAmount,
+      getSortComparator: withDraftFirst(compareNumbers),
     },
     {
       field: 'displayUnit',
@@ -342,6 +352,7 @@ function ChoreList() {
         label: unitLabel(u),
       })),
       editable: isDesktop,
+      getSortComparator: withDraftFirst(compareStrings),
       valueSetter: (value, row) => {
         const amount = toAmount(row.cadenceInDays, row.displayUnit)
         const newUnit = value as DisplayUnit
@@ -357,7 +368,6 @@ function ChoreList() {
   return (
     <Box>
       <UnsavedChangesGuard hasUnsavedChanges={editing > 0} />
-      <AddChoreForm />
       <Stack direction="row" sx={{ mb: 1 }}>
         <Button component={Link} to="/chores/import" size="small">
           Bulk import (hello beauty)
@@ -382,19 +392,28 @@ function ChoreList() {
         </Grid>
       </Grid>
       <EditableDataGrid
-        rows={chores}
+        rows={[draftChore, ...chores]}
         columns={columns}
         showToolbar
+        editMode="row"
         rowHeight={isDesktop ? 40 : 80}
         rowModesModel={rowModesModel}
         onRowModesModelChange={setRowModesModel}
+        getRowClassName={(params) =>
+          params.id === NEW_CHORE_ID ? 'draft-row' : ''
+        }
+        sx={{
+          '& .draft-row .MuiDataGrid-cell:not(.MuiDataGrid-cell--editing)': {
+            color: 'text.disabled',
+          },
+        }}
         onRowClick={
           isDesktop
             ? undefined
             : (params) => setSelectedChore(params.row as Chore)
         }
         onCellClick={isDesktop ? handleCellClick : undefined}
-        onCellEditStop={() => setEditing((x) => x - 1)}
+        onRowEditStop={() => setEditing((x) => x - 1)}
         disableRowSelectionOnClick
         processRowUpdate={processRowUpdate}
       />

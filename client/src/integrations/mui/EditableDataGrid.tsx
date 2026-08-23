@@ -35,6 +35,7 @@ export function EditableDataGrid<TRow extends GridValidRowModel>({
   onCellClick,
   sx,
   apiRef: apiRefProp,
+  editMode,
   ...props
 }: DataGridProps<TRow>) {
   const ownApiRef = useGridApiRef()
@@ -59,12 +60,23 @@ export function EditableDataGrid<TRow extends GridValidRowModel>({
       return
     }
 
-    apiRef.current?.startCellEditMode({ id: params.id, field: params.field })
+    // In "row" edit mode all of a row's cells edit together (and only
+    // commit once you leave the row), so start the whole row rather than
+    // just this cell.
+    if (editMode === 'row') {
+      apiRef.current?.startRowEditMode({
+        id: params.id,
+        fieldToFocus: params.field,
+      })
+    } else {
+      apiRef.current?.startCellEditMode({ id: params.id, field: params.field })
+    }
   }
 
   return (
     <DataGrid
       apiRef={apiRef}
+      editMode={editMode}
       onCellClick={handleCellClick}
       sx={[editableCellSx, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
       {...props}
