@@ -149,9 +149,11 @@ function AmountUnitInput({
 function EditChoreDialog({
   chore,
   onClose,
+  isDesktop,
 }: {
   chore: Chore
   onClose: () => void
+  isDesktop: boolean
 }) {
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
@@ -200,7 +202,13 @@ function EditChoreDialog({
   }
 
   return (
-    <Dialog open={isOpen} onClose={handleClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={isOpen}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="sm"
+      fullScreen={!isDesktop}
+    >
       <DialogTitle>{isCreating ? 'Add chore' : 'Edit chore'}</DialogTitle>
       <DialogContent>
         <Grid container spacing={4} sx={{ mt: 1 }}>
@@ -431,6 +439,7 @@ function ChoreList() {
       <EditChoreDialog
         chore={selectedChore}
         onClose={() => setSelectedChore(nullChore)}
+        isDesktop={isDesktop}
       />
     </Box>
   )
