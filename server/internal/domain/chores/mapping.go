@@ -18,6 +18,7 @@ func ToAPIChore(chore models.Chore) contracts.Chore {
 		Id:            uint64(chore.ID),
 		Name:          chore.Name,
 		CadenceInDays: chore.CadenceInDays,
+		DisplayUnit:   contracts.DisplayUnit(chore.DisplayUnit),
 		CreatedAt:     chore.CreatedAt,
 		UpdatedAt:     chore.UpdatedAt,
 	}

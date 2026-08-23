@@ -16,6 +16,7 @@ export const ListChoresResponseItem = zod.object({
   "id": zod.int(),
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
+  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
@@ -26,7 +27,8 @@ export const ListChoresResponse = zod.array(ListChoresResponseItem)
 
 export const CreateChoreBody = zod.object({
   "name": zod.string(),
-  "cadenceInDays": zod.int().min(1)
+  "cadenceInDays": zod.int().min(1),
+  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']).optional()
 })
 
 
@@ -36,6 +38,7 @@ export const CreateChoreResponse = zod.object({
   "id": zod.int(),
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
+  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
@@ -46,7 +49,8 @@ export const CreateChoreResponse = zod.object({
 export const BulkCreateChoresBody = zod.object({
   "chores": zod.array(zod.object({
   "name": zod.string(),
-  "cadenceInDays": zod.int().min(1)
+  "cadenceInDays": zod.int().min(1),
+  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']).optional()
 }))
 })
 
@@ -57,6 +61,7 @@ export const BulkCreateChoresResponseItem = zod.object({
   "id": zod.int(),
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
+  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
@@ -73,6 +78,7 @@ export const GetChoreResponse = zod.object({
   "id": zod.int(),
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
+  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
@@ -86,7 +92,8 @@ export const UpdateChoreParams = zod.object({
 
 export const UpdateChoreBody = zod.object({
   "name": zod.string().optional(),
-  "cadenceInDays": zod.int().min(1).optional()
+  "cadenceInDays": zod.int().min(1).optional(),
+  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']).optional()
 })
 
 
@@ -96,6 +103,7 @@ export const UpdateChoreResponse = zod.object({
   "id": zod.int(),
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
+  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
@@ -118,6 +126,7 @@ export const GetChoreInsightsResponse = zod.object({
   "id": zod.int(),
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
+  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 }),

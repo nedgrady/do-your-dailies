@@ -58,9 +58,16 @@ export function ChoreInsights() {
           {deduped.map((choreProjection) => (
             <Typography key={choreProjection.chore.id}>
               You wanted to complete "{choreProjection.chore.name}"
-              {formatCadence(choreProjection.chore.cadenceInDays)}, but you will
-              only be able to complete it{' '}
-              {formatCadence(choreProjection.projectedCadence)}.
+              {formatCadence(
+                choreProjection.chore.cadenceInDays,
+                choreProjection.chore.displayUnit,
+              )}
+              , but you will only be able to complete it{' '}
+              {formatCadence(
+                choreProjection.projectedCadence,
+                choreProjection.chore.displayUnit,
+              )}
+              .
             </Typography>
           ))}
         </>

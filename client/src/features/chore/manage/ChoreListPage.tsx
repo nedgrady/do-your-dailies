@@ -10,6 +10,9 @@ import {
   IconButton,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
@@ -32,12 +35,14 @@ import {
   useDeleteChoreMutation,
   useUpdateChoreMutation,
 } from '../../../domain/chore'
+import { DISPLAY_UNITS, toAmount, toDays, unitLabel } from '../../Cadence'
 import {
   mutationStatus,
   SaveStatusIndicator,
 } from '../../../forms/SaveStatusIndicator'
 import { UnsavedChangesGuard } from '../../../forms/UnsavedChangesGuard'
 import { EditableDataGrid } from '../../../integrations/mui/EditableDataGrid'
+import type { DisplayUnit } from '../../../generated/api/api.schemas'
 import { ChoreInsights } from './ChoreInsights'
 
 const validateName = ({ props }: GridPreProcessEditCellProps) => {
@@ -48,29 +53,83 @@ const validateName = ({ props }: GridPreProcessEditCellProps) => {
   }
 }
 
-const validateCadence = ({ props }: GridPreProcessEditCellProps) => {
+const validateAmount = ({ props }: GridPreProcessEditCellProps) => {
   const value = Number(props.value)
   return {
     ...props,
-    error: !value || value <= 0 ? 'Must be a positive number' : undefined,
+    error:
+      !Number.isInteger(value) || value <= 0
+        ? 'Must be a positive whole number'
+        : undefined,
   }
+}
+
+function AmountUnitInput({
+  amount,
+  onAmountChange,
+  unit,
+  onUnitChange,
+}: {
+  amount: string
+  onAmountChange: (value: string) => void
+  unit: DisplayUnit
+  onUnitChange: (unit: DisplayUnit) => void
+}) {
+  return (
+    <>
+      <Typography>every</Typography>
+      <TextField
+        label="Amount"
+        type="number"
+        sx={{ minWidth: 90 }}
+        value={amount}
+        onChange={(e) => onAmountChange(e.target.value)}
+        slotProps={{ htmlInput: { min: 1, step: 1 } }}
+      />
+      <ToggleButtonGroup
+        value={unit}
+        exclusive
+        onChange={(_e, value: DisplayUnit | null) => {
+          if (value) onUnitChange(value)
+        }}
+        aria-label="cadence unit"
+        size="small"
+      >
+        {DISPLAY_UNITS.map((u) => (
+          <ToggleButton key={u} value={u} aria-label={unitLabel(u)}>
+            {unitLabel(u)}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
+    </>
+  )
 }
 
 function AddChoreForm() {
   const [name, setName] = useState('')
-  const [cadenceInDays, setCadenceInDays] = useState('')
+  const [amount, setAmount] = useState('1')
+  const [unit, setUnit] = useState<DisplayUnit>('DAY')
   const createMutation = useCreateChoreMutation()
 
+  const parsedAmount = Number(amount)
+  const isAmountValid = Number.isInteger(parsedAmount) && parsedAmount > 0
+
   const handleSubmit = (e: React.SubmitEvent) => {
-    // e.preventDefault()
-    const cadence = Number(cadenceInDays)
-    if (!name.trim() || !cadence || cadence <= 0) return
+    e.preventDefault()
+    if (!name.trim() || !isAmountValid) return
     createMutation.mutate(
-      { data: { name: name.trim(), cadenceInDays: cadence } },
+      {
+        data: {
+          name: name.trim(),
+          cadenceInDays: toDays(parsedAmount, unit),
+          displayUnit: unit,
+        },
+      },
       {
         onSuccess: () => {
           setName('')
-          setCadenceInDays('')
+          setAmount('1')
+          setUnit('DAY')
         },
       },
     )
@@ -78,25 +137,30 @@ function AddChoreForm() {
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mb: 2 }}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={2}
+        sx={{ alignItems: { sm: 'center' } }}
+      >
         <TextField
           label="Chore name"
           fullWidth
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <TextField
-          label="Cadence (days)"
-          type="number"
-          sx={{ minWidth: 140 }}
-          value={cadenceInDays}
-          onChange={(e) => setCadenceInDays(e.target.value)}
+
+        <AmountUnitInput
+          amount={amount}
+          onAmountChange={setAmount}
+          unit={unit}
+          onUnitChange={setUnit}
         />
+
         <Button
           type="submit"
           variant="contained"
           size="large"
-          disabled={createMutation.isPending}
+          disabled={createMutation.isPending || !name.trim() || !isAmountValid}
         >
           Add
         </Button>
@@ -113,13 +177,15 @@ function EditChoreDialog({
   onClose: () => void
 }) {
   const [name, setName] = useState('')
-  const [cadenceInDays, setCadenceInDays] = useState('')
+  const [amount, setAmount] = useState('')
+  const [unit, setUnit] = useState<DisplayUnit>('DAY')
   const isOpen = chore.id !== nullChore.id
 
   // sync local state whenever a new chore is opened
-  if (isOpen && name === '' && cadenceInDays === '') {
+  if (isOpen && name === '' && amount === '') {
     setName(chore.name)
-    setCadenceInDays(String(chore.cadenceInDays))
+    setAmount(String(toAmount(chore.cadenceInDays, chore.displayUnit)))
+    setUnit(chore.displayUnit)
   }
 
   const updateMutation = useUpdateChoreMutation()
@@ -127,15 +193,25 @@ function EditChoreDialog({
 
   const handleClose = () => {
     setName('')
-    setCadenceInDays('')
+    setAmount('')
+    setUnit('DAY')
     onClose()
   }
 
   const handleSave = () => {
-    const cadence = Number(cadenceInDays)
-    if (!name.trim() || !cadence || cadence <= 0) return
+    const parsedAmount = Number(amount)
+    if (!name.trim() || !Number.isInteger(parsedAmount) || parsedAmount <= 0) {
+      return
+    }
     updateMutation.mutate(
-      { id: chore.id, data: { name: name.trim(), cadenceInDays: cadence } },
+      {
+        id: chore.id,
+        data: {
+          name: name.trim(),
+          cadenceInDays: toDays(parsedAmount, unit),
+          displayUnit: unit,
+        },
+      },
       { onSuccess: handleClose },
     )
   }
@@ -155,12 +231,14 @@ function EditChoreDialog({
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <TextField
-            label="Cadence (days)"
-            type="number"
-            value={cadenceInDays}
-            onChange={(e) => setCadenceInDays(e.target.value)}
-          />
+          <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+            <AmountUnitInput
+              amount={amount}
+              onAmountChange={setAmount}
+              unit={unit}
+              onUnitChange={setUnit}
+            />
+          </Stack>
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -207,6 +285,7 @@ function ChoreList() {
   ): Promise<GridRowModel<Chore>> => {
     const name = String(newRow.name ?? '').trim()
     const cadenceInDays = Number(newRow.cadenceInDays)
+    const displayUnit = newRow.displayUnit
 
     if (!name || !cadenceInDays || cadenceInDays <= 0) {
       // Shouldn't normally hit this — preProcessEditCellProps below stops
@@ -214,18 +293,22 @@ function ChoreList() {
       throw new Error('Chore name and a positive cadence are required')
     }
 
-    if (name === oldRow.name && cadenceInDays === oldRow.cadenceInDays) {
+    if (
+      name === oldRow.name &&
+      cadenceInDays === oldRow.cadenceInDays &&
+      displayUnit === oldRow.displayUnit
+    ) {
       return oldRow
     }
 
     await updateMutation.mutateAsync({
       id: oldRow.id,
-      data: { name, cadenceInDays },
+      data: { name, cadenceInDays, displayUnit },
     })
 
-    // Only name/cadenceInDays are editable. id/createdAt/updatedAt always
-    // come from oldRow, never from newRow or the mutation response.
-    return { ...oldRow, name, cadenceInDays }
+    // Only name/cadenceInDays/displayUnit are editable. id/createdAt/updatedAt
+    // always come from oldRow, never from newRow or the mutation response.
+    return { ...oldRow, name, cadenceInDays, displayUnit }
   }
 
   const columns: GridColDef<Chore>[] = [
@@ -237,12 +320,38 @@ function ChoreList() {
       preProcessEditCellProps: validateName,
     },
     {
-      field: 'cadenceInDays',
-      headerName: 'Cadence (days)',
-      width: 160,
+      field: 'cadenceAmount',
+      headerName: 'Cadence',
+      width: 110,
       type: 'number',
       editable: isDesktop,
-      preProcessEditCellProps: validateCadence,
+      valueGetter: (_value, row) =>
+        toAmount(row.cadenceInDays, row.displayUnit),
+      valueSetter: (value, row) => ({
+        ...row,
+        cadenceInDays: toDays(Number(value), row.displayUnit),
+      }),
+      preProcessEditCellProps: validateAmount,
+    },
+    {
+      field: 'displayUnit',
+      headerName: 'Unit',
+      width: 130,
+      type: 'singleSelect',
+      valueOptions: DISPLAY_UNITS.map((u) => ({
+        value: u,
+        label: unitLabel(u),
+      })),
+      editable: isDesktop,
+      valueSetter: (value, row) => {
+        const amount = toAmount(row.cadenceInDays, row.displayUnit)
+        const newUnit = value as DisplayUnit
+        return {
+          ...row,
+          displayUnit: newUnit,
+          cadenceInDays: toDays(amount, newUnit),
+        }
+      },
     },
   ]
 

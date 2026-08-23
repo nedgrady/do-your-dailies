@@ -181,12 +181,16 @@ paths:
                   $ref: "#/components/schemas/ChoreInQueue"
 components:
   schemas:
+    DisplayUnit:
+      type: string
+      enum: [DAY, WEEK, MONTH, YEAR]
     Chore:
       type: object
       required:
         - id
         - name
         - cadenceInDays
+        - displayUnit
         - createdAt
         - updatedAt
       properties:
@@ -198,6 +202,8 @@ components:
         cadenceInDays:
           type: integer
           minimum: 1
+        displayUnit:
+          $ref: "#/components/schemas/DisplayUnit"
         createdAt:
           type: string
           format: date-time
@@ -239,6 +245,8 @@ components:
         cadenceInDays:
           type: integer
           minimum: 1
+        displayUnit:
+          $ref: "#/components/schemas/DisplayUnit"
     BulkCreateChoresRequest:
       type: object
       required:
@@ -275,6 +283,8 @@ components:
         cadenceInDays:
           type: integer
           minimum: 1
+        displayUnit:
+          $ref: "#/components/schemas/DisplayUnit"
     ChoreCompletion:
       type: object
       required:

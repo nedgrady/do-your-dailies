@@ -4,11 +4,22 @@
  * Do Your Dailies API
  * OpenAPI spec version: 1.0.0
  */
+export type DisplayUnit = typeof DisplayUnit[keyof typeof DisplayUnit];
+
+
+export const DisplayUnit = {
+  DAY: 'DAY',
+  WEEK: 'WEEK',
+  MONTH: 'MONTH',
+  YEAR: 'YEAR',
+} as const;
+
 export interface Chore {
   id: number;
   name: string;
   /** @minimum 1 */
   cadenceInDays: number;
+  displayUnit: DisplayUnit;
   createdAt: string;
   updatedAt: string;
 }
@@ -27,6 +38,7 @@ export interface CreateChoreRequest {
   name: string;
   /** @minimum 1 */
   cadenceInDays: number;
+  displayUnit?: DisplayUnit;
 }
 
 export interface BulkCreateChoresRequest {
@@ -46,6 +58,7 @@ export interface UpdateChoreRequest {
   name?: string;
   /** @minimum 1 */
   cadenceInDays?: number;
+  displayUnit?: DisplayUnit;
 }
 
 export interface ChoreCompletion {

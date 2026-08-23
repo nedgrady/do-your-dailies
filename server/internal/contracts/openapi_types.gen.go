@@ -16,6 +16,30 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// Defines values for DisplayUnit.
+const (
+	DAY   DisplayUnit = "DAY"
+	MONTH DisplayUnit = "MONTH"
+	WEEK  DisplayUnit = "WEEK"
+	YEAR  DisplayUnit = "YEAR"
+)
+
+// Valid indicates whether the value is a known member of the DisplayUnit enum.
+func (e DisplayUnit) Valid() bool {
+	switch e {
+	case DAY:
+		return true
+	case MONTH:
+		return true
+	case WEEK:
+		return true
+	case YEAR:
+		return true
+	default:
+		return false
+	}
+}
+
 // BulkCreateChoresRequest defines model for BulkCreateChoresRequest.
 type BulkCreateChoresRequest struct {
 	Chores []CreateChoreRequest `json:"chores"`
@@ -34,11 +58,12 @@ type BulkCreateChoresValidationError struct {
 
 // Chore defines model for Chore.
 type Chore struct {
-	CadenceInDays int       `json:"cadenceInDays"`
-	CreatedAt     time.Time `json:"createdAt"`
-	Id            uint64    `json:"id"`
-	Name          string    `json:"name"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	CadenceInDays int         `json:"cadenceInDays"`
+	CreatedAt     time.Time   `json:"createdAt"`
+	DisplayUnit   DisplayUnit `json:"displayUnit"`
+	Id            uint64      `json:"id"`
+	Name          string      `json:"name"`
+	UpdatedAt     time.Time   `json:"updatedAt"`
 }
 
 // ChoreCompletion defines model for ChoreCompletion.
@@ -80,14 +105,19 @@ type CreateChoreCompletionRequest struct {
 
 // CreateChoreRequest defines model for CreateChoreRequest.
 type CreateChoreRequest struct {
-	CadenceInDays int    `json:"cadenceInDays"`
-	Name          string `json:"name"`
+	CadenceInDays int          `json:"cadenceInDays"`
+	DisplayUnit   *DisplayUnit `json:"displayUnit,omitempty"`
+	Name          string       `json:"name"`
 }
+
+// DisplayUnit defines model for DisplayUnit.
+type DisplayUnit string
 
 // UpdateChoreRequest defines model for UpdateChoreRequest.
 type UpdateChoreRequest struct {
-	CadenceInDays *int    `json:"cadenceInDays,omitempty"`
-	Name          *string `json:"name,omitempty"`
+	CadenceInDays *int         `json:"cadenceInDays,omitempty"`
+	DisplayUnit   *DisplayUnit `json:"displayUnit,omitempty"`
+	Name          *string      `json:"name,omitempty"`
 }
 
 // ListChoreCompletionsParams defines parameters for ListChoreCompletions.

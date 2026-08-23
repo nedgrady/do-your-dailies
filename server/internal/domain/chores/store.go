@@ -36,6 +36,7 @@ func (store *GormStore) Create(ctx context.Context, userID uint, req CreateReque
 		UserID:        userID,
 		Name:          req.Name,
 		CadenceInDays: req.CadenceInDays,
+		DisplayUnit:   req.DisplayUnit,
 	}
 	result := store.db.WithContext(ctx).Create(&chore)
 	return chore, result.Error
@@ -48,6 +49,7 @@ func (store *GormStore) CreateMany(ctx context.Context, userID uint, reqs []Crea
 			UserID:        userID,
 			Name:          req.Name,
 			CadenceInDays: req.CadenceInDays,
+			DisplayUnit:   req.DisplayUnit,
 		})
 	}
 
@@ -73,6 +75,9 @@ func (store *GormStore) Update(ctx context.Context, userID uint, id uint, req Up
 	}
 	if req.CadenceInDays != nil {
 		chore.CadenceInDays = *req.CadenceInDays
+	}
+	if req.DisplayUnit != nil {
+		chore.DisplayUnit = *req.DisplayUnit
 	}
 	result := store.db.WithContext(ctx).Save(&chore)
 	return chore, result.Error

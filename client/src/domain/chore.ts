@@ -22,6 +22,7 @@ export const nullChore: Chore = {
   id: -1,
   name: '?',
   cadenceInDays: 0,
+  displayUnit: 'DAY',
   createdAt: new Date(0),
   updatedAt: new Date(0),
 }

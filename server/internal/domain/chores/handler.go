@@ -6,6 +6,7 @@ import (
 
 	"do-your-dailies/server/internal/auth"
 	"do-your-dailies/server/internal/contracts"
+	"do-your-dailies/server/internal/domain/models"
 
 	"gorm.io/gorm"
 )
@@ -42,9 +43,15 @@ func (handler ChoreHandler) CreateChore(ctx context.Context, request contracts.C
 		return contracts.CreateChore422Response{}, nil
 	}
 
+	displayUnit := resolveDisplayUnit(request.Body.DisplayUnit)
+	if err := validateDisplayUnit(displayUnit); err != nil {
+		return contracts.CreateChore422Response{}, nil
+	}
+
 	chore, err := handler.Store.Create(ctx, userID, CreateRequest{
 		Name:          request.Body.Name,
 		CadenceInDays: request.Body.CadenceInDays,
+		DisplayUnit:   displayUnit,
 	})
 	if err != nil {
 		return nil, err
@@ -70,7 +77,12 @@ func (handler ChoreHandler) BulkCreateChores(ctx context.Context, request contra
 			rowErrors = append(rowErrors, contracts.BulkCreateChoresRowError{Index: i, Message: "name must not be empty"})
 			continue
 		}
-		requests = append(requests, CreateRequest{Name: chore.Name, CadenceInDays: chore.CadenceInDays})
+		displayUnit := resolveDisplayUnit(chore.DisplayUnit)
+		if err := validateDisplayUnit(displayUnit); err != nil {
+			rowErrors = append(rowErrors, contracts.BulkCreateChoresRowError{Index: i, Message: err.Error()})
+			continue
+		}
+		requests = append(requests, CreateRequest{Name: chore.Name, CadenceInDays: chore.CadenceInDays, DisplayUnit: displayUnit})
 	}
 
 	if len(rowErrors) > 0 {
@@ -114,9 +126,19 @@ func (handler ChoreHandler) UpdateChore(ctx context.Context, request contracts.U
 		}
 	}
 
+	var displayUnit *models.DisplayUnit
+	if request.Body.DisplayUnit != nil {
+		unit := models.DisplayUnit(*request.Body.DisplayUnit)
+		if err := validateDisplayUnit(unit); err != nil {
+			return contracts.UpdateChore422Response{}, nil
+		}
+		displayUnit = &unit
+	}
+
 	chore, err := handler.Store.Update(ctx, userID, uint(request.Id), UpdateRequest{
 		Name:          request.Body.Name,
 		CadenceInDays: request.Body.CadenceInDays,
+		DisplayUnit:   displayUnit,
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -147,6 +169,21 @@ func (handler ChoreHandler) DeleteChore(ctx context.Context, request contracts.D
 func validateCadence(cadenceInDays int) error {
 	if cadenceInDays <= 0 {
 		return errors.New("cadenceInDays must be greater than zero")
+	}
+
+	return nil
+}
+
+func resolveDisplayUnit(unit *contracts.DisplayUnit) models.DisplayUnit {
+	if unit == nil {
+		return models.DisplayUnitDay
+	}
+	return models.DisplayUnit(*unit)
+}
+
+func validateDisplayUnit(unit models.DisplayUnit) error {
+	if !unit.Valid() {
+		return errors.New("displayUnit must be one of DAY, WEEK, MONTH, YEAR")
 	}
 
 	return nil
