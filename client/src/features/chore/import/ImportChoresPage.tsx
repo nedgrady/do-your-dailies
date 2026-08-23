@@ -15,13 +15,16 @@ import type {
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useBulkCreateChoresMutation } from '../../../domain/chore'
+import type { DisplayUnit } from '../../../generated/api/api.schemas'
 import { EditableDataGrid } from '../../../integrations/mui/EditableDataGrid'
+import { DISPLAY_UNITS, toAmount, toDays, unitLabel } from '../../Cadence'
 import { parseChoreRows } from './parseChoreRows'
 
 interface DraftRow {
   id: number
   name: string
   cadenceInDays: number | null
+  displayUnit: DisplayUnit
 }
 
 export default function ImportChoresPage() {
@@ -39,11 +42,15 @@ export default function ImportChoresPage() {
     newRow: GridRowModel<DraftRow>,
   ): GridRowModel<DraftRow> => {
     const name = String(newRow.name).trim()
-    const cadence = Number(newRow.cadenceInDays)
+    const cadenceInDays = Number(newRow.cadenceInDays)
     const updated: DraftRow = {
       id: newRow.id,
       name,
-      cadenceInDays: Number.isFinite(cadence) && cadence > 0 ? cadence : null,
+      cadenceInDays:
+        Number.isFinite(cadenceInDays) && cadenceInDays > 0
+          ? cadenceInDays
+          : null,
+      displayUnit: newRow.displayUnit,
     }
     setRows((prev) =>
       prev.map((row) => (row.id === updated.id ? updated : row)),
@@ -63,11 +70,14 @@ export default function ImportChoresPage() {
     }
   }
 
-  const validateCadence = ({ props }: GridPreProcessEditCellProps) => {
+  const validateAmount = ({ props }: GridPreProcessEditCellProps) => {
     const value = Number(props.value)
     return {
       ...props,
-      error: !value || value <= 0 ? 'Must be a positive number' : undefined,
+      error:
+        !Number.isInteger(value) || value <= 0
+          ? 'Must be a positive whole number'
+          : undefined,
     }
   }
 
@@ -80,12 +90,38 @@ export default function ImportChoresPage() {
       preProcessEditCellProps: validateName,
     },
     {
-      field: 'cadenceInDays',
-      headerName: 'Cadence (days)',
-      width: 160,
+      field: 'cadenceAmount',
+      headerName: 'Cadence',
+      width: 110,
       type: 'number',
       editable: true,
-      preProcessEditCellProps: validateCadence,
+      valueGetter: (_value, row) =>
+        toAmount(row.cadenceInDays ?? 0, row.displayUnit),
+      valueSetter: (value, row) => ({
+        ...row,
+        cadenceInDays: toDays(Number(value), row.displayUnit),
+      }),
+      preProcessEditCellProps: validateAmount,
+    },
+    {
+      field: 'displayUnit',
+      headerName: 'Unit',
+      width: 130,
+      type: 'singleSelect',
+      valueOptions: DISPLAY_UNITS.map((u) => ({
+        value: u,
+        label: unitLabel(u),
+      })),
+      editable: true,
+      valueSetter: (value, row) => {
+        const amount = toAmount(row.cadenceInDays ?? 0, row.displayUnit)
+        const newUnit = value as DisplayUnit
+        return {
+          ...row,
+          displayUnit: newUnit,
+          cadenceInDays: toDays(amount, newUnit),
+        }
+      },
     },
     {
       field: 'remove',
@@ -122,6 +158,7 @@ export default function ImportChoresPage() {
           chores: rows.map((row) => ({
             name: row.name.trim(),
             cadenceInDays: row.cadenceInDays as number,
+            displayUnit: row.displayUnit,
           })),
         },
       },
@@ -137,15 +174,16 @@ export default function ImportChoresPage() {
         Bulk import chores
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Paste a list of chores, one per line. Copying two columns (name and
-        cadence in days) out of a spreadsheet like Google Sheets or Excel works
-        too.
+        Paste a list of chores, one per line. Copying columns out of a
+        spreadsheet like Google Sheets or Excel works too — either two columns
+        (name, cadence — e.g. "3d", "2 weeks", "1m", "1 year", or a plain number
+        of days), or three columns (name, amount, unit).
       </Typography>
       <TextField
         multiline
         minRows={6}
         fullWidth
-        placeholder={'Dishes\t1\nVacuum\t7\nMow lawn\t14'}
+        placeholder={'Dishes\t1\nVacuum\t1\tweek\nMow lawn\t2\tweeks'}
         value={pasteText}
         onChange={(e) => setPasteText(e.target.value)}
         sx={{ mb: 1 }}
