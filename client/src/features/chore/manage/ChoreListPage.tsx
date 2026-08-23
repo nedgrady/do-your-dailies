@@ -24,7 +24,7 @@ import type {
   GridRowModesModel,
 } from '@mui/x-data-grid'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { getRouteApi, Link } from '@tanstack/react-router'
 import { Suspense, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import type { Chore } from '../../../domain/chore'
@@ -46,6 +46,17 @@ import { DISPLAY_UNITS, toAmount, toDays, unitLabel } from '../../Cadence'
 import { ChoreInsights } from './ChoreInsights'
 
 const NEW_CHORE_ID = -2
+
+const routeApi = getRouteApi('/chores/manage')
+
+function resolveSelectedChore(
+  choreParam: string | undefined,
+  chores: Chore[],
+): Chore {
+  if (choreParam === undefined) return nullChore
+  if (choreParam === 'new') return draftChore
+  return chores.find((c) => c.id === Number(choreParam)) ?? nullChore
+}
 
 const draftChore: Chore = {
   id: NEW_CHORE_ID,
@@ -262,7 +273,9 @@ function ChoreList() {
   const theme = useTheme()
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
   const { data: chores } = useAllChoresQuery()
-  const [selectedChore, setSelectedChore] = useState<Chore>(nullChore)
+  const { chore: choreParam } = routeApi.useSearch()
+  const navigate = routeApi.useNavigate()
+  const selectedChore = resolveSelectedChore(choreParam, chores)
   const createMutation = useCreateChoreMutation()
   const updateMutation = useUpdateChoreMutation()
 
@@ -428,7 +441,14 @@ function ChoreList() {
         onRowClick={
           isDesktop
             ? undefined
-            : (params) => setSelectedChore(params.row as Chore)
+            : (params) => {
+                const row = params.row as Chore
+                void navigate({
+                  search: {
+                    chore: row.id === NEW_CHORE_ID ? 'new' : String(row.id),
+                  },
+                })
+              }
         }
         onCellClick={isDesktop ? handleCellClick : undefined}
         onRowEditStop={() => setEditing((x) => x - 1)}
@@ -438,7 +458,7 @@ function ChoreList() {
 
       <EditChoreDialog
         chore={selectedChore}
-        onClose={() => setSelectedChore(nullChore)}
+        onClose={() => void navigate({ search: {}, replace: true })}
         isDesktop={isDesktop}
       />
     </Box>
