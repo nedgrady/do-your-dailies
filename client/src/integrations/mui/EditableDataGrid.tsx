@@ -1,4 +1,5 @@
 import type { Theme } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import { DataGrid, useGridApiRef } from '@mui/x-data-grid'
 import type {
   DataGridProps,
@@ -8,6 +9,13 @@ import type {
 
 // Styling that makes editable cells look clickable, and highlights whichever
 // cell is currently being edited.
+//
+// MUI's default edit-cell input already gets a `Mui-error` class when
+// `preProcessEditCellProps` sets `error: true`, but its built-in error
+// styling is subtle — easily lost under the bold blue "editing" outline
+// below. The `:has(.Mui-error)` rule overrides that outline to red whenever
+// the cell currently holds an invalid value, so invalid input is obviously
+// distinct from merely "being edited".
 const editableCellSx = {
   '& .MuiDataGrid-cell--editable': {
     cursor: 'text',
@@ -22,6 +30,10 @@ const editableCellSx = {
   },
   '& .MuiDataGrid-cell--editing:focus-within': {
     outline: (t: Theme) => `2px solid ${t.palette.primary.main}`,
+  },
+  '& .MuiDataGrid-cell--editing:has(.Mui-error)': {
+    backgroundColor: (t: Theme) => alpha(t.palette.error.main, 0.12),
+    outline: (t: Theme) => `2px solid ${t.palette.error.main}`,
   },
 } as const
 
