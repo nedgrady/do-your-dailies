@@ -50,12 +50,12 @@ const NEW_CHORE_ID = -2
 const routeApi = getRouteApi('/chores/manage')
 
 function resolveSelectedChore(
-  choreParam: string | undefined,
+  choreParam: number | 'new' | undefined,
   chores: Chore[],
 ): Chore {
   if (choreParam === undefined) return nullChore
   if (choreParam === 'new') return draftChore
-  return chores.find((c) => c.id === Number(choreParam)) ?? nullChore
+  return chores.find((c) => c.id === choreParam) ?? nullChore
 }
 
 const draftChore: Chore = {
@@ -444,9 +444,7 @@ function ChoreList() {
             : (params) => {
                 const row = params.row as Chore
                 void navigate({
-                  search: {
-                    chore: row.id === NEW_CHORE_ID ? 'new' : String(row.id),
-                  },
+                  search: { chore: row.id === NEW_CHORE_ID ? 'new' : row.id },
                 })
               }
         }
