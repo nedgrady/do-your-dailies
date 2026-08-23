@@ -35,14 +35,14 @@ import {
   useDeleteChoreMutation,
   useUpdateChoreMutation,
 } from '../../../domain/chore'
-import { DISPLAY_UNITS, toAmount, toDays, unitLabel } from '../../Cadence'
 import {
   mutationStatus,
   SaveStatusIndicator,
 } from '../../../forms/SaveStatusIndicator'
 import { UnsavedChangesGuard } from '../../../forms/UnsavedChangesGuard'
-import { EditableDataGrid } from '../../../integrations/mui/EditableDataGrid'
 import type { DisplayUnit } from '../../../generated/api/api.schemas'
+import { EditableDataGrid } from '../../../integrations/mui/EditableDataGrid'
+import { DISPLAY_UNITS, toAmount, toDays, unitLabel } from '../../Cadence'
 import { ChoreInsights } from './ChoreInsights'
 
 const validateName = ({ props }: GridPreProcessEditCellProps) => {
@@ -93,7 +93,6 @@ function AmountUnitInput({
           if (value) onUnitChange(value)
         }}
         aria-label="cadence unit"
-        size="small"
       >
         {DISPLAY_UNITS.map((u) => (
           <ToggleButton key={u} value={u} aria-label={unitLabel(u)}>
