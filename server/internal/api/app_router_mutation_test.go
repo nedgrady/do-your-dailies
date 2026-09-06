@@ -16,7 +16,7 @@ import (
 func TestNewWithNilDBLeavesStoresNil(t *testing.T) {
 	t.Parallel()
 
-	app := New(nil)
+	app := New(nil, false)
 
 	assert.Nil(t, app.ChoreStore)
 }
@@ -25,7 +25,7 @@ func TestNewWithDBInitializesChoreStore(t *testing.T) {
 	t.Parallel()
 	database := testhelpers.NewTransactionDB(t, migrateForAPITests)
 
-	app := New(database)
+	app := New(database, false)
 
 	assert.NotNil(t, app.ChoreStore)
 }
@@ -34,14 +34,14 @@ func TestNewWithDBInitializesChoreCompletionStore(t *testing.T) {
 	t.Parallel()
 	database := testhelpers.NewTransactionDB(t, migrateForAPITests)
 
-	app := New(database)
+	app := New(database, false)
 
 	assert.NotNil(t, app.ChoreCompletionStore)
 }
 
 func TestRouterRegistersChoresRoute(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
+	app := New(nil, false)
 	rr := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/api/chores/", nil)
 
@@ -52,7 +52,7 @@ func TestRouterRegistersChoresRoute(t *testing.T) {
 
 func TestRouterRegistersChoreCompletionsRoute(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
+	app := New(nil, false)
 	rr := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/api/chore-completions/", strings.NewReader(`not-json`))
 
@@ -63,7 +63,7 @@ func TestRouterRegistersChoreCompletionsRoute(t *testing.T) {
 
 func TestRouterRegistersOpenAPISpecRoute(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
+	app := New(nil, false)
 	rr := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
 
@@ -74,7 +74,7 @@ func TestRouterRegistersOpenAPISpecRoute(t *testing.T) {
 
 func TestRouterRegistersSwaggerRedirectRoute(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
+	app := New(nil, false)
 	rr := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/swagger", nil)
 
@@ -85,7 +85,7 @@ func TestRouterRegistersSwaggerRedirectRoute(t *testing.T) {
 
 func TestRouterRecoversWhenChoreStoreIsNil(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
+	app := New(nil, false)
 	rr := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/api/chores/", nil)
 

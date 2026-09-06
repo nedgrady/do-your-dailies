@@ -2,10 +2,13 @@ package chores
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"do-your-dailies/server/internal/domain/models"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Store interface {
@@ -38,8 +41,17 @@ func (store *GormStore) Create(ctx context.Context, userID uint, req CreateReque
 		CadenceInDays: req.CadenceInDays,
 		DisplayUnit:   req.DisplayUnit,
 	}
-	result := store.db.WithContext(ctx).Create(&chore)
-	return chore, result.Error
+
+	err := store.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := ensureUserExists(tx, userID); err != nil {
+			return err
+		}
+		if err := tx.Create(&chore).Error; err != nil {
+			return err
+		}
+		return createBackdatedCompletion(tx, chore.ID, req.LastCompletedAt)
+	})
+	return chore, err
 }
 
 func (store *GormStore) CreateMany(ctx context.Context, userID uint, reqs []CreateRequest) ([]models.Chore, error) {
@@ -54,9 +66,41 @@ func (store *GormStore) CreateMany(ctx context.Context, userID uint, reqs []Crea
 	}
 
 	err := store.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return tx.Create(&chores).Error
+		if err := ensureUserExists(tx, userID); err != nil {
+			return err
+		}
+		if err := tx.Create(&chores).Error; err != nil {
+			return err
+		}
+		for i, chore := range chores {
+			if err := createBackdatedCompletion(tx, chore.ID, reqs[i].LastCompletedAt); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 	return chores, err
+}
+
+// createBackdatedCompletion records a chore as already completed at lastCompletedAt, so a
+// chore imported with known history doesn't read as "just done now" (the fallback used when
+// no completion row exists). A nil lastCompletedAt is a no-op, preserving that default.
+func createBackdatedCompletion(tx *gorm.DB, choreID uint, lastCompletedAt *time.Time) error {
+	if lastCompletedAt == nil {
+		return nil
+	}
+	completion := models.ChoreCompletion{ChoreID: choreID}
+	completion.CreatedAt = *lastCompletedAt
+	return tx.Create(&completion).Error
+}
+
+// ensureUserExists provisions a User row for userID if one doesn't already exist. Real users
+// are always already seeded, so this is a no-op for them; it only actually matters for a
+// not-yet-seen synthetic id acting through the admin simulator's impersonation header, letting
+// a chore be created under it without violating the chores.user_id foreign key.
+func ensureUserExists(tx *gorm.DB, userID uint) error {
+	user := models.User{Model: gorm.Model{ID: userID}, Name: fmt.Sprintf("sim-%d", userID)}
+	return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&user).Error
 }
 
 func (store *GormStore) Get(ctx context.Context, userID uint, id uint) (models.Chore, error) {

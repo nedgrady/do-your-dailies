@@ -13,6 +13,7 @@ import { Route as TodayRouteImport } from './routes/today'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChoresManageRouteImport } from './routes/chores/manage'
 import { Route as ChoresImportRouteImport } from './routes/chores/import'
+import { Route as AdminSimulatorRouteImport } from './routes/admin/simulator'
 
 const TodayRoute = TodayRouteImport.update({
   id: '/today',
@@ -34,16 +35,23 @@ const ChoresImportRoute = ChoresImportRouteImport.update({
   path: '/chores/import',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSimulatorRoute = AdminSimulatorRouteImport.update({
+  id: '/admin/simulator',
+  path: '/admin/simulator',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/today': typeof TodayRoute
+  '/admin/simulator': typeof AdminSimulatorRoute
   '/chores/import': typeof ChoresImportRoute
   '/chores/manage': typeof ChoresManageRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/today': typeof TodayRoute
+  '/admin/simulator': typeof AdminSimulatorRoute
   '/chores/import': typeof ChoresImportRoute
   '/chores/manage': typeof ChoresManageRoute
 }
@@ -51,20 +59,33 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/today': typeof TodayRoute
+  '/admin/simulator': typeof AdminSimulatorRoute
   '/chores/import': typeof ChoresImportRoute
   '/chores/manage': typeof ChoresManageRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/today' | '/chores/import' | '/chores/manage'
+  fullPaths:
+    | '/'
+    | '/today'
+    | '/admin/simulator'
+    | '/chores/import'
+    | '/chores/manage'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/today' | '/chores/import' | '/chores/manage'
-  id: '__root__' | '/' | '/today' | '/chores/import' | '/chores/manage'
+  to: '/' | '/today' | '/admin/simulator' | '/chores/import' | '/chores/manage'
+  id:
+    | '__root__'
+    | '/'
+    | '/today'
+    | '/admin/simulator'
+    | '/chores/import'
+    | '/chores/manage'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   TodayRoute: typeof TodayRoute
+  AdminSimulatorRoute: typeof AdminSimulatorRoute
   ChoresImportRoute: typeof ChoresImportRoute
   ChoresManageRoute: typeof ChoresManageRoute
 }
@@ -99,12 +120,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChoresImportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/simulator': {
+      id: '/admin/simulator'
+      path: '/admin/simulator'
+      fullPath: '/admin/simulator'
+      preLoaderRoute: typeof AdminSimulatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   TodayRoute: TodayRoute,
+  AdminSimulatorRoute: AdminSimulatorRoute,
   ChoresImportRoute: ChoresImportRoute,
   ChoresManageRoute: ChoresManageRoute,
 }

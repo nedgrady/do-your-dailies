@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
 
+import { apiBaseUrl } from '#/lib/axios'
+import { server } from '#/mocks/server'
 import { render, screen, waitFor } from '#/test-utils'
 import type * as ReactRouter from '@tanstack/react-router'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import ImportChoresPage from './ImportChoresPage'
 
@@ -147,6 +150,30 @@ describe('ImportChoresPage', () => {
       ).toContain('invalid-row')
     })
     expect(await screen.findByText('Dishes: Cadence is missing')).toBeTruthy()
+  })
+
+  it('includes lastCompletedAt in the submitted payload only for rows that provide it', async () => {
+    let capturedBody: { chores: Array<{ lastCompletedAt?: string }> } | null =
+      null
+    server.use(
+      http.post(`${apiBaseUrl}/api/chores/bulk`, async ({ request }) => {
+        capturedBody = (await request.json()) as {
+          chores: Array<{ lastCompletedAt?: string }>
+        }
+        return HttpResponse.json([], { status: 201 })
+      }),
+    )
+
+    render(<ImportChoresPage />)
+    await pasteAndParse('Dishes\t3d\nMow lawn\t2\tweek\t3 weeks ago')
+
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /Add \d+ chores?/ }))
+
+    await waitFor(() => expect(capturedBody).not.toBeNull())
+    const chores = capturedBody!.chores
+    expect(chores[0].lastCompletedAt).toBeUndefined()
+    expect(chores[1].lastCompletedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
   })
 
   it('keeps the delimiter picker hidden until custom mode is selected', async () => {

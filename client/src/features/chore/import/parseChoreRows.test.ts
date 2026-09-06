@@ -12,6 +12,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '3d',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
       {
         name: 'Vacuum',
@@ -19,6 +20,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'WEEK',
         cadenceRaw: '1w',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
     ])
   })
@@ -35,6 +37,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '3',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
       {
         name: 'Vacuum',
@@ -42,6 +45,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'WEEK',
         cadenceRaw: '2 weeks',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
       {
         name: 'Mow',
@@ -49,6 +53,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'MONTH',
         cadenceRaw: '1m',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
       {
         name: 'Taxes',
@@ -56,6 +61,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'YEAR',
         cadenceRaw: '1y',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
     ])
   })
@@ -70,6 +76,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '3d',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
       {
         name: 'Vacuum',
@@ -77,6 +84,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'WEEK',
         cadenceRaw: '1w',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
     ])
   })
@@ -93,6 +101,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '3d',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
       {
         name: 'Weird',
@@ -100,6 +109,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '3 x y',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
     ])
   })
@@ -120,6 +130,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '4, week',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
       {
         name: 'test from sheets',
@@ -127,6 +138,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '2 day',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
     ])
   })
@@ -147,6 +159,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'WEEK',
         cadenceRaw: '4 week',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
       {
         name: 'test from sheets 2',
@@ -154,6 +167,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '2 day',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
     ])
   })
@@ -170,6 +184,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '3 day',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
       {
         name: 'Vacuum',
@@ -177,6 +192,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'WEEK',
         cadenceRaw: '1 week',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
     ])
   })
@@ -191,6 +207,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '3d',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
       {
         name: 'Weird',
@@ -198,6 +215,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '3 fortnight',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
     ])
   })
@@ -214,6 +232,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '3d',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
     ])
   })
@@ -228,6 +247,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '3d',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
       {
         name: 'Vacuum',
@@ -235,8 +255,45 @@ describe('parseChoreRows', () => {
         displayUnit: 'WEEK',
         cadenceRaw: '1w',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
     ])
+  })
+
+  it('carries an optional 4th "last done" cell through, split-cadence form', () => {
+    const rows = parseChoreRows('Mow lawn\t2\tweek\t3 weeks ago')
+
+    expect(rows).toEqual([
+      {
+        name: 'Mow lawn',
+        cadenceInDays: 14,
+        displayUnit: 'WEEK',
+        cadenceRaw: '2 week',
+        parseError: null,
+        lastCompletedAgoRaw: '3 weeks ago',
+      },
+    ])
+  })
+
+  it('carries an optional "last done" cell through, combined-cadence form with a blank unit cell', () => {
+    const rows = parseChoreRows('Mow lawn\t2w\t\t3 weeks ago')
+
+    expect(rows).toEqual([
+      {
+        name: 'Mow lawn',
+        cadenceInDays: 14,
+        displayUnit: 'WEEK',
+        cadenceRaw: '2w',
+        parseError: null,
+        lastCompletedAgoRaw: '3 weeks ago',
+      },
+    ])
+  })
+
+  it('defaults "last done" to blank when the 4th cell is absent', () => {
+    const rows = parseChoreRows('Dishes\t3d')
+
+    expect(rows[0].lastCompletedAgoRaw).toBe('')
   })
 
   it('honors both an explicit field and row delimiter together', () => {
@@ -252,6 +309,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'DAY',
         cadenceRaw: '3d',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
       {
         name: 'Vacuum',
@@ -259,6 +317,7 @@ describe('parseChoreRows', () => {
         displayUnit: 'WEEK',
         cadenceRaw: '1w',
         parseError: null,
+        lastCompletedAgoRaw: '',
       },
     ])
   })

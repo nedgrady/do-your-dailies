@@ -27,6 +27,13 @@ func resolvePort(getenv func(string) string) string {
 	return "8080"
 }
 
+// resolveSimulationModeEnabled gates the X-Simulated-User-Id impersonation
+// header (see internal/auth). Off unless explicitly turned on, so it's
+// structurally inert in any environment that doesn't set it.
+func resolveSimulationModeEnabled(getenv func(string) string) bool {
+	return getenv("SIMULATION_MODE_ENABLED") == "true"
+}
+
 func main() {
 	time.Local = time.UTC
 
@@ -45,7 +52,7 @@ func main() {
 		log.Fatal("failed to run migrations:", err)
 	}
 
-	app := api.New(database)
+	app := api.New(database, resolveSimulationModeEnabled(os.Getenv))
 
 	port := resolvePort(os.Getenv)
 	log.Printf("starting server on :%s", port)

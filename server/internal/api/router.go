@@ -23,7 +23,7 @@ func (app *Application) setupRoutes() *chi.Mux {
 	logging.Apply(router)
 	router.Use(corsMiddleware)
 	router.Use(middleware.Recoverer)
-	router.Use(auth.Middleware)
+	router.Use(auth.NewMiddleware(app.SimulationModeEnabled))
 
 	apidocs.RegisterRoutes(router)
 	swagger.RegisterRoutes(router)

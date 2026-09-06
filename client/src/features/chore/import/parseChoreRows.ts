@@ -13,6 +13,10 @@ export interface ParsedChoreRow {
   // A structural problem PapaParse itself flagged for this row (e.g.
   // mismatched quotes), distinct from a cadence that simply doesn't parse.
   parseError: string | null
+  // Optional 4th cell: how long ago this chore was last actually done (e.g.
+  // "3 weeks ago"), as pasted. Blank means unknown - the chore is created
+  // with no completion history, same as today's default.
+  lastCompletedAgoRaw: string
 }
 
 export interface ParseDelimiters {
@@ -63,6 +67,10 @@ function toRow(cells: string[], parseError: string | null): ParsedChoreRow {
     displayUnit: parsed?.displayUnit ?? 'DAY',
     cadenceRaw: describeCadenceCells(cells),
     parseError,
+    // Always the 4th cell, regardless of whether the cadence used the
+    // combined ("3d") or split (amount, unit) form in cells 1-2 - a blank
+    // unit cell still occupies its column position in a spreadsheet paste.
+    lastCompletedAgoRaw: cells[3] ?? '',
   }
 }
 

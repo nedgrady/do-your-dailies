@@ -247,6 +247,13 @@ components:
           minimum: 1
         displayUnit:
           $ref: "#/components/schemas/DisplayUnit"
+        lastCompletedAt:
+          type: string
+          format: date-time
+          description: >-
+            When this chore was last actually done, if known. Backdates a
+            completion record instead of leaving the chore with no history
+            (which otherwise reads as "just done now").
     BulkCreateChoresRequest:
       type: object
       required:

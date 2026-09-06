@@ -39,6 +39,8 @@ export interface CreateChoreRequest {
   /** @minimum 1 */
   cadenceInDays: number;
   displayUnit?: DisplayUnit;
+  /** When this chore was last actually done, if known. Backdates a completion record instead of leaving the chore with no history (which otherwise reads as "just done now"). */
+  lastCompletedAt?: string;
 }
 
 export interface BulkCreateChoresRequest {

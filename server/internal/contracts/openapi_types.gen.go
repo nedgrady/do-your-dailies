@@ -107,7 +107,10 @@ type CreateChoreCompletionRequest struct {
 type CreateChoreRequest struct {
 	CadenceInDays int          `json:"cadenceInDays"`
 	DisplayUnit   *DisplayUnit `json:"displayUnit,omitempty"`
-	Name          string       `json:"name"`
+
+	// LastCompletedAt When this chore was last actually done, if known. Backdates a completion record instead of leaving the chore with no history (which otherwise reads as "just done now").
+	LastCompletedAt *time.Time `json:"lastCompletedAt,omitempty"`
+	Name            string     `json:"name"`
 }
 
 // DisplayUnit defines model for DisplayUnit.

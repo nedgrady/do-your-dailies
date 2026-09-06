@@ -32,7 +32,7 @@ func TestRouterAppliesLoggingMiddleware(t *testing.T) {
 		middleware.DefaultLogger = originalLogger
 	})
 
-	app := New(nil)
+	app := New(nil, false)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rr := httptest.NewRecorder()
 

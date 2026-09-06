@@ -27,6 +27,7 @@ import type { DisplayUnit } from '../../../generated/api/api.schemas'
 import { EditableDataGrid } from '../../../integrations/mui/EditableDataGrid'
 import { DISPLAY_UNITS, toAmount, toDays, unitLabel } from '../../Cadence'
 import { parseChoreRows } from './parseChoreRows'
+import { parseLastCompletedAgo } from './parseLastCompletedAgo'
 
 type FieldDelimiterChoice = 'auto' | 'tab' | 'comma' | 'custom'
 type RowDelimiterChoice = 'newline' | 'semicolon' | 'custom'
@@ -55,6 +56,10 @@ interface DraftRow {
   displayUnit: DisplayUnit
   cadenceRaw: string
   parseError: string | null
+  // How long ago this chore was last done, as free text (e.g. "3 weeks
+  // ago"). Blank/unparseable is fine - it just means no known history, same
+  // as today's default of leaving the chore with no completion record.
+  lastCompletedAgoRaw: string
 }
 
 // Explains why a row can't be imported yet, or null if it's valid.
@@ -120,7 +125,7 @@ export default function ImportChoresPage() {
   const placeholder = [
     ['Dishes', '1'].join(placeholderFieldSep),
     ['Vacuum', '1', 'week'].join(placeholderFieldSep),
-    ['Mow lawn', '2', 'weeks'].join(placeholderFieldSep),
+    ['Mow lawn', '2', 'weeks', '3 weeks ago'].join(placeholderFieldSep),
   ].join(resolvedRowDelimiter)
 
   // Lets Tab insert a literal tab instead of moving focus, since that's
@@ -197,6 +202,7 @@ export default function ImportChoresPage() {
       // A structural parse error is about the original raw paste — once the
       // user has edited this row's fields directly, it no longer applies.
       parseError: null,
+      lastCompletedAgoRaw: String(newRow.lastCompletedAgoRaw),
     }
     setRows((prev) =>
       prev.map((row) => (row.id === updated.id ? updated : row)),
@@ -249,6 +255,12 @@ export default function ImportChoresPage() {
       },
     },
     {
+      field: 'lastCompletedAgoRaw',
+      headerName: 'Last done',
+      width: 140,
+      editable: true,
+    },
+    {
       field: 'remove',
       headerName: '',
       width: 56,
@@ -280,11 +292,17 @@ export default function ImportChoresPage() {
     bulkCreateMutation.mutate(
       {
         data: {
-          chores: rows.map((row) => ({
-            name: row.name.trim(),
-            cadenceInDays: row.cadenceInDays as number,
-            displayUnit: row.displayUnit,
-          })),
+          chores: rows.map((row) => {
+            const lastCompletedAt = parseLastCompletedAgo(
+              row.lastCompletedAgoRaw,
+            )
+            return {
+              name: row.name.trim(),
+              cadenceInDays: row.cadenceInDays as number,
+              displayUnit: row.displayUnit,
+              lastCompletedAt: lastCompletedAt?.toISOString(),
+            }
+          }),
         },
       },
       {
@@ -308,7 +326,9 @@ export default function ImportChoresPage() {
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Paste a list of chores, one per line. Copying columns out of a
-        spreadsheet like Google Sheets or Excel works too.
+        spreadsheet like Google Sheets or Excel works too. Add a "last done"
+        column (e.g. "3 weeks ago") for anything you've already kept up with, so
+        it doesn't look freshly overdue on day one.
       </Typography>
       <TextField
         multiline

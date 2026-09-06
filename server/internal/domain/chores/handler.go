@@ -49,9 +49,10 @@ func (handler ChoreHandler) CreateChore(ctx context.Context, request contracts.C
 	}
 
 	chore, err := handler.Store.Create(ctx, userID, CreateRequest{
-		Name:          request.Body.Name,
-		CadenceInDays: request.Body.CadenceInDays,
-		DisplayUnit:   displayUnit,
+		Name:            request.Body.Name,
+		CadenceInDays:   request.Body.CadenceInDays,
+		DisplayUnit:     displayUnit,
+		LastCompletedAt: request.Body.LastCompletedAt,
 	})
 	if err != nil {
 		return nil, err
@@ -82,7 +83,12 @@ func (handler ChoreHandler) BulkCreateChores(ctx context.Context, request contra
 			rowErrors = append(rowErrors, contracts.BulkCreateChoresRowError{Index: i, Message: err.Error()})
 			continue
 		}
-		requests = append(requests, CreateRequest{Name: chore.Name, CadenceInDays: chore.CadenceInDays, DisplayUnit: displayUnit})
+		requests = append(requests, CreateRequest{
+			Name:            chore.Name,
+			CadenceInDays:   chore.CadenceInDays,
+			DisplayUnit:     displayUnit,
+			LastCompletedAt: chore.LastCompletedAt,
+		})
 	}
 
 	if len(rowErrors) > 0 {

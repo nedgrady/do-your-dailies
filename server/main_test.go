@@ -46,3 +46,29 @@ func TestResolvePort(t *testing.T) {
 		}
 	})
 }
+
+func TestResolveSimulationModeEnabled(t *testing.T) {
+	t.Run("defaults to false when unset", func(t *testing.T) {
+		if resolveSimulationModeEnabled(func(string) string { return "" }) {
+			t.Fatal("expected simulation mode to default to disabled")
+		}
+	})
+
+	t.Run("is disabled for any value other than exactly \"true\"", func(t *testing.T) {
+		if resolveSimulationModeEnabled(func(string) string { return "1" }) {
+			t.Fatal("expected simulation mode to stay disabled for a non-\"true\" value")
+		}
+	})
+
+	t.Run("is enabled when set to \"true\"", func(t *testing.T) {
+		enabled := resolveSimulationModeEnabled(func(key string) string {
+			if key == "SIMULATION_MODE_ENABLED" {
+				return "true"
+			}
+			return ""
+		})
+		if !enabled {
+			t.Fatal("expected simulation mode to be enabled")
+		}
+	})
+}

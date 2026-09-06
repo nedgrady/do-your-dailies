@@ -17,10 +17,11 @@ type Application struct {
 	ChoreQueueStore             chorequeue.Store
 	ChoreInQueueCompletionStore choreinqueuecompletion.Store
 	Db                          *gorm.DB
+	SimulationModeEnabled       bool
 }
 
-func New(db *gorm.DB) *Application {
-	app := &Application{}
+func New(db *gorm.DB, simulationModeEnabled bool) *Application {
+	app := &Application{SimulationModeEnabled: simulationModeEnabled}
 
 	if db == nil {
 		panic("db is nil")

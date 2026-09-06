@@ -8,6 +8,7 @@ import {
   useUpdateChore,
 } from '../generated/api/default/default'
 import { ListChoresResponseItem } from '../generated/zod/default/default'
+import { useSimulatedUser } from '../lib/simulatedUser'
 import { isoDateTime } from './dateCoercion'
 import { queryKeys } from './queryKeys'
 
@@ -28,9 +29,10 @@ export const nullChore: Chore = {
 }
 
 export function useAllChoresQuery() {
+  const { userId } = useSimulatedUser()
   return useListChoresSuspense({
     query: {
-      queryKey: queryKeys.chores.list(),
+      queryKey: queryKeys.chores.list(userId),
       select: (data) => z.array(choreSchema).parse(data),
     },
   })
@@ -38,10 +40,13 @@ export function useAllChoresQuery() {
 
 export function useCreateChoreMutation() {
   const queryClient = useQueryClient()
+  const { userId } = useSimulatedUser()
   return useCreateChore({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.chores.all() })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.chores.all(userId),
+        })
       },
     },
   })
@@ -49,10 +54,13 @@ export function useCreateChoreMutation() {
 
 export function useBulkCreateChoresMutation() {
   const queryClient = useQueryClient()
+  const { userId } = useSimulatedUser()
   return useBulkCreateChores({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.chores.all() })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.chores.all(userId),
+        })
       },
     },
   })
@@ -60,10 +68,13 @@ export function useBulkCreateChoresMutation() {
 
 export function useUpdateChoreMutation() {
   const queryClient = useQueryClient()
+  const { userId } = useSimulatedUser()
   return useUpdateChore({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.chores.all() })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.chores.all(userId),
+        })
       },
     },
   })
@@ -71,10 +82,13 @@ export function useUpdateChoreMutation() {
 
 export function useDeleteChoreMutation() {
   const queryClient = useQueryClient()
+  const { userId } = useSimulatedUser()
   return useDeleteChore({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.chores.all() })
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.chores.all(userId),
+        })
       },
     },
   })

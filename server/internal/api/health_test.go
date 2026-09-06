@@ -12,7 +12,7 @@ import (
 
 func TestHealthCheck(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
+	app := New(nil, false)
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rr := httptest.NewRecorder()
@@ -24,7 +24,7 @@ func TestHealthCheck(t *testing.T) {
 
 func TestHealthCheckContentType(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
+	app := New(nil, false)
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rr := httptest.NewRecorder()
@@ -36,7 +36,7 @@ func TestHealthCheckContentType(t *testing.T) {
 
 func TestHealthCheckBody(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
+	app := New(nil, false)
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rr := httptest.NewRecorder()

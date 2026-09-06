@@ -28,7 +28,8 @@ export const ListChoresResponse = zod.array(ListChoresResponseItem)
 export const CreateChoreBody = zod.object({
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
-  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']).optional()
+  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']).optional(),
+  "lastCompletedAt": zod.iso.datetime({"offset":true}).optional().describe('When this chore was last actually done, if known. Backdates a completion record instead of leaving the chore with no history (which otherwise reads as \"just done now\").')
 })
 
 
@@ -50,7 +51,8 @@ export const BulkCreateChoresBody = zod.object({
   "chores": zod.array(zod.object({
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
-  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']).optional()
+  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']).optional(),
+  "lastCompletedAt": zod.iso.datetime({"offset":true}).optional().describe('When this chore was last actually done, if known. Backdates a completion record instead of leaving the chore with no history (which otherwise reads as \"just done now\").')
 }))
 })
 

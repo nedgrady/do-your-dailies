@@ -10,7 +10,7 @@ import (
 
 func TestRouterSetsCorsAllowOriginHeader(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
+	app := New(nil, false)
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	req.Header.Set("Origin", "http://localhost:3000")
@@ -23,7 +23,7 @@ func TestRouterSetsCorsAllowOriginHeader(t *testing.T) {
 
 func TestRouterHandlesCorsPreflightRequest(t *testing.T) {
 	t.Parallel()
-	app := New(nil)
+	app := New(nil, false)
 
 	req := httptest.NewRequest(http.MethodOptions, "/api/chore-queue", nil)
 	req.Header.Set("Origin", "http://localhost:3000")
