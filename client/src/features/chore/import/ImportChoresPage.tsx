@@ -74,11 +74,23 @@ function describeRowError(row: DraftRow): string | null {
   return null
 }
 
-export default function ImportChoresPage() {
+interface ImportChoresPageProps {
+  // Called instead of navigating to /chores/manage after a successful
+  // import, or when "Back to chores" is clicked. Defaults to that
+  // navigation, matching this page's standalone route - pass a no-op (or
+  // something else) when embedding this page somewhere that should stay
+  // put instead, like the admin simulator.
+  onExit?: () => void
+}
+
+export default function ImportChoresPage({
+  onExit,
+}: ImportChoresPageProps = {}) {
   const [pasteText, setPasteText] = useState('')
   const [rows, setRows] = useState<DraftRow[]>([])
   const navigate = useNavigate()
   const bulkCreateMutation = useBulkCreateChoresMutation()
+  const exit = onExit ?? (() => navigate({ to: '/chores/manage' }))
 
   // Auto-detect handles the common case (pasting straight from a
   // spreadsheet) with zero input, so the picker stays tucked away until
@@ -306,7 +318,7 @@ export default function ImportChoresPage() {
         },
       },
       {
-        onSuccess: () => navigate({ to: '/chores/manage' }),
+        onSuccess: () => exit(),
       },
     )
   }
@@ -316,7 +328,7 @@ export default function ImportChoresPage() {
       <Button
         size="small"
         startIcon={<ArrowBackIcon />}
-        onClick={() => navigate({ to: '/chores/manage' })}
+        onClick={() => exit()}
         sx={{ mb: 1 }}
       >
         Back to chores

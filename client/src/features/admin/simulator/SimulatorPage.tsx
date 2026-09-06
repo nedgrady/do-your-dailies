@@ -98,7 +98,7 @@ function SimulatorPageContent() {
 
       {activeUserId !== null && (
         <Stack spacing={3}>
-          <ImportChoresPage />
+          <ImportChoresPage onExit={() => {}} />
           <Divider />
           <Typography variant="h6">Resulting queue</Typography>
           <ChoreQueuePage />
