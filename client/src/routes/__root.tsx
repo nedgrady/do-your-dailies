@@ -3,6 +3,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import type { QueryClient } from '@tanstack/react-query'
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
+import BackToParent from '../components/BackToParent'
 import Footer from '../Footer'
 import AppConfigPanel from '../integrations/devtools/AppConfigPanel'
 import { AppThemeProvider } from '../integrations/mui/theme-provider'
@@ -34,6 +35,7 @@ function RootComponent() {
           }}
         >
           <Box sx={{ mt: 2, mx: 'auto', maxWidth: 720, px: 2 }}>
+            <BackToParent />
             <Outlet />
           </Box>
           <Footer />

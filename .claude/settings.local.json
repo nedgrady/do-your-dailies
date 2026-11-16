@@ -3,7 +3,8 @@
     "allow": [
       "Bash(xargs grep *)",
       "Bash(npx tsc *)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "WebSearch"
     ]
   }
 }

@@ -1,4 +1,3 @@
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {
   Alert,
@@ -76,7 +75,7 @@ function describeRowError(row: DraftRow): string | null {
 
 interface ImportChoresPageProps {
   // Called instead of navigating to /chores/manage after a successful
-  // import, or when "Back to chores" is clicked. Defaults to that
+  // import. Defaults to that
   // navigation, matching this page's standalone route - pass a no-op (or
   // something else) when embedding this page somewhere that should stay
   // put instead, like the admin simulator.
@@ -325,14 +324,6 @@ export default function ImportChoresPage({
 
   return (
     <Box>
-      <Button
-        size="small"
-        startIcon={<ArrowBackIcon />}
-        onClick={() => exit()}
-        sx={{ mb: 1 }}
-      >
-        Back to chores
-      </Button>
       <Typography variant="h6" sx={{ mb: 1 }}>
         Bulk import chores
       </Typography>

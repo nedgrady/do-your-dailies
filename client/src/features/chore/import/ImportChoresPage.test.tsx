@@ -34,26 +34,6 @@ async function pasteAndParse(text: string) {
 }
 
 describe('ImportChoresPage', () => {
-  it('navigates back to the chore list when Back to chores is clicked', async () => {
-    render(<ImportChoresPage />)
-
-    const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'Back to chores' }))
-
-    expect(navigateMock).toHaveBeenCalledWith({ to: '/chores/manage' })
-  })
-
-  it('calls onExit instead of navigating when Back to chores is clicked', async () => {
-    const onExit = vi.fn()
-    render(<ImportChoresPage onExit={onExit} />)
-
-    const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'Back to chores' }))
-
-    expect(onExit).toHaveBeenCalledOnce()
-    expect(navigateMock).not.toHaveBeenCalled()
-  })
-
   it('calls onExit instead of navigating after a successful import', async () => {
     server.use(
       http.post(`${apiBaseUrl}/api/chores/bulk`, () => {
