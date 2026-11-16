@@ -9,6 +9,25 @@ import * as zod from 'zod';
 
 export const HealthCheckResponse = zod.string()
 
+export const ListChoreCompletorsResponseItem = zod.object({
+  "id": zod.int(),
+  "name": zod.string(),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "updatedAt": zod.iso.datetime({"offset":true})
+})
+export const ListChoreCompletorsResponse = zod.array(ListChoreCompletorsResponseItem)
+
+export const CreateChoreCompletorBody = zod.object({
+  "name": zod.string()
+})
+
+export const CreateChoreCompletorResponse = zod.object({
+  "id": zod.int(),
+  "name": zod.string(),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "updatedAt": zod.iso.datetime({"offset":true})
+})
+
 
 
 

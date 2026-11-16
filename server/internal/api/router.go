@@ -8,6 +8,7 @@ import (
 	"do-your-dailies/server/internal/auth"
 	"do-your-dailies/server/internal/contracts"
 	"do-your-dailies/server/internal/domain/chorecompletions"
+	"do-your-dailies/server/internal/domain/chorecompletors"
 	"do-your-dailies/server/internal/domain/choreinsights"
 	"do-your-dailies/server/internal/domain/chorepreview"
 	"do-your-dailies/server/internal/domain/chorequeue"
@@ -38,9 +39,10 @@ func (app *Application) setupRoutes() *chi.Mux {
 			app.ChoreInQueueCompletionStore,
 			app.Db,
 		),
-		ChoreQueueHandler:    chorequeue.NewHandler(app.ChoreQueueStore, app.ChoreInQueueCompletionStore),
-		ChoreInsightsHandler: choreinsights.NewHandler(app.ChoreStore),
-		ChorePreviewHandler:  chorepreview.NewHandler(app.Db),
+		ChoreQueueHandler:     chorequeue.NewHandler(app.ChoreQueueStore, app.ChoreInQueueCompletionStore),
+		ChoreInsightsHandler:  choreinsights.NewHandler(app.ChoreStore),
+		ChorePreviewHandler:   chorepreview.NewHandler(app.Db),
+		ChoreCompletorHandler: chorecompletors.NewHandler(app.ChoreCompletorStore),
 	}
 
 	strictHandler := contracts.NewStrictHandlerWithOptions(server, nil, contracts.StrictHTTPServerOptions{

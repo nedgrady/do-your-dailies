@@ -31,10 +31,12 @@ import type {
   BulkCreateChoresValidationError,
   Chore,
   ChoreCompletion,
+  ChoreCompletor,
   ChoreInQueue,
   ChoreInsights,
   ChorePreview,
   CreateChoreCompletionRequest,
+  CreateChoreCompletorRequest,
   CreateChoreRequest,
   GetChorePreviewParams,
   ListChoreCompletionsParams,
@@ -199,7 +201,203 @@ export function useHealthCheckSuspense<TData = Awaited<ReturnType<typeof healthC
 
 
 
-export const listChores = (
+export const listChoreCompletors = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<ChoreCompletor[]>(
+      {url: `/api/chore-completors`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getListChoreCompletorsQueryKey = () => {
+    return [
+    `/api/chore-completors`
+    ] as const;
+    }
+
+
+export const getListChoreCompletorsQueryOptions = <TData = Awaited<ReturnType<typeof listChoreCompletors>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreCompletors>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListChoreCompletorsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listChoreCompletors>>> = ({ signal }) => listChoreCompletors(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listChoreCompletors>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListChoreCompletorsQueryResult = NonNullable<Awaited<ReturnType<typeof listChoreCompletors>>>
+export type ListChoreCompletorsQueryError = unknown
+
+
+export function useListChoreCompletors<TData = Awaited<ReturnType<typeof listChoreCompletors>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreCompletors>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listChoreCompletors>>,
+          TError,
+          Awaited<ReturnType<typeof listChoreCompletors>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListChoreCompletors<TData = Awaited<ReturnType<typeof listChoreCompletors>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreCompletors>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listChoreCompletors>>,
+          TError,
+          Awaited<ReturnType<typeof listChoreCompletors>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListChoreCompletors<TData = Awaited<ReturnType<typeof listChoreCompletors>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreCompletors>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListChoreCompletors<TData = Awaited<ReturnType<typeof listChoreCompletors>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listChoreCompletors>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListChoreCompletorsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getListChoreCompletorsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listChoreCompletors>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreCompletors>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListChoreCompletorsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listChoreCompletors>>> = ({ signal }) => listChoreCompletors(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreCompletors>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListChoreCompletorsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listChoreCompletors>>>
+export type ListChoreCompletorsSuspenseQueryError = unknown
+
+
+export function useListChoreCompletorsSuspense<TData = Awaited<ReturnType<typeof listChoreCompletors>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreCompletors>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListChoreCompletorsSuspense<TData = Awaited<ReturnType<typeof listChoreCompletors>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreCompletors>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListChoreCompletorsSuspense<TData = Awaited<ReturnType<typeof listChoreCompletors>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreCompletors>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListChoreCompletorsSuspense<TData = Awaited<ReturnType<typeof listChoreCompletors>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listChoreCompletors>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListChoreCompletorsSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const createChoreCompletor = (
+    createChoreCompletorRequest: CreateChoreCompletorRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<ChoreCompletor>(
+      {url: `/api/chore-completors`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createChoreCompletorRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getCreateChoreCompletorMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletor>>, TError,{data: CreateChoreCompletorRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletor>>, TError,{data: CreateChoreCompletorRequest}, TContext> => {
+
+const mutationKey = ['createChoreCompletor'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createChoreCompletor>>, {data: CreateChoreCompletorRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createChoreCompletor(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateChoreCompletorMutationResult = NonNullable<Awaited<ReturnType<typeof createChoreCompletor>>>
+    export type CreateChoreCompletorMutationBody = CreateChoreCompletorRequest
+    export type CreateChoreCompletorMutationError = void
+
+    export const useCreateChoreCompletor = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletor>>, TError,{data: CreateChoreCompletorRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createChoreCompletor>>,
+        TError,
+        {data: CreateChoreCompletorRequest},
+        TContext
+      > => {
+      return useMutation(getCreateChoreCompletorMutationOptions(options), queryClient);
+    }
+    export const listChores = (
 
  signal?: AbortSignal
 ) => {

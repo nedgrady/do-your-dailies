@@ -63,6 +63,17 @@ export interface UpdateChoreRequest {
   displayUnit?: DisplayUnit;
 }
 
+export interface ChoreCompletor {
+  id: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateChoreCompletorRequest {
+  name: string;
+}
+
 export interface ChoreCompletion {
   id: number;
   choreId: number;

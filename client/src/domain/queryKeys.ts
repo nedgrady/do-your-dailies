@@ -20,5 +20,7 @@ export const queryKeys = {
       ['chores', userId, 'insights'] as const,
     preview: (userId: number | null, days: number) =>
       ['chores', userId, 'preview', days] as const,
+    completors: (userId: number | null) =>
+      ['chores', userId, 'completors'] as const,
   },
 }

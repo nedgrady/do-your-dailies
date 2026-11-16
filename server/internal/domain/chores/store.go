@@ -43,7 +43,7 @@ func (store *GormStore) Create(ctx context.Context, userID uint, req CreateReque
 	}
 
 	err := store.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := ensureUserExists(tx, userID); err != nil {
+		if err := EnsureUserExists(tx, userID); err != nil {
 			return err
 		}
 		if err := tx.Create(&chore).Error; err != nil {
@@ -66,7 +66,7 @@ func (store *GormStore) CreateMany(ctx context.Context, userID uint, reqs []Crea
 	}
 
 	err := store.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := ensureUserExists(tx, userID); err != nil {
+		if err := EnsureUserExists(tx, userID); err != nil {
 			return err
 		}
 		if err := tx.Create(&chores).Error; err != nil {
@@ -94,11 +94,11 @@ func createBackdatedCompletion(tx *gorm.DB, choreID uint, lastCompletedAt *time.
 	return tx.Create(&completion).Error
 }
 
-// ensureUserExists provisions a User row for userID if one doesn't already exist. Real users
+// EnsureUserExists provisions a User row for userID if one doesn't already exist. Real users
 // are always already seeded, so this is a no-op for them; it only actually matters for a
 // not-yet-seen synthetic id acting through the admin simulator's impersonation header, letting
 // a chore be created under it without violating the chores.user_id foreign key.
-func ensureUserExists(tx *gorm.DB, userID uint) error {
+func EnsureUserExists(tx *gorm.DB, userID uint) error {
 	user := models.User{Model: gorm.Model{ID: userID}, Name: fmt.Sprintf("sim-%d", userID)}
 	return tx.Clauses(clause.OnConflict{DoNothing: true}).Create(&user).Error
 }

@@ -74,6 +74,14 @@ type ChoreCompletion struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+// ChoreCompletor defines model for ChoreCompletor.
+type ChoreCompletor struct {
+	CreatedAt time.Time `json:"createdAt"`
+	Id        uint64    `json:"id"`
+	Name      string    `json:"name"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
 // ChoreInQueue defines model for ChoreInQueue.
 type ChoreInQueue struct {
 	CadenceInDays      int        `json:"cadenceInDays"`
@@ -120,6 +128,11 @@ type CreateChoreCompletionRequest struct {
 	ChoreId uint64 `json:"choreId"`
 }
 
+// CreateChoreCompletorRequest defines model for CreateChoreCompletorRequest.
+type CreateChoreCompletorRequest struct {
+	Name string `json:"name"`
+}
+
 // CreateChoreRequest defines model for CreateChoreRequest.
 type CreateChoreRequest struct {
 	CadenceInDays int          `json:"cadenceInDays"`
@@ -154,6 +167,9 @@ type GetChorePreviewParams struct {
 // CreateChoreCompletionJSONRequestBody defines body for CreateChoreCompletion for application/json ContentType.
 type CreateChoreCompletionJSONRequestBody = CreateChoreCompletionRequest
 
+// CreateChoreCompletorJSONRequestBody defines body for CreateChoreCompletor for application/json ContentType.
+type CreateChoreCompletorJSONRequestBody = CreateChoreCompletorRequest
+
 // CreateChoreJSONRequestBody defines body for CreateChore for application/json ContentType.
 type CreateChoreJSONRequestBody = CreateChoreRequest
 
@@ -171,6 +187,12 @@ type ServerInterface interface {
 
 	// (POST /api/chore-completions)
 	CreateChoreCompletion(w http.ResponseWriter, r *http.Request)
+
+	// (GET /api/chore-completors)
+	ListChoreCompletors(w http.ResponseWriter, r *http.Request)
+
+	// (POST /api/chore-completors)
+	CreateChoreCompletor(w http.ResponseWriter, r *http.Request)
 
 	// (GET /api/chore-insights)
 	GetChoreInsights(w http.ResponseWriter, r *http.Request)
@@ -214,6 +236,16 @@ func (_ Unimplemented) ListChoreCompletions(w http.ResponseWriter, r *http.Reque
 
 // (POST /api/chore-completions)
 func (_ Unimplemented) CreateChoreCompletion(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/chore-completors)
+func (_ Unimplemented) ListChoreCompletors(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (POST /api/chore-completors)
+func (_ Unimplemented) CreateChoreCompletor(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -327,6 +359,34 @@ func (siw *ServerInterfaceWrapper) CreateChoreCompletion(w http.ResponseWriter, 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateChoreCompletion(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListChoreCompletors operation middleware
+func (siw *ServerInterfaceWrapper) ListChoreCompletors(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListChoreCompletors(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateChoreCompletor operation middleware
+func (siw *ServerInterfaceWrapper) CreateChoreCompletor(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateChoreCompletor(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -651,6 +711,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/api/chore-completions", wrapper.CreateChoreCompletion)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/chore-completors", wrapper.ListChoreCompletors)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/chore-completors", wrapper.CreateChoreCompletor)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/chore-insights", wrapper.GetChoreInsights)
 	})
 	r.Group(func(r chi.Router) {
@@ -748,6 +814,57 @@ type CreateChoreCompletion422Response struct {
 }
 
 func (response CreateChoreCompletion422Response) VisitCreateChoreCompletionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(422)
+	return nil
+}
+
+type ListChoreCompletorsRequestObject struct {
+}
+
+type ListChoreCompletorsResponseObject interface {
+	VisitListChoreCompletorsResponse(w http.ResponseWriter) error
+}
+
+type ListChoreCompletors200JSONResponse []ChoreCompletor
+
+func (response ListChoreCompletors200JSONResponse) VisitListChoreCompletorsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateChoreCompletorRequestObject struct {
+	Body *CreateChoreCompletorJSONRequestBody
+}
+
+type CreateChoreCompletorResponseObject interface {
+	VisitCreateChoreCompletorResponse(w http.ResponseWriter) error
+}
+
+type CreateChoreCompletor201JSONResponse ChoreCompletor
+
+func (response CreateChoreCompletor201JSONResponse) VisitCreateChoreCompletorResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CreateChoreCompletor422Response struct {
+}
+
+func (response CreateChoreCompletor422Response) VisitCreateChoreCompletorResponse(w http.ResponseWriter) error {
 	w.WriteHeader(422)
 	return nil
 }
@@ -1031,6 +1148,12 @@ type StrictServerInterface interface {
 	// (POST /api/chore-completions)
 	CreateChoreCompletion(ctx context.Context, request CreateChoreCompletionRequestObject) (CreateChoreCompletionResponseObject, error)
 
+	// (GET /api/chore-completors)
+	ListChoreCompletors(ctx context.Context, request ListChoreCompletorsRequestObject) (ListChoreCompletorsResponseObject, error)
+
+	// (POST /api/chore-completors)
+	CreateChoreCompletor(ctx context.Context, request CreateChoreCompletorRequestObject) (CreateChoreCompletorResponseObject, error)
+
 	// (GET /api/chore-insights)
 	GetChoreInsights(ctx context.Context, request GetChoreInsightsRequestObject) (GetChoreInsightsResponseObject, error)
 
@@ -1141,6 +1264,61 @@ func (sh *strictHandler) CreateChoreCompletion(w http.ResponseWriter, r *http.Re
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CreateChoreCompletionResponseObject); ok {
 		if err := validResponse.VisitCreateChoreCompletionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListChoreCompletors operation middleware
+func (sh *strictHandler) ListChoreCompletors(w http.ResponseWriter, r *http.Request) {
+	var request ListChoreCompletorsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListChoreCompletors(ctx, request.(ListChoreCompletorsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListChoreCompletors")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListChoreCompletorsResponseObject); ok {
+		if err := validResponse.VisitListChoreCompletorsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CreateChoreCompletor operation middleware
+func (sh *strictHandler) CreateChoreCompletor(w http.ResponseWriter, r *http.Request) {
+	var request CreateChoreCompletorRequestObject
+
+	var body CreateChoreCompletorJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateChoreCompletor(ctx, request.(CreateChoreCompletorRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateChoreCompletor")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CreateChoreCompletorResponseObject); ok {
+		if err := validResponse.VisitCreateChoreCompletorResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
