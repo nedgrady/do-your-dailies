@@ -15,7 +15,7 @@ import (
 )
 
 func migrateForChoreQueueTests(database *gorm.DB) error {
-	return database.AutoMigrate(&models.User{}, &models.Chore{}, &models.ChoreCompletion{})
+	return database.AutoMigrate(&models.User{}, &models.Chore{}, &models.ChoreCompletion{}, &models.ChoreCompletor{})
 }
 
 func seedUser(t *testing.T, database *gorm.DB) uint {

@@ -68,10 +68,12 @@ type Chore struct {
 
 // ChoreCompletion defines model for ChoreCompletion.
 type ChoreCompletion struct {
-	ChoreId   uint64    `json:"choreId"`
-	CreatedAt time.Time `json:"createdAt"`
-	Id        uint64    `json:"id"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	// ChoreCompletorIds Who did this completion. Empty for backdated or imported completions.
+	ChoreCompletorIds []uint64  `json:"choreCompletorIds"`
+	ChoreId           uint64    `json:"choreId"`
+	CreatedAt         time.Time `json:"createdAt"`
+	Id                uint64    `json:"id"`
+	UpdatedAt         time.Time `json:"updatedAt"`
 }
 
 // ChoreCompletor defines model for ChoreCompletor.
@@ -125,7 +127,8 @@ type ChoreProjection struct {
 
 // CreateChoreCompletionRequest defines model for CreateChoreCompletionRequest.
 type CreateChoreCompletionRequest struct {
-	ChoreId uint64 `json:"choreId"`
+	ChoreCompletorIds []uint64 `json:"choreCompletorIds"`
+	ChoreId           uint64   `json:"choreId"`
 }
 
 // CreateChoreCompletorRequest defines model for CreateChoreCompletorRequest.

@@ -95,5 +95,5 @@ func TestRouterRecoversWhenChoreStoreIsNil(t *testing.T) {
 }
 
 func migrateForAPITests(database *gorm.DB) error {
-	return database.AutoMigrate(&models.Chore{}, &models.ChoreCompletion{})
+	return database.AutoMigrate(&models.Chore{}, &models.ChoreCompletion{}, &models.ChoreCompletor{})
 }

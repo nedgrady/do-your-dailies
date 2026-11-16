@@ -9,17 +9,20 @@ import {
   Typography,
 } from '@mui/material'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { nullChore, useAllChoresQuery, type Chore } from '../../../domain/chore'
+import { nullChore, useAllChoresQuery } from '../../../domain/chore'
 import {
   useChoreCompletionsBetweenQuery,
   useCreateChoreCompletionMutation,
 } from '../../../domain/choreCompletion'
 import {
-  useCurrentDayChoreQueueQuery,
-  type ChoreInQueue,
-} from '../../../domain/choreQueue'
+  useChoreCompletorsQuery,
+  useCreateChoreCompletorMutation,
+} from '../../../domain/choreCompletor'
+import { useCurrentDayChoreQueueQuery } from '../../../domain/choreQueue'
+import type { ChoreInQueue } from '../../../domain/choreQueue'
+import WhoDidItDialog from './WhoDidItDialog'
 
 function ChoreQueueContent() {
   const { data: allChoresLookup = [] } = useAllChoresQuery()
@@ -29,7 +32,12 @@ function ChoreQueueContent() {
     new Date(new Date().setHours(24, 0, 0, 0)),
   )
 
+  const { data: completors = [] } = useChoreCompletorsQuery()
   const { mutate: createChoreCompletion } = useCreateChoreCompletionMutation()
+  const { mutateAsync: createChoreCompletor } =
+    useCreateChoreCompletorMutation()
+  const [choreBeingCompleted, setChoreBeingCompleted] =
+    useState<ChoreInQueue | null>(null)
 
   const toDoChores = choresInQueue.filter(
     (choreInQueue) =>
@@ -38,19 +46,35 @@ function ChoreQueueContent() {
       ),
   )
 
-  const completedChores: Chore[] = completions.map(
-    (completion) =>
+  const completedEntries = completions.map((completion) => ({
+    completion,
+    chore:
       allChoresLookup.find((chore) => chore.id === completion.choreId) ??
       nullChore,
-  )
+    names: completion.choreCompletorIds
+      .map((id) => completors.find((completor) => completor.id === id)?.name)
+      .filter((name): name is string => name !== undefined)
+      .join(', '),
+  }))
 
-  // TODO: wire this up to your actual "complete chore" mutation
   const handleChoreClick = (choreInQueue: ChoreInQueue) => {
+    setChoreBeingCompleted(choreInQueue)
+  }
+
+  const handleConfirmCompletion = (choreCompletorIds: number[]) => {
+    if (!choreBeingCompleted) return
     createChoreCompletion({
       data: {
-        choreId: choreInQueue.choreId,
+        choreId: choreBeingCompleted.choreId,
+        choreCompletorIds,
       },
     })
+    setChoreBeingCompleted(null)
+  }
+
+  const handleAddPerson = async (name: string) => {
+    const created = await createChoreCompletor({ data: { name } })
+    return created.id
   }
 
   return (
@@ -88,10 +112,13 @@ function ChoreQueueContent() {
               Completed
             </Typography>
             <List aria-label="Completed chores" disablePadding>
-              {completedChores.map((chore) => (
-                <ListItem key={chore.id} disablePadding sx={{ mb: 1 }}>
+              {completedEntries.map(({ completion, chore, names }) => (
+                <ListItem key={completion.id} disablePadding sx={{ mb: 1 }}>
                   <Paper variant="outlined" sx={{ p: 2, width: '100%' }}>
-                    <ListItemText primary={chore.name} />
+                    <ListItemText
+                      primary={chore.name}
+                      secondary={names || undefined}
+                    />
                   </Paper>
                 </ListItem>
               ))}
@@ -99,6 +126,17 @@ function ChoreQueueContent() {
           </Paper>
         </Grid>
       </Grid>
+
+      {choreBeingCompleted && (
+        <WhoDidItDialog
+          key={choreBeingCompleted.choreId}
+          choreName={choreBeingCompleted.choreName}
+          completors={completors}
+          onClose={() => setChoreBeingCompleted(null)}
+          onConfirm={handleConfirmCompletion}
+          onAddPerson={handleAddPerson}
+        />
+      )}
     </Box>
   )
 }

@@ -6,11 +6,17 @@ import (
 )
 
 func toAPIChoreCompletion(choreCompletion models.ChoreCompletion) contracts.ChoreCompletion {
+	completorIDs := make([]uint64, 0, len(choreCompletion.Completors))
+	for _, completor := range choreCompletion.Completors {
+		completorIDs = append(completorIDs, uint64(completor.ID))
+	}
+
 	return contracts.ChoreCompletion{
-		Id:        uint64(choreCompletion.ID),
-		ChoreId:   uint64(choreCompletion.ChoreID),
-		CreatedAt: choreCompletion.CreatedAt,
-		UpdatedAt: choreCompletion.UpdatedAt,
+		Id:                uint64(choreCompletion.ID),
+		ChoreId:           uint64(choreCompletion.ChoreID),
+		ChoreCompletorIds: completorIDs,
+		CreatedAt:         choreCompletion.CreatedAt,
+		UpdatedAt:         choreCompletion.UpdatedAt,
 	}
 }
 

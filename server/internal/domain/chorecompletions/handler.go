@@ -54,6 +54,14 @@ func (handler ChoreCompletionHandler) CreateChoreCompletion(ctx context.Context,
 
 	choreId := uint(request.Body.ChoreId)
 
+	if len(request.Body.ChoreCompletorIds) == 0 {
+		return contracts.CreateChoreCompletion422Response{}, nil
+	}
+	choreCompletorIDs := make([]uint, 0, len(request.Body.ChoreCompletorIds))
+	for _, id := range request.Body.ChoreCompletorIds {
+		choreCompletorIDs = append(choreCompletorIDs, uint(id))
+	}
+
 	if _, err := handler.ChoreStore.Get(ctx, userID, choreId); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return contracts.CreateChoreCompletion404Response{}, nil
@@ -70,7 +78,14 @@ func (handler ChoreCompletionHandler) CreateChoreCompletion(ctx context.Context,
 		return choreInQueue.ChoreID == choreId
 	})
 
-	choreCompletion, err := handler.Store.Create(ctx, CreateRequest{ChoreID: choreId})
+	choreCompletion, err := handler.Store.Create(ctx, CreateRequest{
+		UserID:            userID,
+		ChoreID:           choreId,
+		ChoreCompletorIDs: choreCompletorIDs,
+	})
+	if errors.Is(err, ErrUnknownChoreCompletor) {
+		return contracts.CreateChoreCompletion422Response{}, nil
+	}
 	if err != nil {
 		return nil, err
 	}

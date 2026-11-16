@@ -163,18 +163,24 @@ export const ListChoreCompletionsQueryParams = zod.object({
 export const ListChoreCompletionsResponseItem = zod.object({
   "id": zod.int(),
   "choreId": zod.int(),
+  "choreCompletorIds": zod.array(zod.int()).describe('Who did this completion. Empty for backdated or imported completions.'),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
 export const ListChoreCompletionsResponse = zod.array(ListChoreCompletionsResponseItem)
 
+
+
+
 export const CreateChoreCompletionBody = zod.object({
-  "choreId": zod.int()
+  "choreId": zod.int(),
+  "choreCompletorIds": zod.array(zod.int()).min(1)
 })
 
 export const CreateChoreCompletionResponse = zod.object({
   "id": zod.int(),
   "choreId": zod.int(),
+  "choreCompletorIds": zod.array(zod.int()).describe('Who did this completion. Empty for backdated or imported completions.'),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 })

@@ -77,12 +77,16 @@ export interface CreateChoreCompletorRequest {
 export interface ChoreCompletion {
   id: number;
   choreId: number;
+  /** Who did this completion. Empty for backdated or imported completions. */
+  choreCompletorIds: number[];
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateChoreCompletionRequest {
   choreId: number;
+  /** @minItems 1 */
+  choreCompletorIds: number[];
 }
 
 export interface ChoreProjection {
