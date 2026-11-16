@@ -86,8 +86,31 @@ export interface ChoreInsights {
   choreProjections: ChoreProjection[];
 }
 
+export interface ChorePreviewChore {
+  choreId: number;
+  choreName: string;
+}
+
+export interface ChorePreviewDay {
+  /** @minimum 1 */
+  dayOffset: number;
+  chores: ChorePreviewChore[];
+}
+
+export interface ChorePreview {
+  days: ChorePreviewDay[];
+}
+
 export type ListChoreCompletionsParams = {
 start: string;
 end: string;
+};
+
+export type GetChorePreviewParams = {
+/**
+ * @minimum 1
+ * @maximum 90
+ */
+days: number;
 };
 

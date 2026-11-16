@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodayRouteImport } from './routes/today'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ChoresPreviewRouteImport } from './routes/chores/preview'
 import { Route as ChoresManageRouteImport } from './routes/chores/manage'
 import { Route as ChoresImportRouteImport } from './routes/chores/import'
 import { Route as AdminSimulatorRouteImport } from './routes/admin/simulator'
@@ -23,6 +24,11 @@ const TodayRoute = TodayRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChoresPreviewRoute = ChoresPreviewRouteImport.update({
+  id: '/chores/preview',
+  path: '/chores/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChoresManageRoute = ChoresManageRouteImport.update({
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/admin/simulator': typeof AdminSimulatorRoute
   '/chores/import': typeof ChoresImportRoute
   '/chores/manage': typeof ChoresManageRoute
+  '/chores/preview': typeof ChoresPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/admin/simulator': typeof AdminSimulatorRoute
   '/chores/import': typeof ChoresImportRoute
   '/chores/manage': typeof ChoresManageRoute
+  '/chores/preview': typeof ChoresPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,6 +70,7 @@ export interface FileRoutesById {
   '/admin/simulator': typeof AdminSimulatorRoute
   '/chores/import': typeof ChoresImportRoute
   '/chores/manage': typeof ChoresManageRoute
+  '/chores/preview': typeof ChoresPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -71,8 +80,15 @@ export interface FileRouteTypes {
     | '/admin/simulator'
     | '/chores/import'
     | '/chores/manage'
+    | '/chores/preview'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/today' | '/admin/simulator' | '/chores/import' | '/chores/manage'
+  to:
+    | '/'
+    | '/today'
+    | '/admin/simulator'
+    | '/chores/import'
+    | '/chores/manage'
+    | '/chores/preview'
   id:
     | '__root__'
     | '/'
@@ -80,6 +96,7 @@ export interface FileRouteTypes {
     | '/admin/simulator'
     | '/chores/import'
     | '/chores/manage'
+    | '/chores/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -88,6 +105,7 @@ export interface RootRouteChildren {
   AdminSimulatorRoute: typeof AdminSimulatorRoute
   ChoresImportRoute: typeof ChoresImportRoute
   ChoresManageRoute: typeof ChoresManageRoute
+  ChoresPreviewRoute: typeof ChoresPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -104,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chores/preview': {
+      id: '/chores/preview'
+      path: '/chores/preview'
+      fullPath: '/chores/preview'
+      preLoaderRoute: typeof ChoresPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chores/manage': {
@@ -136,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSimulatorRoute: AdminSimulatorRoute,
   ChoresImportRoute: ChoresImportRoute,
   ChoresManageRoute: ChoresManageRoute,
+  ChoresPreviewRoute: ChoresPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

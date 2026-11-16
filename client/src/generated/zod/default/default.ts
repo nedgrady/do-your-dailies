@@ -173,3 +173,24 @@ export const ListChoreQueueResponseItem = zod.object({
 })
 export const ListChoreQueueResponse = zod.array(ListChoreQueueResponseItem)
 
+export const getChorePreviewQueryDaysMax = 90;
+
+
+
+export const GetChorePreviewQueryParams = zod.object({
+  "days": zod.int().min(1).max(getChorePreviewQueryDaysMax)
+})
+
+
+
+
+export const GetChorePreviewResponse = zod.object({
+  "days": zod.array(zod.object({
+  "dayOffset": zod.int().min(1),
+  "chores": zod.array(zod.object({
+  "choreId": zod.int(),
+  "choreName": zod.string()
+}))
+}))
+})
+

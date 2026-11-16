@@ -33,8 +33,10 @@ import type {
   ChoreCompletion,
   ChoreInQueue,
   ChoreInsights,
+  ChorePreview,
   CreateChoreCompletionRequest,
   CreateChoreRequest,
+  GetChorePreviewParams,
   ListChoreCompletionsParams,
   UpdateChoreRequest
 } from '../api.schemas.ts';
@@ -1166,6 +1168,145 @@ export function useListChoreQueueSuspense<TData = Awaited<ReturnType<typeof list
  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListChoreQueueSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getChorePreview = (
+    params: GetChorePreviewParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<ChorePreview>(
+      {url: `/api/chore-preview`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetChorePreviewQueryKey = (params?: GetChorePreviewParams,) => {
+    return [
+    `/api/chore-preview`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetChorePreviewQueryOptions = <TData = Awaited<ReturnType<typeof getChorePreview>>, TError = void>(params: GetChorePreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChorePreview>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetChorePreviewQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getChorePreview>>> = ({ signal }) => getChorePreview(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChorePreview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetChorePreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getChorePreview>>>
+export type GetChorePreviewQueryError = void
+
+
+export function useGetChorePreview<TData = Awaited<ReturnType<typeof getChorePreview>>, TError = void>(
+ params: GetChorePreviewParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChorePreview>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChorePreview>>,
+          TError,
+          Awaited<ReturnType<typeof getChorePreview>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChorePreview<TData = Awaited<ReturnType<typeof getChorePreview>>, TError = void>(
+ params: GetChorePreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChorePreview>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChorePreview>>,
+          TError,
+          Awaited<ReturnType<typeof getChorePreview>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChorePreview<TData = Awaited<ReturnType<typeof getChorePreview>>, TError = void>(
+ params: GetChorePreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChorePreview>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetChorePreview<TData = Awaited<ReturnType<typeof getChorePreview>>, TError = void>(
+ params: GetChorePreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChorePreview>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetChorePreviewQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getGetChorePreviewSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof getChorePreview>>, TError = void>(params: GetChorePreviewParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getChorePreview>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetChorePreviewQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getChorePreview>>> = ({ signal }) => getChorePreview(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof getChorePreview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetChorePreviewSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getChorePreview>>>
+export type GetChorePreviewSuspenseQueryError = void
+
+
+export function useGetChorePreviewSuspense<TData = Awaited<ReturnType<typeof getChorePreview>>, TError = void>(
+ params: GetChorePreviewParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getChorePreview>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChorePreviewSuspense<TData = Awaited<ReturnType<typeof getChorePreview>>, TError = void>(
+ params: GetChorePreviewParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getChorePreview>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChorePreviewSuspense<TData = Awaited<ReturnType<typeof getChorePreview>>, TError = void>(
+ params: GetChorePreviewParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getChorePreview>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetChorePreviewSuspense<TData = Awaited<ReturnType<typeof getChorePreview>>, TError = void>(
+ params: GetChorePreviewParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getChorePreview>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetChorePreviewSuspenseQueryOptions(params,options)
 
   const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

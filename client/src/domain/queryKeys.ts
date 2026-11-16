@@ -18,5 +18,7 @@ export const queryKeys = {
     queue: (userId: number | null) => ['chores', userId, 'queue'] as const,
     insights: (userId: number | null) =>
       ['chores', userId, 'insights'] as const,
+    preview: (userId: number | null, days: number) =>
+      ['chores', userId, 'preview', days] as const,
   },
 }

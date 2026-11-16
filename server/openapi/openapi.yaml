@@ -179,6 +179,26 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ChoreInQueue"
+  /api/chore-preview:
+    get:
+      operationId: getChorePreview
+      parameters:
+        - name: days
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 90
+      responses:
+        "200":
+          description: Simulated day-by-day chore schedule for the next `days` days, assuming every day's recommended chores are completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChorePreview"
+        "400":
+          description: Missing or invalid days query parameter
 components:
   schemas:
     DisplayUnit:
@@ -351,3 +371,36 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ChoreProjection"
+    ChorePreviewChore:
+      type: object
+      required:
+        - choreId
+        - choreName
+      properties:
+        choreId:
+          type: integer
+          format: uint64
+        choreName:
+          type: string
+    ChorePreviewDay:
+      type: object
+      required:
+        - dayOffset
+        - chores
+      properties:
+        dayOffset:
+          type: integer
+          minimum: 1
+        chores:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChorePreviewChore"
+    ChorePreview:
+      type: object
+      required:
+        - days
+      properties:
+        days:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChorePreviewDay"

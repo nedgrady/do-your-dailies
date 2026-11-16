@@ -9,7 +9,7 @@ import (
 	"do-your-dailies/server/internal/domain/choreinqueuecompletion"
 )
 
-const defaultMaxChores = 5
+const DefaultMaxChores = 5
 
 type ChoreQueueHandler struct {
 	Now                         func() time.Time
@@ -44,7 +44,7 @@ func (handler ChoreQueueHandler) ListChoreQueue(ctx context.Context, request con
 		return nil, err
 	}
 
-	choresRemainingToComplete := defaultMaxChores - len(requiredChoresCompletedToday)
+	choresRemainingToComplete := DefaultMaxChores - len(requiredChoresCompletedToday)
 	queue, err := handler.Store.ListForCapacityFirstUser(ctx, userID, choresRemainingToComplete)
 	if err != nil {
 		return nil, err

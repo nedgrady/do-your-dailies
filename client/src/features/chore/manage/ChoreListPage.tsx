@@ -405,9 +405,14 @@ function ChoreList() {
         <Typography variant="h6" component="h2">
           Manage chores
         </Typography>
-        <Button component={Link} to="/chores/import" size="small">
-          Bulk import
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button component={Link} to="/chores/preview" size="small">
+            Preview upcoming days
+          </Button>
+          <Button component={Link} to="/chores/import" size="small">
+            Bulk import
+          </Button>
+        </Stack>
       </Stack>
       <Grid container sx={{ alignItems: 'stretch', mb: 0.5 }}>
         <Grid>

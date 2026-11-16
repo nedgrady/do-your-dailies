@@ -92,6 +92,23 @@ type ChoreInsights struct {
 	UtilizationRatio                                float64           `json:"utilizationRatio"`
 }
 
+// ChorePreview defines model for ChorePreview.
+type ChorePreview struct {
+	Days []ChorePreviewDay `json:"days"`
+}
+
+// ChorePreviewChore defines model for ChorePreviewChore.
+type ChorePreviewChore struct {
+	ChoreId   uint64 `json:"choreId"`
+	ChoreName string `json:"choreName"`
+}
+
+// ChorePreviewDay defines model for ChorePreviewDay.
+type ChorePreviewDay struct {
+	Chores    []ChorePreviewChore `json:"chores"`
+	DayOffset int                 `json:"dayOffset"`
+}
+
 // ChoreProjection defines model for ChoreProjection.
 type ChoreProjection struct {
 	Chore            Chore   `json:"chore"`
@@ -129,6 +146,11 @@ type ListChoreCompletionsParams struct {
 	End   time.Time `form:"end" json:"end"`
 }
 
+// GetChorePreviewParams defines parameters for GetChorePreview.
+type GetChorePreviewParams struct {
+	Days int `form:"days" json:"days"`
+}
+
 // CreateChoreCompletionJSONRequestBody defines body for CreateChoreCompletion for application/json ContentType.
 type CreateChoreCompletionJSONRequestBody = CreateChoreCompletionRequest
 
@@ -152,6 +174,9 @@ type ServerInterface interface {
 
 	// (GET /api/chore-insights)
 	GetChoreInsights(w http.ResponseWriter, r *http.Request)
+
+	// (GET /api/chore-preview)
+	GetChorePreview(w http.ResponseWriter, r *http.Request, params GetChorePreviewParams)
 
 	// (GET /api/chore-queue)
 	ListChoreQueue(w http.ResponseWriter, r *http.Request)
@@ -194,6 +219,11 @@ func (_ Unimplemented) CreateChoreCompletion(w http.ResponseWriter, r *http.Requ
 
 // (GET /api/chore-insights)
 func (_ Unimplemented) GetChoreInsights(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (GET /api/chore-preview)
+func (_ Unimplemented) GetChorePreview(w http.ResponseWriter, r *http.Request, params GetChorePreviewParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -311,6 +341,39 @@ func (siw *ServerInterfaceWrapper) GetChoreInsights(w http.ResponseWriter, r *ht
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetChoreInsights(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetChorePreview operation middleware
+func (siw *ServerInterfaceWrapper) GetChorePreview(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetChorePreviewParams
+
+	// ------------- Required query parameter "days" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "days", r.URL.Query(), &params.Days, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "days"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "days", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetChorePreview(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -591,6 +654,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/api/chore-insights", wrapper.GetChoreInsights)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/chore-preview", wrapper.GetChorePreview)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/chore-queue", wrapper.ListChoreQueue)
 	})
 	r.Group(func(r chi.Router) {
@@ -705,6 +771,36 @@ func (response GetChoreInsights200JSONResponse) VisitGetChoreInsightsResponse(w 
 	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
+}
+
+type GetChorePreviewRequestObject struct {
+	Params GetChorePreviewParams
+}
+
+type GetChorePreviewResponseObject interface {
+	VisitGetChorePreviewResponse(w http.ResponseWriter) error
+}
+
+type GetChorePreview200JSONResponse ChorePreview
+
+func (response GetChorePreview200JSONResponse) VisitGetChorePreviewResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetChorePreview400Response struct {
+}
+
+func (response GetChorePreview400Response) VisitGetChorePreviewResponse(w http.ResponseWriter) error {
+	w.WriteHeader(400)
+	return nil
 }
 
 type ListChoreQueueRequestObject struct {
@@ -938,6 +1034,9 @@ type StrictServerInterface interface {
 	// (GET /api/chore-insights)
 	GetChoreInsights(ctx context.Context, request GetChoreInsightsRequestObject) (GetChoreInsightsResponseObject, error)
 
+	// (GET /api/chore-preview)
+	GetChorePreview(ctx context.Context, request GetChorePreviewRequestObject) (GetChorePreviewResponseObject, error)
+
 	// (GET /api/chore-queue)
 	ListChoreQueue(ctx context.Context, request ListChoreQueueRequestObject) (ListChoreQueueResponseObject, error)
 
@@ -1066,6 +1165,32 @@ func (sh *strictHandler) GetChoreInsights(w http.ResponseWriter, r *http.Request
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetChoreInsightsResponseObject); ok {
 		if err := validResponse.VisitGetChoreInsightsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetChorePreview operation middleware
+func (sh *strictHandler) GetChorePreview(w http.ResponseWriter, r *http.Request, params GetChorePreviewParams) {
+	var request GetChorePreviewRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetChorePreview(ctx, request.(GetChorePreviewRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetChorePreview")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetChorePreviewResponseObject); ok {
+		if err := validResponse.VisitGetChorePreviewResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
