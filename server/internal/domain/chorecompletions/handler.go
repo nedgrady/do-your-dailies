@@ -61,7 +61,7 @@ func (handler ChoreCompletionHandler) CreateChoreCompletion(ctx context.Context,
 		return nil, err
 	}
 
-	choreQueue, err := handler.ChoreQueueStore.ListForCapacityFirstUser(ctx, userID, 5)
+	choreQueue, err := handler.ChoreQueueStore.ListForCapacityFirstUser(ctx, userID, chorequeue.DefaultMaxChores)
 	if err != nil {
 		return nil, err
 	}
@@ -70,15 +70,15 @@ func (handler ChoreCompletionHandler) CreateChoreCompletion(ctx context.Context,
 		return choreInQueue.ChoreID == choreId
 	})
 
-	if isChoreInQueue {
-		if _, err := handler.ChoreInQueueCompletionStore.Create(ctx, choreinqueuecompletion.CreateRequest{ChoreCompletionID: choreId}); err != nil {
-			return nil, err
-		}
-	}
-
 	choreCompletion, err := handler.Store.Create(ctx, CreateRequest{ChoreID: choreId})
 	if err != nil {
 		return nil, err
+	}
+
+	if isChoreInQueue {
+		if _, err := handler.ChoreInQueueCompletionStore.Create(ctx, choreinqueuecompletion.CreateRequest{ChoreCompletionID: choreCompletion.ID}); err != nil {
+			return nil, err
+		}
 	}
 
 	return contracts.CreateChoreCompletion201JSONResponse(toAPIChoreCompletion(choreCompletion)), nil

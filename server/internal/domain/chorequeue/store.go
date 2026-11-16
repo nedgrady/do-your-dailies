@@ -112,7 +112,7 @@ LEFT JOIN LATERAL (
 ) latest_completion ON true
 WHERE chores.deleted_at IS NULL
   AND chores.user_id = ?
-ORDER BY priority DESC
+ORDER BY priority DESC, chores.id ASC
 LIMIT ?;
 	`, asOf, asOf, userID, maxChores).Scan(&allChoresForUserWithLatestCompletion).Error
 
