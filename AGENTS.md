@@ -15,3 +15,8 @@ You may NOT use reflection without asking the user first.
 Before any changes are done you MUST come up with a list of refactors for the user to consider to implement next.
 
 When making contract changes you must change server\openapi\openapi.yaml first, then run Generate-Contracts.ps1.
+
+UI conventions:
+- Design for touch and mouse by default. Use MUI default control sizes; reserve size="small" or dense for deliberately compact, desktop-only UI such as data grids.
+- Use ResponsiveDialog (client/src/components/ResponsiveDialog.tsx) for dialogs instead of raw MUI Dialog. It shows a bottom sheet below the md breakpoint and a centered dialog above it.
+- Check new UI at roughly 390px and 1280px widths before finishing.

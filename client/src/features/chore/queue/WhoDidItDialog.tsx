@@ -2,16 +2,18 @@ import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
 import {
   Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  Checkbox,
   IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
   Stack,
   TextField,
 } from '@mui/material'
 import { useState } from 'react'
+import ResponsiveDialog from '../../../components/ResponsiveDialog'
 import type { ChoreCompletor } from '../../../domain/choreCompletor'
 
 interface WhoDidItDialogProps {
@@ -63,80 +65,86 @@ export default function WhoDidItDialog({
   }
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Who did "{choreName}"?</DialogTitle>
-      <DialogContent>
-        <Stack
-          direction="row"
-          spacing={1}
-          useFlexGap
-          sx={{ flexWrap: 'wrap', alignItems: 'center', mb: 1 }}
-        >
-          {completors.map((completor) => {
-            const selected = selectedIds.includes(completor.id)
-            return (
-              <Chip
-                key={completor.id}
-                label={completor.name}
-                color={selected ? 'primary' : 'default'}
-                variant={selected ? 'filled' : 'outlined'}
+    <ResponsiveDialog
+      open
+      onClose={onClose}
+      title={`Who did "${choreName}"?`}
+      actions={
+        <>
+          <Button size="large" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            size="large"
+            variant="contained"
+            disabled={selectedIds.length === 0}
+            onClick={() => onConfirm(selectedIds)}
+          >
+            Done
+          </Button>
+        </>
+      }
+    >
+      <List disablePadding>
+        {completors.map((completor) => {
+          const selected = selectedIds.includes(completor.id)
+          return (
+            <ListItem key={completor.id} disablePadding>
+              <ListItemButton
                 onClick={() => toggle(completor.id)}
                 aria-pressed={selected}
-              />
-            )
-          })}
+              >
+                <ListItemIcon>
+                  <Checkbox
+                    checked={selected}
+                    tabIndex={-1}
+                    disableRipple
+                    sx={{ pointerEvents: 'none' }}
+                  />
+                </ListItemIcon>
+                <ListItemText primary={completor.name} />
+              </ListItemButton>
+            </ListItem>
+          )
+        })}
 
-          {isAddingPerson ? (
-            <>
-              <TextField
-                size="small"
-                autoFocus
-                placeholder="Name"
-                slotProps={{ htmlInput: { 'aria-label': 'New person name' } }}
-                value={newName}
-                onChange={(event) => setNewName(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') void addPerson()
-                  if (event.key === 'Escape') collapseAddPerson()
-                }}
-                sx={{ width: 160 }}
-              />
-              <Button
-                size="small"
-                onClick={() => void addPerson()}
-                disabled={!newName.trim() || isAdding}
-              >
-                Add
-              </Button>
-              <IconButton
-                size="small"
-                aria-label="Cancel adding person"
-                onClick={collapseAddPerson}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </>
-          ) : (
-            <IconButton
-              size="small"
-              aria-label="Add person"
-              onClick={() => setIsAddingPerson(true)}
-            >
-              <AddIcon />
-            </IconButton>
-          )}
+        {!isAddingPerson && (
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => setIsAddingPerson(true)}>
+              <ListItemIcon>
+                <AddIcon />
+              </ListItemIcon>
+              <ListItemText primary="Add person" />
+            </ListItemButton>
+          </ListItem>
+        )}
+      </List>
+
+      {isAddingPerson && (
+        <Stack direction="row" spacing={1} sx={{ mt: 1, alignItems: 'center' }}>
+          <TextField
+            autoFocus
+            fullWidth
+            label="New person's name"
+            value={newName}
+            onChange={(event) => setNewName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') void addPerson()
+              if (event.key === 'Escape') collapseAddPerson()
+            }}
+          />
+          <Button
+            size="large"
+            onClick={() => void addPerson()}
+            disabled={!newName.trim() || isAdding}
+          >
+            Add
+          </Button>
+          <IconButton aria-label="Cancel adding person" onClick={collapseAddPerson}>
+            <CloseIcon />
+          </IconButton>
         </Stack>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button
-          variant="contained"
-          disabled={selectedIds.length === 0}
-          onClick={() => onConfirm(selectedIds)}
-        >
-          Done
-        </Button>
-      </DialogActions>
-    </Dialog>
+      )}
+    </ResponsiveDialog>
   )
 }
