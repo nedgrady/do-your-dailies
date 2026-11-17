@@ -20,8 +20,10 @@ interface MyRouterContext {
 // Search params declared here are shared by every route beneath the root.
 // `completing` is the chore id whose "Who did it?" sheet is open. A number,
 // not a numeric string, for the same serialization reason as chores/manage.
+// `completion` is the completion id whose "Mark not done?" sheet is open.
 export interface RootSearch {
   completing?: number
+  completion?: number
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
@@ -29,6 +31,9 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   validateSearch: (search: Record<string, unknown>): RootSearch => {
     if (typeof search.completing === 'number') {
       return { completing: search.completing }
+    }
+    if (typeof search.completion === 'number') {
+      return { completion: search.completion }
     }
     return {}
   },

@@ -4,6 +4,7 @@ import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	Name   string  `json:"name" gorm:"not null"`
-	Chores []Chore `json:"chores" gorm:"foreignKey:UserID"`
+	Name            string           `json:"name" gorm:"not null"`
+	Chores          []Chore          `json:"chores" gorm:"foreignKey:UserID"`
+	ChoreCompletors []ChoreCompletor `json:"chore_completors" gorm:"foreignKey:UserID"`
 }

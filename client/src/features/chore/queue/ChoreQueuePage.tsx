@@ -15,6 +15,7 @@ import { nullChore, useAllChoresQuery } from '../../../domain/chore'
 import {
   useChoreCompletionsBetweenQuery,
   useCreateChoreCompletionMutation,
+  useDeleteChoreCompletionMutation,
 } from '../../../domain/choreCompletion'
 import {
   useChoreCompletorsQuery,
@@ -22,7 +23,11 @@ import {
 } from '../../../domain/choreCompletor'
 import { useCurrentDayChoreQueueQuery } from '../../../domain/choreQueue'
 import type { ChoreInQueue } from '../../../domain/choreQueue'
-import { useCompletingChore } from '../../../lib/useCompletingChore'
+import {
+  useCompletingChore,
+  useViewingCompletion,
+} from '../../../lib/useCompletingChore'
+import CompletedChoreDialog from './CompletedChoreDialog'
 import WhoDidItDialog from './WhoDidItDialog'
 
 function ChoreQueueContent() {
@@ -36,7 +41,9 @@ function ChoreQueueContent() {
   const { data: completors = [] } = useChoreCompletorsQuery()
   const completeChore = useCreateChoreCompletionMutation()
   const addPersonMutation = useCreateChoreCompletorMutation()
+  const deleteCompletion = useDeleteChoreCompletionMutation()
   const { completingChoreId, open, close } = useCompletingChore()
+  const viewing = useViewingCompletion()
 
   const toDoChores = choresInQueue.filter(
     (choreInQueue) =>
@@ -60,8 +67,30 @@ function ChoreQueueContent() {
       .join(', '),
   }))
 
+  // A stale, invalid or already-undone id in the URL just shows no sheet.
+  const completionBeingViewed =
+    completedEntries.find(
+      ({ completion }) => completion.id === viewing.viewingCompletionId,
+    ) ?? null
+
   const handleChoreClick = (choreInQueue: ChoreInQueue) => {
     open(choreInQueue.choreId)
+  }
+
+  // Closes only after the server accepts the undo, so a failure leaves the
+  // sheet open for a retry.
+  const handleMarkNotDone = () => {
+    if (!completionBeingViewed) return
+    deleteCompletion.mutate(
+      { id: completionBeingViewed.completion.id },
+      { onSuccess: handleCloseCompletedSheet },
+    )
+  }
+
+  // Failed undo attempts must not show on the next sheet.
+  const handleCloseCompletedSheet = () => {
+    deleteCompletion.reset()
+    viewing.close()
   }
 
   // Closes only after the server accepts the completion, so a failure leaves
@@ -128,18 +157,36 @@ function ChoreQueueContent() {
             <List aria-label="Completed chores" disablePadding>
               {completedEntries.map(({ completion, chore, names }) => (
                 <ListItem key={completion.id} disablePadding sx={{ mb: 1 }}>
-                  <Paper variant="outlined" sx={{ p: 2, width: '100%' }}>
+                  <ListItemButton
+                    onClick={() => viewing.open(completion.id)}
+                    component={Paper}
+                    variant="outlined"
+                    sx={{ p: 2 }}
+                  >
                     <ListItemText
                       primary={chore.name}
                       secondary={names || undefined}
                     />
-                  </Paper>
+                  </ListItemButton>
                 </ListItem>
               ))}
             </List>
           </Paper>
         </Grid>
       </Grid>
+
+      {completionBeingViewed && (
+        <CompletedChoreDialog
+          key={completionBeingViewed.completion.id}
+          choreName={completionBeingViewed.chore.name}
+          completorNames={completionBeingViewed.names}
+          completedAt={completionBeingViewed.completion.createdAt}
+          onClose={handleCloseCompletedSheet}
+          onMarkNotDone={handleMarkNotDone}
+          isSaving={deleteCompletion.isPending}
+          saveFailed={deleteCompletion.isError}
+        />
+      )}
 
       {choreBeingCompleted && (
         <WhoDidItDialog

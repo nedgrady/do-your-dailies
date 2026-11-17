@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import {
   useCreateChoreCompletion,
+  useDeleteChoreCompletion,
   useListChoreCompletionsSuspense,
 } from '../generated/api/default/default'
 import { ListChoreCompletionsResponseItem } from '../generated/zod/default/default'
@@ -34,6 +35,23 @@ export function useCreateChoreCompletionMutation() {
   const { userId } = useSimulatedUser()
 
   return useCreateChoreCompletion({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.chores.all(userId),
+        })
+      },
+    },
+  })
+}
+
+// Undoing a completion changes the queue, the done list and the insights, so
+// everything under the chores key is refetched.
+export function useDeleteChoreCompletionMutation() {
+  const queryClient = useQueryClient()
+  const { userId } = useSimulatedUser()
+
+  return useDeleteChoreCompletion({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({
