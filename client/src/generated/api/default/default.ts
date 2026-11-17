@@ -27,7 +27,6 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  BulkCreateChoresHeaders,
   BulkCreateChoresRequest,
   BulkCreateChoresValidationError,
   Chore,
@@ -37,11 +36,8 @@ import type {
   ChoreInsights,
   ChorePreview,
   ConflictResponse,
-  CreateChoreCompletionHeaders,
   CreateChoreCompletionRequest,
-  CreateChoreCompletorHeaders,
   CreateChoreCompletorRequest,
-  CreateChoreHeaders,
   CreateChoreRequest,
   GetChorePreviewParams,
   ListChoreCompletionsParams,
@@ -346,14 +342,13 @@ export function useListChoreCompletorsSuspense<TData = Awaited<ReturnType<typeof
 
 export const createChoreCompletor = (
     createChoreCompletorRequest: CreateChoreCompletorRequest,
-    headers: CreateChoreCompletorHeaders,
  signal?: AbortSignal
 ) => {
 
 
       return customInstance<ChoreCompletor>(
       {url: `/api/chore-completors`, method: 'POST',
-      headers: {'Content-Type': 'application/json', ...headers},
+      headers: {'Content-Type': 'application/json', },
       data: createChoreCompletorRequest, signal
     },
       );
@@ -363,8 +358,8 @@ export const createChoreCompletor = (
 
 
 export const getCreateChoreCompletorMutationOptions = <TError = ConflictResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletor>>, TError,{data: CreateChoreCompletorRequest;headers: CreateChoreCompletorHeaders}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletor>>, TError,{data: CreateChoreCompletorRequest;headers: CreateChoreCompletorHeaders}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletor>>, TError,{data: CreateChoreCompletorRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletor>>, TError,{data: CreateChoreCompletorRequest}, TContext> => {
 
 const mutationKey = ['createChoreCompletor'];
 const {mutation: mutationOptions} = options ?
@@ -376,10 +371,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createChoreCompletor>>, {data: CreateChoreCompletorRequest;headers: CreateChoreCompletorHeaders}> = (props) => {
-          const {data,headers} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createChoreCompletor>>, {data: CreateChoreCompletorRequest}> = (props) => {
+          const {data} = props ?? {};
 
-          return  createChoreCompletor(data,headers,)
+          return  createChoreCompletor(data,)
         }
 
 
@@ -394,11 +389,11 @@ const {mutation: mutationOptions} = options ?
     export type CreateChoreCompletorMutationError = ConflictResponse | void
 
     export const useCreateChoreCompletor = <TError = ConflictResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletor>>, TError,{data: CreateChoreCompletorRequest;headers: CreateChoreCompletorHeaders}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletor>>, TError,{data: CreateChoreCompletorRequest}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createChoreCompletor>>,
         TError,
-        {data: CreateChoreCompletorRequest;headers: CreateChoreCompletorHeaders},
+        {data: CreateChoreCompletorRequest},
         TContext
       > => {
       return useMutation(getCreateChoreCompletorMutationOptions(options), queryClient);
@@ -543,14 +538,13 @@ export function useListChoresSuspense<TData = Awaited<ReturnType<typeof listChor
 
 export const createChore = (
     createChoreRequest: CreateChoreRequest,
-    headers: CreateChoreHeaders,
  signal?: AbortSignal
 ) => {
 
 
       return customInstance<Chore>(
       {url: `/api/chores`, method: 'POST',
-      headers: {'Content-Type': 'application/json', ...headers},
+      headers: {'Content-Type': 'application/json', },
       data: createChoreRequest, signal
     },
       );
@@ -560,8 +554,8 @@ export const createChore = (
 
 
 export const getCreateChoreMutationOptions = <TError = ConflictResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChore>>, TError,{data: CreateChoreRequest;headers: CreateChoreHeaders}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof createChore>>, TError,{data: CreateChoreRequest;headers: CreateChoreHeaders}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChore>>, TError,{data: CreateChoreRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createChore>>, TError,{data: CreateChoreRequest}, TContext> => {
 
 const mutationKey = ['createChore'];
 const {mutation: mutationOptions} = options ?
@@ -573,10 +567,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createChore>>, {data: CreateChoreRequest;headers: CreateChoreHeaders}> = (props) => {
-          const {data,headers} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createChore>>, {data: CreateChoreRequest}> = (props) => {
+          const {data} = props ?? {};
 
-          return  createChore(data,headers,)
+          return  createChore(data,)
         }
 
 
@@ -591,25 +585,24 @@ const {mutation: mutationOptions} = options ?
     export type CreateChoreMutationError = ConflictResponse | void
 
     export const useCreateChore = <TError = ConflictResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChore>>, TError,{data: CreateChoreRequest;headers: CreateChoreHeaders}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChore>>, TError,{data: CreateChoreRequest}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createChore>>,
         TError,
-        {data: CreateChoreRequest;headers: CreateChoreHeaders},
+        {data: CreateChoreRequest},
         TContext
       > => {
       return useMutation(getCreateChoreMutationOptions(options), queryClient);
     }
     export const bulkCreateChores = (
     bulkCreateChoresRequest: BulkCreateChoresRequest,
-    headers: BulkCreateChoresHeaders,
  signal?: AbortSignal
 ) => {
 
 
       return customInstance<Chore[]>(
       {url: `/api/chores/bulk`, method: 'POST',
-      headers: {'Content-Type': 'application/json', ...headers},
+      headers: {'Content-Type': 'application/json', },
       data: bulkCreateChoresRequest, signal
     },
       );
@@ -619,8 +612,8 @@ const {mutation: mutationOptions} = options ?
 
 
 export const getBulkCreateChoresMutationOptions = <TError = ConflictResponse | BulkCreateChoresValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkCreateChores>>, TError,{data: BulkCreateChoresRequest;headers: BulkCreateChoresHeaders}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof bulkCreateChores>>, TError,{data: BulkCreateChoresRequest;headers: BulkCreateChoresHeaders}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkCreateChores>>, TError,{data: BulkCreateChoresRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof bulkCreateChores>>, TError,{data: BulkCreateChoresRequest}, TContext> => {
 
 const mutationKey = ['bulkCreateChores'];
 const {mutation: mutationOptions} = options ?
@@ -632,10 +625,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkCreateChores>>, {data: BulkCreateChoresRequest;headers: BulkCreateChoresHeaders}> = (props) => {
-          const {data,headers} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkCreateChores>>, {data: BulkCreateChoresRequest}> = (props) => {
+          const {data} = props ?? {};
 
-          return  bulkCreateChores(data,headers,)
+          return  bulkCreateChores(data,)
         }
 
 
@@ -650,11 +643,11 @@ const {mutation: mutationOptions} = options ?
     export type BulkCreateChoresMutationError = ConflictResponse | BulkCreateChoresValidationError
 
     export const useBulkCreateChores = <TError = ConflictResponse | BulkCreateChoresValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkCreateChores>>, TError,{data: BulkCreateChoresRequest;headers: BulkCreateChoresHeaders}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkCreateChores>>, TError,{data: BulkCreateChoresRequest}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof bulkCreateChores>>,
         TError,
-        {data: BulkCreateChoresRequest;headers: BulkCreateChoresHeaders},
+        {data: BulkCreateChoresRequest},
         TContext
       > => {
       return useMutation(getBulkCreateChoresMutationOptions(options), queryClient);
@@ -1191,14 +1184,13 @@ export function useListChoreCompletionsSuspense<TData = Awaited<ReturnType<typeo
 
 export const createChoreCompletion = (
     createChoreCompletionRequest: CreateChoreCompletionRequest,
-    headers: CreateChoreCompletionHeaders,
  signal?: AbortSignal
 ) => {
 
 
       return customInstance<ChoreCompletion>(
       {url: `/api/chore-completions`, method: 'POST',
-      headers: {'Content-Type': 'application/json', ...headers},
+      headers: {'Content-Type': 'application/json', },
       data: createChoreCompletionRequest, signal
     },
       );
@@ -1208,8 +1200,8 @@ export const createChoreCompletion = (
 
 
 export const getCreateChoreCompletionMutationOptions = <TError = void | ConflictResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletion>>, TError,{data: CreateChoreCompletionRequest;headers: CreateChoreCompletionHeaders}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletion>>, TError,{data: CreateChoreCompletionRequest;headers: CreateChoreCompletionHeaders}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletion>>, TError,{data: CreateChoreCompletionRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletion>>, TError,{data: CreateChoreCompletionRequest}, TContext> => {
 
 const mutationKey = ['createChoreCompletion'];
 const {mutation: mutationOptions} = options ?
@@ -1221,10 +1213,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createChoreCompletion>>, {data: CreateChoreCompletionRequest;headers: CreateChoreCompletionHeaders}> = (props) => {
-          const {data,headers} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createChoreCompletion>>, {data: CreateChoreCompletionRequest}> = (props) => {
+          const {data} = props ?? {};
 
-          return  createChoreCompletion(data,headers,)
+          return  createChoreCompletion(data,)
         }
 
 
@@ -1239,11 +1231,11 @@ const {mutation: mutationOptions} = options ?
     export type CreateChoreCompletionMutationError = void | ConflictResponse
 
     export const useCreateChoreCompletion = <TError = void | ConflictResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletion>>, TError,{data: CreateChoreCompletionRequest;headers: CreateChoreCompletionHeaders}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChoreCompletion>>, TError,{data: CreateChoreCompletionRequest}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createChoreCompletion>>,
         TError,
-        {data: CreateChoreCompletionRequest;headers: CreateChoreCompletionHeaders},
+        {data: CreateChoreCompletionRequest},
         TContext
       > => {
       return useMutation(getCreateChoreCompletionMutationOptions(options), queryClient);

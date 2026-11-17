@@ -15,7 +15,6 @@ export default defineConfig({
       mode: 'tags-split',
       target: 'src/generated/api/api.ts',
       client: 'react-query',
-      headers: true,
       httpClient: 'axios',
       override: {
         query: {

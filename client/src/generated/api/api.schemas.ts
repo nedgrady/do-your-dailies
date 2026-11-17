@@ -126,45 +126,9 @@ export type ConflictResponse = void;
  */
 export type IdempotencyKeyParameter = string;
 
-export type CreateChoreCompletorHeaders = {
-/**
- * Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.
- * @minLength 1
- * @maxLength 64
- */
-'Idempotency-Key': IdempotencyKeyParameter;
-};
-
-export type CreateChoreHeaders = {
-/**
- * Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.
- * @minLength 1
- * @maxLength 64
- */
-'Idempotency-Key': IdempotencyKeyParameter;
-};
-
-export type BulkCreateChoresHeaders = {
-/**
- * Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.
- * @minLength 1
- * @maxLength 64
- */
-'Idempotency-Key': IdempotencyKeyParameter;
-};
-
 export type ListChoreCompletionsParams = {
 start: string;
 end: string;
-};
-
-export type CreateChoreCompletionHeaders = {
-/**
- * Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.
- * @minLength 1
- * @maxLength 64
- */
-'Idempotency-Key': IdempotencyKeyParameter;
 };
 
 export type GetChorePreviewParams = {

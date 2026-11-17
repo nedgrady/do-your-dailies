@@ -248,6 +248,7 @@ function EditChoreDialog({
             aria-label="delete chore"
             color="error"
             onClick={handleDelete}
+            disabled={deleteMutation.isPending}
             size="large"
           >
             <DeleteIcon />

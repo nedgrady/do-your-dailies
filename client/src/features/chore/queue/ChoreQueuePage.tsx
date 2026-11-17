@@ -34,9 +34,8 @@ function ChoreQueueContent() {
   )
 
   const { data: completors = [] } = useChoreCompletorsQuery()
-  const { mutate: createChoreCompletion } = useCreateChoreCompletionMutation()
-  const { mutateAsync: createChoreCompletor } =
-    useCreateChoreCompletorMutation()
+  const completeChore = useCreateChoreCompletionMutation()
+  const addPersonMutation = useCreateChoreCompletorMutation()
   const { completingChoreId, open, close } = useCompletingChore()
 
   const toDoChores = choresInQueue.filter(
@@ -65,20 +64,31 @@ function ChoreQueueContent() {
     open(choreInQueue.choreId)
   }
 
+  // Closes only after the server accepts the completion, so a failure leaves
+  // the sheet open for a retry.
   const handleConfirmCompletion = (choreCompletorIds: number[]) => {
     if (!choreBeingCompleted) return
-    createChoreCompletion({
-      data: {
-        choreId: choreBeingCompleted.choreId,
-        choreCompletorIds,
+    completeChore.mutate(
+      {
+        data: {
+          choreId: choreBeingCompleted.choreId,
+          choreCompletorIds,
+        },
       },
-    })
-    close()
+      { onSuccess: close },
+    )
   }
 
   const handleAddPerson = async (name: string) => {
-    const created = await createChoreCompletor({ data: { name } })
+    const created = await addPersonMutation.mutateAsync({ data: { name } })
     return created.id
+  }
+
+  // Failed attempts from a previous sheet must not show on the next one.
+  const handleCloseSheet = () => {
+    completeChore.reset()
+    addPersonMutation.reset()
+    close()
   }
 
   return (
@@ -136,9 +146,13 @@ function ChoreQueueContent() {
           key={choreBeingCompleted.choreId}
           choreName={choreBeingCompleted.choreName}
           completors={completors}
-          onClose={close}
+          onClose={handleCloseSheet}
           onConfirm={handleConfirmCompletion}
           onAddPerson={handleAddPerson}
+          isSaving={completeChore.isPending}
+          saveFailed={completeChore.isError}
+          isAddingPerson={addPersonMutation.isPending}
+          addPersonFailed={addPersonMutation.isError}
         />
       )}
     </Box>
