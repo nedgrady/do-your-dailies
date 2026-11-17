@@ -17,18 +17,29 @@ const (
 	HeaderName     = "Idempotency-Key"
 	replayedHeader = "Idempotent-Replayed"
 	maxBodyBytes   = 1 << 20
+	maxKeyLength   = 64
 )
 
-// NewMiddleware makes repeated POSTs safe to retry. A request with an
-// Idempotency-Key is run at most once; repeats replay the stored response.
-// Requests without the header pass through, and the generated handlers reject
-// them because the header is required in the OpenAPI spec.
-func NewMiddleware(db *gorm.DB) func(http.Handler) http.Handler {
+// NewMiddleware makes every POST safe to retry by default. A POST must carry an
+// Idempotency-Key; a repeat with the same key replays the original response.
+// Routes can opt out by listing them as "METHOD /path" in optOut, which should
+// be rare and deliberate.
+func NewMiddleware(db *gorm.DB, optOut ...string) func(http.Handler) http.Handler {
+	skip := make(map[string]bool, len(optOut))
+	for _, route := range optOut {
+		skip[route] = true
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			key := r.Header.Get(HeaderName)
-			if r.Method != http.MethodPost || key == "" {
+			if r.Method != http.MethodPost || skip[r.Method+" "+r.URL.Path] {
 				next.ServeHTTP(w, r)
+				return
+			}
+
+			key := r.Header.Get(HeaderName)
+			if key == "" || len(key) > maxKeyLength {
+				apijson.Write(w, http.StatusBadRequest, map[string]string{"error": "Idempotency-Key header is required (1-64 characters)"})
 				return
 			}
 
