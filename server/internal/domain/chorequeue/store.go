@@ -86,36 +86,34 @@ func (store *GormStore) ListForCapacityFirstUser(ctx context.Context, userID uin
 func RankChoresAsOf(db *gorm.DB, ctx context.Context, userID uint, asOf time.Time, maxChores int) ([]ChoreInQueue, error) {
 	var allChoresForUserWithLatestCompletion []ChoreInQueue
 
-	err := db.WithContext(ctx).Raw(`
-SELECT
-    chores.id,
-    chores.name,
-    chores.cadence_in_days,
-    latest_completion.id AS latest_completion_id,
-    latest_completion.created_at AS latest_completion_created_at,
-    (
-        EXTRACT(EPOCH FROM COALESCE(
-            latest_completion.duration_since_last_completed,
-            ?::timestamptz - chores.created_at
-        )) / (chores.cadence_in_days * 86400)
-    ) AS priority
-FROM chores
-LEFT JOIN LATERAL (
-    SELECT
-        id,
-        created_at,
-        ?::timestamptz - created_at AS duration_since_last_completed
-    FROM chore_completions
-    WHERE chore_id = chores.id
-      AND deleted_at IS NULL
-    ORDER BY created_at DESC
-    LIMIT 1
-) latest_completion ON true
-WHERE chores.deleted_at IS NULL
-  AND chores.user_id = ?
-ORDER BY priority DESC, chores.id ASC
-LIMIT ?;
-	`, asOf, asOf, userID, maxChores).Scan(&allChoresForUserWithLatestCompletion).Error
+	// Built from models so GORM applies the soft-delete scope to both the
+	// chores table and the completion subquery. Do not replace with raw SQL.
+	latestCompletion := db.WithContext(ctx).
+		Model(&models.ChoreCompletion{}).
+		Select("id, created_at, ?::timestamptz - created_at AS duration_since_last_completed", asOf).
+		Where("chore_id = chores.id").
+		Order("created_at DESC").
+		Limit(1)
+
+	err := db.WithContext(ctx).
+		Model(&models.Chore{}).
+		Select(`
+		chores.id,
+		chores.name,
+		chores.cadence_in_days,
+		latest_completion.id AS latest_completion_id,
+		latest_completion.created_at AS latest_completion_created_at,
+		(
+			EXTRACT(EPOCH FROM COALESCE(
+				latest_completion.duration_since_last_completed,
+				?::timestamptz - chores.created_at
+			)) / (chores.cadence_in_days * 86400)
+		) AS priority`, asOf).
+		Joins("LEFT JOIN LATERAL (?) latest_completion ON true", latestCompletion).
+		Where("chores.user_id = ?", userID).
+		Order("priority DESC, chores.id ASC").
+		Limit(maxChores).
+		Scan(&allChoresForUserWithLatestCompletion).Error
 
 	if err != nil {
 		return nil, err

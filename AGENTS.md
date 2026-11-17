@@ -16,6 +16,8 @@ Before any changes are done you MUST come up with a list of refactors for the us
 
 When making contract changes you must change server\openapi\openapi.yaml first, then run Generate-Contracts.ps1.
 
+Soft deletes: do not write raw SQL or string joins in domain stores; use model or association queries so the soft-delete scope applies. Use `Unscoped()` only deliberately, never raw SQL on soft-deletable tables.
+
 UI conventions:
 - Design for touch and mouse by default. Use MUI default control sizes; reserve size="small" or dense for deliberately compact, desktop-only UI such as data grids.
 - Use ResponsiveDialog (client/src/components/ResponsiveDialog.tsx) for dialogs instead of raw MUI Dialog. It shows a bottom sheet below the md breakpoint and a centered dialog above it.
