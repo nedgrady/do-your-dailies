@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
-import { Suspense, useState } from 'react'
+import { Suspense } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { nullChore, useAllChoresQuery } from '../../../domain/chore'
 import {
@@ -22,6 +22,7 @@ import {
 } from '../../../domain/choreCompletor'
 import { useCurrentDayChoreQueueQuery } from '../../../domain/choreQueue'
 import type { ChoreInQueue } from '../../../domain/choreQueue'
+import { useCompletingChore } from '../../../lib/useCompletingChore'
 import WhoDidItDialog from './WhoDidItDialog'
 
 function ChoreQueueContent() {
@@ -36,8 +37,7 @@ function ChoreQueueContent() {
   const { mutate: createChoreCompletion } = useCreateChoreCompletionMutation()
   const { mutateAsync: createChoreCompletor } =
     useCreateChoreCompletorMutation()
-  const [choreBeingCompleted, setChoreBeingCompleted] =
-    useState<ChoreInQueue | null>(null)
+  const { completingChoreId, open, close } = useCompletingChore()
 
   const toDoChores = choresInQueue.filter(
     (choreInQueue) =>
@@ -45,6 +45,10 @@ function ChoreQueueContent() {
         (completion) => completion.choreId === choreInQueue.choreId,
       ),
   )
+
+  // A stale, invalid or already-completed id in the URL just shows no sheet.
+  const choreBeingCompleted =
+    toDoChores.find((chore) => chore.choreId === completingChoreId) ?? null
 
   const completedEntries = completions.map((completion) => ({
     completion,
@@ -58,7 +62,7 @@ function ChoreQueueContent() {
   }))
 
   const handleChoreClick = (choreInQueue: ChoreInQueue) => {
-    setChoreBeingCompleted(choreInQueue)
+    open(choreInQueue.choreId)
   }
 
   const handleConfirmCompletion = (choreCompletorIds: number[]) => {
@@ -69,7 +73,7 @@ function ChoreQueueContent() {
         choreCompletorIds,
       },
     })
-    setChoreBeingCompleted(null)
+    close()
   }
 
   const handleAddPerson = async (name: string) => {
@@ -132,7 +136,7 @@ function ChoreQueueContent() {
           key={choreBeingCompleted.choreId}
           choreName={choreBeingCompleted.choreName}
           completors={completors}
-          onClose={() => setChoreBeingCompleted(null)}
+          onClose={close}
           onConfirm={handleConfirmCompletion}
           onAddPerson={handleAddPerson}
         />

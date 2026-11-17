@@ -17,8 +17,21 @@ interface MyRouterContext {
   queryClient: QueryClient
 }
 
+// Search params declared here are shared by every route beneath the root.
+// `completing` is the chore id whose "Who did it?" sheet is open. A number,
+// not a numeric string, for the same serialization reason as chores/manage.
+export interface RootSearch {
+  completing?: number
+}
+
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: RootComponent,
+  validateSearch: (search: Record<string, unknown>): RootSearch => {
+    if (typeof search.completing === 'number') {
+      return { completing: search.completing }
+    }
+    return {}
+  },
 })
 
 function RootComponent() {
