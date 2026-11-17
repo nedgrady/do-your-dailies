@@ -17,6 +17,14 @@ export const ListChoreCompletorsResponseItem = zod.object({
 })
 export const ListChoreCompletorsResponse = zod.array(ListChoreCompletorsResponseItem)
 
+export const createChoreCompletorHeaderIdempotencyKeyMax = 64;
+
+
+
+export const CreateChoreCompletorHeader = zod.object({
+  "Idempotency-Key": zod.string().min(1).max(createChoreCompletorHeaderIdempotencyKeyMax).describe('Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.')
+})
+
 export const CreateChoreCompletorBody = zod.object({
   "name": zod.string()
 })
@@ -41,6 +49,14 @@ export const ListChoresResponseItem = zod.object({
 })
 export const ListChoresResponse = zod.array(ListChoresResponseItem)
 
+export const createChoreHeaderIdempotencyKeyMax = 64;
+
+
+
+export const CreateChoreHeader = zod.object({
+  "Idempotency-Key": zod.string().min(1).max(createChoreHeaderIdempotencyKeyMax).describe('Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.')
+})
+
 
 
 
@@ -61,6 +77,14 @@ export const CreateChoreResponse = zod.object({
   "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
+})
+
+export const bulkCreateChoresHeaderIdempotencyKeyMax = 64;
+
+
+
+export const BulkCreateChoresHeader = zod.object({
+  "Idempotency-Key": zod.string().min(1).max(bulkCreateChoresHeaderIdempotencyKeyMax).describe('Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.')
 })
 
 
@@ -168,6 +192,14 @@ export const ListChoreCompletionsResponseItem = zod.object({
   "updatedAt": zod.iso.datetime({"offset":true})
 })
 export const ListChoreCompletionsResponse = zod.array(ListChoreCompletionsResponseItem)
+
+export const createChoreCompletionHeaderIdempotencyKeyMax = 64;
+
+
+
+export const CreateChoreCompletionHeader = zod.object({
+  "Idempotency-Key": zod.string().min(1).max(createChoreCompletionHeaderIdempotencyKeyMax).describe('Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.')
+})
 
 
 

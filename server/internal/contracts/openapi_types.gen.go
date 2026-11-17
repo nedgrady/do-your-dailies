@@ -156,15 +156,42 @@ type UpdateChoreRequest struct {
 	Name          *string      `json:"name,omitempty"`
 }
 
+// IdempotencyKey defines model for IdempotencyKey.
+type IdempotencyKey = string
+
 // ListChoreCompletionsParams defines parameters for ListChoreCompletions.
 type ListChoreCompletionsParams struct {
 	Start time.Time `form:"start" json:"start"`
 	End   time.Time `form:"end" json:"end"`
 }
 
+// CreateChoreCompletionParams defines parameters for CreateChoreCompletion.
+type CreateChoreCompletionParams struct {
+	// IdempotencyKey Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+}
+
+// CreateChoreCompletorParams defines parameters for CreateChoreCompletor.
+type CreateChoreCompletorParams struct {
+	// IdempotencyKey Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+}
+
 // GetChorePreviewParams defines parameters for GetChorePreview.
 type GetChorePreviewParams struct {
 	Days int `form:"days" json:"days"`
+}
+
+// CreateChoreParams defines parameters for CreateChore.
+type CreateChoreParams struct {
+	// IdempotencyKey Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+}
+
+// BulkCreateChoresParams defines parameters for BulkCreateChores.
+type BulkCreateChoresParams struct {
+	// IdempotencyKey Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
 }
 
 // CreateChoreCompletionJSONRequestBody defines body for CreateChoreCompletion for application/json ContentType.
@@ -189,13 +216,13 @@ type ServerInterface interface {
 	ListChoreCompletions(w http.ResponseWriter, r *http.Request, params ListChoreCompletionsParams)
 
 	// (POST /api/chore-completions)
-	CreateChoreCompletion(w http.ResponseWriter, r *http.Request)
+	CreateChoreCompletion(w http.ResponseWriter, r *http.Request, params CreateChoreCompletionParams)
 
 	// (GET /api/chore-completors)
 	ListChoreCompletors(w http.ResponseWriter, r *http.Request)
 
 	// (POST /api/chore-completors)
-	CreateChoreCompletor(w http.ResponseWriter, r *http.Request)
+	CreateChoreCompletor(w http.ResponseWriter, r *http.Request, params CreateChoreCompletorParams)
 
 	// (GET /api/chore-insights)
 	GetChoreInsights(w http.ResponseWriter, r *http.Request)
@@ -210,10 +237,10 @@ type ServerInterface interface {
 	ListChores(w http.ResponseWriter, r *http.Request)
 
 	// (POST /api/chores)
-	CreateChore(w http.ResponseWriter, r *http.Request)
+	CreateChore(w http.ResponseWriter, r *http.Request, params CreateChoreParams)
 
 	// (POST /api/chores/bulk)
-	BulkCreateChores(w http.ResponseWriter, r *http.Request)
+	BulkCreateChores(w http.ResponseWriter, r *http.Request, params BulkCreateChoresParams)
 
 	// (DELETE /api/chores/{id})
 	DeleteChore(w http.ResponseWriter, r *http.Request, id uint64)
@@ -238,7 +265,7 @@ func (_ Unimplemented) ListChoreCompletions(w http.ResponseWriter, r *http.Reque
 }
 
 // (POST /api/chore-completions)
-func (_ Unimplemented) CreateChoreCompletion(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) CreateChoreCompletion(w http.ResponseWriter, r *http.Request, params CreateChoreCompletionParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -248,7 +275,7 @@ func (_ Unimplemented) ListChoreCompletors(w http.ResponseWriter, r *http.Reques
 }
 
 // (POST /api/chore-completors)
-func (_ Unimplemented) CreateChoreCompletor(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) CreateChoreCompletor(w http.ResponseWriter, r *http.Request, params CreateChoreCompletorParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -273,12 +300,12 @@ func (_ Unimplemented) ListChores(w http.ResponseWriter, r *http.Request) {
 }
 
 // (POST /api/chores)
-func (_ Unimplemented) CreateChore(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) CreateChore(w http.ResponseWriter, r *http.Request, params CreateChoreParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // (POST /api/chores/bulk)
-func (_ Unimplemented) BulkCreateChores(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) BulkCreateChores(w http.ResponseWriter, r *http.Request, params BulkCreateChoresParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -360,8 +387,39 @@ func (siw *ServerInterfaceWrapper) ListChoreCompletions(w http.ResponseWriter, r
 // CreateChoreCompletion operation middleware
 func (siw *ServerInterfaceWrapper) CreateChoreCompletion(w http.ResponseWriter, r *http.Request) {
 
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CreateChoreCompletionParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.CreateChoreCompletion(w, r)
+		siw.Handler.CreateChoreCompletion(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -388,8 +446,39 @@ func (siw *ServerInterfaceWrapper) ListChoreCompletors(w http.ResponseWriter, r 
 // CreateChoreCompletor operation middleware
 func (siw *ServerInterfaceWrapper) CreateChoreCompletor(w http.ResponseWriter, r *http.Request) {
 
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CreateChoreCompletorParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.CreateChoreCompletor(w, r)
+		siw.Handler.CreateChoreCompletor(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -477,8 +566,39 @@ func (siw *ServerInterfaceWrapper) ListChores(w http.ResponseWriter, r *http.Req
 // CreateChore operation middleware
 func (siw *ServerInterfaceWrapper) CreateChore(w http.ResponseWriter, r *http.Request) {
 
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CreateChoreParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.CreateChore(w, r)
+		siw.Handler.CreateChore(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -491,8 +611,39 @@ func (siw *ServerInterfaceWrapper) CreateChore(w http.ResponseWriter, r *http.Re
 // BulkCreateChores operation middleware
 func (siw *ServerInterfaceWrapper) BulkCreateChores(w http.ResponseWriter, r *http.Request) {
 
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params BulkCreateChoresParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.BulkCreateChores(w, r)
+		siw.Handler.BulkCreateChores(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -753,6 +904,13 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	return r
 }
 
+type ConflictResponseHeaders struct {
+	RetryAfter *int
+}
+type ConflictResponse struct {
+	Headers ConflictResponseHeaders
+}
+
 type ListChoreCompletionsRequestObject struct {
 	Params ListChoreCompletionsParams
 }
@@ -784,7 +942,8 @@ func (response ListChoreCompletions400Response) VisitListChoreCompletionsRespons
 }
 
 type CreateChoreCompletionRequestObject struct {
-	Body *CreateChoreCompletionJSONRequestBody
+	Params CreateChoreCompletionParams
+	Body   *CreateChoreCompletionJSONRequestBody
 }
 
 type CreateChoreCompletionResponseObject interface {
@@ -810,6 +969,16 @@ type CreateChoreCompletion404Response struct {
 
 func (response CreateChoreCompletion404Response) VisitCreateChoreCompletionResponse(w http.ResponseWriter) error {
 	w.WriteHeader(404)
+	return nil
+}
+
+type CreateChoreCompletion409Response = ConflictResponse
+
+func (response CreateChoreCompletion409Response) VisitCreateChoreCompletionResponse(w http.ResponseWriter) error {
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	w.WriteHeader(409)
 	return nil
 }
 
@@ -843,7 +1012,8 @@ func (response ListChoreCompletors200JSONResponse) VisitListChoreCompletorsRespo
 }
 
 type CreateChoreCompletorRequestObject struct {
-	Body *CreateChoreCompletorJSONRequestBody
+	Params CreateChoreCompletorParams
+	Body   *CreateChoreCompletorJSONRequestBody
 }
 
 type CreateChoreCompletorResponseObject interface {
@@ -862,6 +1032,16 @@ func (response CreateChoreCompletor201JSONResponse) VisitCreateChoreCompletorRes
 	w.WriteHeader(201)
 	_, err := buf.WriteTo(w)
 	return err
+}
+
+type CreateChoreCompletor409Response = ConflictResponse
+
+func (response CreateChoreCompletor409Response) VisitCreateChoreCompletorResponse(w http.ResponseWriter) error {
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	w.WriteHeader(409)
+	return nil
 }
 
 type CreateChoreCompletor422Response struct {
@@ -966,7 +1146,8 @@ func (response ListChores200JSONResponse) VisitListChoresResponse(w http.Respons
 }
 
 type CreateChoreRequestObject struct {
-	Body *CreateChoreJSONRequestBody
+	Params CreateChoreParams
+	Body   *CreateChoreJSONRequestBody
 }
 
 type CreateChoreResponseObject interface {
@@ -987,6 +1168,16 @@ func (response CreateChore201JSONResponse) VisitCreateChoreResponse(w http.Respo
 	return err
 }
 
+type CreateChore409Response = ConflictResponse
+
+func (response CreateChore409Response) VisitCreateChoreResponse(w http.ResponseWriter) error {
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	w.WriteHeader(409)
+	return nil
+}
+
 type CreateChore422Response struct {
 }
 
@@ -996,7 +1187,8 @@ func (response CreateChore422Response) VisitCreateChoreResponse(w http.ResponseW
 }
 
 type BulkCreateChoresRequestObject struct {
-	Body *BulkCreateChoresJSONRequestBody
+	Params BulkCreateChoresParams
+	Body   *BulkCreateChoresJSONRequestBody
 }
 
 type BulkCreateChoresResponseObject interface {
@@ -1015,6 +1207,16 @@ func (response BulkCreateChores201JSONResponse) VisitBulkCreateChoresResponse(w 
 	w.WriteHeader(201)
 	_, err := buf.WriteTo(w)
 	return err
+}
+
+type BulkCreateChores409Response = ConflictResponse
+
+func (response BulkCreateChores409Response) VisitBulkCreateChoresResponse(w http.ResponseWriter) error {
+	if response.Headers.RetryAfter != nil {
+		w.Header().Set("Retry-After", fmt.Sprint(*response.Headers.RetryAfter))
+	}
+	w.WriteHeader(409)
+	return nil
 }
 
 type BulkCreateChores422JSONResponse BulkCreateChoresValidationError
@@ -1244,8 +1446,10 @@ func (sh *strictHandler) ListChoreCompletions(w http.ResponseWriter, r *http.Req
 }
 
 // CreateChoreCompletion operation middleware
-func (sh *strictHandler) CreateChoreCompletion(w http.ResponseWriter, r *http.Request) {
+func (sh *strictHandler) CreateChoreCompletion(w http.ResponseWriter, r *http.Request, params CreateChoreCompletionParams) {
 	var request CreateChoreCompletionRequestObject
+
+	request.Params = params
 
 	var body CreateChoreCompletionJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -1299,8 +1503,10 @@ func (sh *strictHandler) ListChoreCompletors(w http.ResponseWriter, r *http.Requ
 }
 
 // CreateChoreCompletor operation middleware
-func (sh *strictHandler) CreateChoreCompletor(w http.ResponseWriter, r *http.Request) {
+func (sh *strictHandler) CreateChoreCompletor(w http.ResponseWriter, r *http.Request, params CreateChoreCompletorParams) {
 	var request CreateChoreCompletorRequestObject
+
+	request.Params = params
 
 	var body CreateChoreCompletorJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -1428,8 +1634,10 @@ func (sh *strictHandler) ListChores(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateChore operation middleware
-func (sh *strictHandler) CreateChore(w http.ResponseWriter, r *http.Request) {
+func (sh *strictHandler) CreateChore(w http.ResponseWriter, r *http.Request, params CreateChoreParams) {
 	var request CreateChoreRequestObject
+
+	request.Params = params
 
 	var body CreateChoreJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -1459,8 +1667,10 @@ func (sh *strictHandler) CreateChore(w http.ResponseWriter, r *http.Request) {
 }
 
 // BulkCreateChores operation middleware
-func (sh *strictHandler) BulkCreateChores(w http.ResponseWriter, r *http.Request) {
+func (sh *strictHandler) BulkCreateChores(w http.ResponseWriter, r *http.Request, params BulkCreateChoresParams) {
 	var request BulkCreateChoresRequestObject
+
+	request.Params = params
 
 	var body BulkCreateChoresJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {

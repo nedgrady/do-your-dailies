@@ -27,6 +27,8 @@ paths:
                   $ref: "#/components/schemas/ChoreCompletor"
     post:
       operationId: createChoreCompletor
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -40,6 +42,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ChoreCompletor"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "422":
           description: Invalid JSON payload or blank name
   /api/chores:
@@ -56,6 +60,8 @@ paths:
                   $ref: "#/components/schemas/Chore"
     post:
       operationId: createChore
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -69,11 +75,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Chore"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "422":
           description: Invalid JSON payload
   /api/chores/bulk:
     post:
       operationId: bulkCreateChores
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -89,6 +99,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Chore"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "422":
           description: One or more rows failed validation
           content:
@@ -179,6 +191,8 @@ paths:
           description: Missing or invalid start/end query parameters
     post:
       operationId: createChoreCompletion
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -194,6 +208,8 @@ paths:
                 $ref: "#/components/schemas/ChoreCompletion"
         "404":
           description: Chore not found
+        "409":
+          $ref: "#/components/responses/Conflict"
         "422":
           description: Invalid JSON payload, empty choreCompletorIds, or a choreCompletorId that does not belong to this account
   /api/chore-queue:
@@ -229,6 +245,23 @@ paths:
         "400":
           description: Missing or invalid days query parameter
 components:
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+  responses:
+    Conflict:
+      description: A request with this Idempotency-Key is still in progress. Retry after the Retry-After delay.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
   schemas:
     DisplayUnit:
       type: string

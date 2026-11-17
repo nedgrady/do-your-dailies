@@ -20,6 +20,6 @@ func Migrate(database *gorm.DB) error {
 		}
 
 		println("Running migrations...")
-		return tx.AutoMigrate(&models.User{}, &models.Chore{}, &models.ChoreCompletion{}, &models.ChoreInQueueCompletion{}, &models.ChoreCompletor{})
+		return tx.AutoMigrate(&models.User{}, &models.Chore{}, &models.ChoreCompletion{}, &models.ChoreInQueueCompletion{}, &models.ChoreCompletor{}, &models.IdempotencyKey{})
 	})
 }

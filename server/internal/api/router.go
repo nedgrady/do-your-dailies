@@ -11,6 +11,7 @@ import (
 	"do-your-dailies/server/internal/domain/chorecompletors"
 	"do-your-dailies/server/internal/domain/choreinsights"
 	"do-your-dailies/server/internal/domain/chorepreview"
+	"do-your-dailies/server/internal/idempotency"
 	"do-your-dailies/server/internal/domain/chorequeue"
 	"do-your-dailies/server/internal/domain/chores"
 	"do-your-dailies/server/internal/logging"
@@ -26,6 +27,7 @@ func (app *Application) setupRoutes() *chi.Mux {
 	router.Use(corsMiddleware)
 	router.Use(middleware.Recoverer)
 	router.Use(auth.NewMiddleware(app.SimulationModeEnabled))
+	router.Use(idempotency.NewMiddleware(app.Db))
 
 	apidocs.RegisterRoutes(router)
 	swagger.RegisterRoutes(router)

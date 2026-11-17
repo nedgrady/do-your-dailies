@@ -116,6 +116,16 @@ export interface ChorePreview {
   days: ChorePreviewDay[];
 }
 
+/**
+ * A request with this Idempotency-Key is still in progress. Retry after the Retry-After delay.
+ */
+export type ConflictResponse = void;
+
+/**
+ * Client-generated key, unique per user action. Repeating a request with the same key replays the original response instead of creating another record. Reusing a key with a different request body returns 422.
+ */
+export type IdempotencyKeyParameter = string;
+
 export type ListChoreCompletionsParams = {
 start: string;
 end: string;
