@@ -98,3 +98,19 @@ func (handler ChoreCompletionHandler) CreateChoreCompletion(ctx context.Context,
 
 	return contracts.CreateChoreCompletion201JSONResponse(toAPIChoreCompletion(choreCompletion)), nil
 }
+
+func (handler ChoreCompletionHandler) DeleteChoreCompletion(ctx context.Context, request contracts.DeleteChoreCompletionRequestObject) (contracts.DeleteChoreCompletionResponseObject, error) {
+	userID, err := auth.UserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := handler.Store.Delete(ctx, userID, uint(request.Id)); err != nil {
+		if errors.Is(err, ErrCompletionNotFound) {
+			return contracts.DeleteChoreCompletion404Response{}, nil
+		}
+		return nil, err
+	}
+
+	return contracts.DeleteChoreCompletion204Response{}, nil
+}

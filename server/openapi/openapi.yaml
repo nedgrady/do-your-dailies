@@ -212,6 +212,21 @@ paths:
           $ref: "#/components/responses/Conflict"
         "422":
           description: Invalid JSON payload, empty choreCompletorIds, or a choreCompletorId that does not belong to this account
+  /api/chore-completions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: uint64
+    delete:
+      operationId: deleteChoreCompletion
+      responses:
+        "204":
+          description: Chore completion undone (soft deleted)
+        "404":
+          description: Chore completion not found
   /api/chore-queue:
     get:
       operationId: listChoreQueue

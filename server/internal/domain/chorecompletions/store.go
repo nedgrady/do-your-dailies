@@ -2,6 +2,7 @@ package chorecompletions
 
 import (
 	"context"
+	"errors"
 	"slices"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 type Store interface {
 	Create(ctx context.Context, req CreateRequest) (models.ChoreCompletion, error)
 	ListByRange(ctx context.Context, userID uint, start, end time.Time) ([]models.ChoreCompletion, error)
+	Delete(ctx context.Context, userID uint, completionID uint) error
 }
 
 type GormStore struct {
@@ -46,6 +48,31 @@ func (store *GormStore) Create(ctx context.Context, req CreateRequest) (models.C
 		return tx.Model(&choreCompletion).Association("Completors").Append(completors)
 	})
 	return choreCompletion, err
+}
+
+// Delete undoes a completion by soft deleting it, along with its queue
+// capacity marker, in one transaction. The completion must belong to userID
+// (via its chore); otherwise ErrCompletionNotFound is returned and nothing is
+// written.
+func (store *GormStore) Delete(ctx context.Context, userID uint, completionID uint) error {
+	return store.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var choreCompletion models.ChoreCompletion
+		err := tx.
+			Joins("JOIN chores ON chores.id = chore_completions.chore_id").
+			Where("chore_completions.id = ? AND chores.user_id = ?", completionID, userID).
+			Take(&choreCompletion).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrCompletionNotFound
+		}
+		if err != nil {
+			return err
+		}
+
+		if err := tx.Where("chore_completion_id = ?", choreCompletion.ID).Delete(&models.ChoreInQueueCompletion{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&choreCompletion).Error
+	})
 }
 
 func (store *GormStore) ListByRange(ctx context.Context, userID uint, start, end time.Time) ([]models.ChoreCompletion, error) {

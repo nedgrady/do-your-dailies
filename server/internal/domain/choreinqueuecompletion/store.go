@@ -39,7 +39,7 @@ func (store *GormStore) ListBetween(ctx context.Context, userID uint, from time.
 	var records []models.ChoreInQueueCompletion
 
 	err := store.db.WithContext(ctx).
-		Joins("JOIN chore_completions ON chore_completions.id = chore_in_queue_completions.chore_completion_id").
+		Joins("JOIN chore_completions ON chore_completions.id = chore_in_queue_completions.chore_completion_id AND chore_completions.deleted_at IS NULL").
 		Joins("JOIN chores ON chores.id = chore_completions.chore_id").
 		Where("chores.user_id = ?", userID).
 		Where("chore_in_queue_completions.created_at >= ? AND chore_in_queue_completions.created_at < ?", from, to).

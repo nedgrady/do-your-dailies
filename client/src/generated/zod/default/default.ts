@@ -217,6 +217,12 @@ export const CreateChoreCompletionResponse = zod.object({
   "updatedAt": zod.iso.datetime({"offset":true})
 })
 
+export const DeleteChoreCompletionParams = zod.object({
+  "id": zod.int()
+})
+
+export const DeleteChoreCompletionResponse = zod.void()
+
 
 
 

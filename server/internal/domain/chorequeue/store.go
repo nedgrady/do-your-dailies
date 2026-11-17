@@ -107,6 +107,7 @@ LEFT JOIN LATERAL (
         ?::timestamptz - created_at AS duration_since_last_completed
     FROM chore_completions
     WHERE chore_id = chores.id
+      AND deleted_at IS NULL
     ORDER BY created_at DESC
     LIMIT 1
 ) latest_completion ON true

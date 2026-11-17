@@ -218,6 +218,9 @@ type ServerInterface interface {
 	// (POST /api/chore-completions)
 	CreateChoreCompletion(w http.ResponseWriter, r *http.Request, params CreateChoreCompletionParams)
 
+	// (DELETE /api/chore-completions/{id})
+	DeleteChoreCompletion(w http.ResponseWriter, r *http.Request, id uint64)
+
 	// (GET /api/chore-completors)
 	ListChoreCompletors(w http.ResponseWriter, r *http.Request)
 
@@ -266,6 +269,11 @@ func (_ Unimplemented) ListChoreCompletions(w http.ResponseWriter, r *http.Reque
 
 // (POST /api/chore-completions)
 func (_ Unimplemented) CreateChoreCompletion(w http.ResponseWriter, r *http.Request, params CreateChoreCompletionParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (DELETE /api/chore-completions/{id})
+func (_ Unimplemented) DeleteChoreCompletion(w http.ResponseWriter, r *http.Request, id uint64) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -420,6 +428,32 @@ func (siw *ServerInterfaceWrapper) CreateChoreCompletion(w http.ResponseWriter, 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateChoreCompletion(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteChoreCompletion operation middleware
+func (siw *ServerInterfaceWrapper) DeleteChoreCompletion(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id uint64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "uint64"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteChoreCompletion(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -865,6 +899,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/api/chore-completions", wrapper.CreateChoreCompletion)
 	})
 	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/chore-completions/{id}", wrapper.DeleteChoreCompletion)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/chore-completors", wrapper.ListChoreCompletors)
 	})
 	r.Group(func(r chi.Router) {
@@ -987,6 +1024,30 @@ type CreateChoreCompletion422Response struct {
 
 func (response CreateChoreCompletion422Response) VisitCreateChoreCompletionResponse(w http.ResponseWriter) error {
 	w.WriteHeader(422)
+	return nil
+}
+
+type DeleteChoreCompletionRequestObject struct {
+	Id uint64 `json:"id"`
+}
+
+type DeleteChoreCompletionResponseObject interface {
+	VisitDeleteChoreCompletionResponse(w http.ResponseWriter) error
+}
+
+type DeleteChoreCompletion204Response struct {
+}
+
+func (response DeleteChoreCompletion204Response) VisitDeleteChoreCompletionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteChoreCompletion404Response struct {
+}
+
+func (response DeleteChoreCompletion404Response) VisitDeleteChoreCompletionResponse(w http.ResponseWriter) error {
+	w.WriteHeader(404)
 	return nil
 }
 
@@ -1353,6 +1414,9 @@ type StrictServerInterface interface {
 	// (POST /api/chore-completions)
 	CreateChoreCompletion(ctx context.Context, request CreateChoreCompletionRequestObject) (CreateChoreCompletionResponseObject, error)
 
+	// (DELETE /api/chore-completions/{id})
+	DeleteChoreCompletion(ctx context.Context, request DeleteChoreCompletionRequestObject) (DeleteChoreCompletionResponseObject, error)
+
 	// (GET /api/chore-completors)
 	ListChoreCompletors(ctx context.Context, request ListChoreCompletorsRequestObject) (ListChoreCompletorsResponseObject, error)
 
@@ -1471,6 +1535,32 @@ func (sh *strictHandler) CreateChoreCompletion(w http.ResponseWriter, r *http.Re
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CreateChoreCompletionResponseObject); ok {
 		if err := validResponse.VisitCreateChoreCompletionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteChoreCompletion operation middleware
+func (sh *strictHandler) DeleteChoreCompletion(w http.ResponseWriter, r *http.Request, id uint64) {
+	var request DeleteChoreCompletionRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteChoreCompletion(ctx, request.(DeleteChoreCompletionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteChoreCompletion")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteChoreCompletionResponseObject); ok {
+		if err := validResponse.VisitDeleteChoreCompletionResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

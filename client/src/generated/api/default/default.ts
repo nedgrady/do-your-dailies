@@ -1240,6 +1240,62 @@ const {mutation: mutationOptions} = options ?
       > => {
       return useMutation(getCreateChoreCompletionMutationOptions(options), queryClient);
     }
+    export const deleteChoreCompletion = (
+    id: number,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/chore-completions/${id}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getDeleteChoreCompletionMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteChoreCompletion>>, TError,{id: number}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteChoreCompletion>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteChoreCompletion'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteChoreCompletion>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteChoreCompletion(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteChoreCompletionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteChoreCompletion>>>
+
+    export type DeleteChoreCompletionMutationError = void
+
+    export const useDeleteChoreCompletion = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteChoreCompletion>>, TError,{id: number}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteChoreCompletion>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteChoreCompletionMutationOptions(options), queryClient);
+    }
     export const listChoreQueue = (
 
  signal?: AbortSignal
