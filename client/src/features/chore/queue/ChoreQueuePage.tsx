@@ -86,8 +86,8 @@ function ChoreQueueContent() {
             emptyMessage="Nothing to do right now"
             footer={
               <Button
-                variant="outlined"
-                fullWidth
+                variant="text"
+                color="inherit"
                 startIcon={<TaskAltIcon />}
                 onClick={() => picking.open()}
               >
