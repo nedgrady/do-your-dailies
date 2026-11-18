@@ -99,7 +99,8 @@ export default function FlowDialog<TValues extends object>({
             open
             onClose={onClose}
             title={definition.title}
-            fillHeight
+            // A single step needs no fixed height, so the sheet fits its content.
+            fillHeight={definition.steps.length > 1}
             actions={
               <>
                 <Button
@@ -140,8 +141,9 @@ export default function FlowDialog<TValues extends object>({
               color="text.secondary"
               sx={{ mb: 1 }}
             >
-              {current.title} · Step {stepIndex + 1} of{' '}
-              {definition.steps.length}
+              {definition.steps.length > 1
+                ? `${current.title} · Step ${stepIndex + 1} of ${definition.steps.length}`
+                : current.title}
             </Typography>
             {current.render(values, setValue)}
           </ResponsiveDialog>

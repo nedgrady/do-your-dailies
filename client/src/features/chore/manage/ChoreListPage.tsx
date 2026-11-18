@@ -1,18 +1,9 @@
 import AddIcon from '@mui/icons-material/Add'
-import DeleteIcon from '@mui/icons-material/Delete'
 import {
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Grid,
-  IconButton,
   Stack,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
   useMediaQuery,
   useTheme,
@@ -33,7 +24,6 @@ import {
   nullChore,
   useAllChoresQuery,
   useCreateChoreMutation,
-  useDeleteChoreMutation,
   useUpdateChoreMutation,
 } from '../../../domain/chore'
 import {
@@ -44,6 +34,7 @@ import { UnsavedChangesGuard } from '../../../forms/UnsavedChangesGuard'
 import type { DisplayUnit } from '../../../generated/api/api.schemas'
 import { EditableDataGrid } from '../../../integrations/mui/EditableDataGrid'
 import { DISPLAY_UNITS, toAmount, toDays, unitLabel } from '../../Cadence'
+import ChoreFlow from './ChoreFlow'
 import { ChoreInsights } from './ChoreInsights'
 
 const NEW_CHORE_ID = -2
@@ -109,166 +100,6 @@ const validateAmount = ({ props }: GridPreProcessEditCellProps) => {
         ? 'Must be a positive whole number'
         : undefined,
   }
-}
-
-function AmountUnitInput({
-  amount,
-  onAmountChange,
-  unit,
-  onUnitChange,
-}: {
-  amount: string
-  onAmountChange: (value: string) => void
-  unit: DisplayUnit
-  onUnitChange: (unit: DisplayUnit) => void
-}) {
-  return (
-    <Grid container spacing={2} sx={{ flexGrow: 1, alignItems: 'center' }}>
-      <Grid size={{ xs: 12, sm: 'auto' }}>
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <Typography>every</Typography>
-          <TextField
-            label="Amount"
-            type="number"
-            sx={{ minWidth: 90 }}
-            value={amount}
-            onChange={(e) => onAmountChange(e.target.value)}
-            slotProps={{ htmlInput: { min: 1, step: 1 } }}
-          />
-        </Stack>
-      </Grid>
-      <Grid size={{ xs: 12, sm: 'grow' }}>
-        <ToggleButtonGroup
-          value={unit}
-          exclusive
-          onChange={(_e, value: DisplayUnit | null) => {
-            if (value) onUnitChange(value)
-          }}
-          aria-label="cadence unit"
-          fullWidth
-        >
-          {DISPLAY_UNITS.map((u) => (
-            <ToggleButton key={u} value={u} aria-label={unitLabel(u)}>
-              {unitLabel(u)}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-      </Grid>
-    </Grid>
-  )
-}
-
-function EditChoreDialog({
-  chore,
-  onClose,
-  isDesktop,
-}: {
-  chore: Chore
-  onClose: () => void
-  isDesktop: boolean
-}) {
-  const [name, setName] = useState('')
-  const [amount, setAmount] = useState('')
-  const [unit, setUnit] = useState<DisplayUnit>('DAY')
-  const isOpen = chore.id !== nullChore.id
-  const isCreating = chore.id === NEW_CHORE_ID
-
-  // sync local state whenever a new chore is opened
-  if (isOpen && name === '' && amount === '') {
-    setName(chore.name)
-    setAmount(String(toAmount(chore.cadenceInDays, chore.displayUnit)))
-    setUnit(chore.displayUnit)
-  }
-
-  const createMutation = useCreateChoreMutation()
-  const updateMutation = useUpdateChoreMutation()
-  const deleteMutation = useDeleteChoreMutation()
-  const saveMutation = isCreating ? createMutation : updateMutation
-
-  const handleClose = () => {
-    setName('')
-    setAmount('')
-    setUnit('DAY')
-    onClose()
-  }
-
-  const handleSave = () => {
-    const parsedAmount = Number(amount)
-    if (!name.trim() || !Number.isInteger(parsedAmount) || parsedAmount <= 0) {
-      return
-    }
-    const data = {
-      name: name.trim(),
-      cadenceInDays: toDays(parsedAmount, unit),
-      displayUnit: unit,
-    }
-    if (isCreating) {
-      createMutation.mutate({ data }, { onSuccess: handleClose })
-    } else {
-      updateMutation.mutate({ id: chore.id, data }, { onSuccess: handleClose })
-    }
-  }
-
-  const handleDelete = () => {
-    deleteMutation.mutate({ id: chore.id }, { onSuccess: handleClose })
-  }
-
-  return (
-    <Dialog
-      open={isOpen}
-      onClose={handleClose}
-      fullWidth
-      maxWidth="sm"
-      fullScreen={!isDesktop}
-    >
-      <DialogTitle>{isCreating ? 'Add chore' : 'Edit chore'}</DialogTitle>
-      <DialogContent>
-        <Grid container spacing={4} sx={{ mt: 1 }}>
-          <Grid size={12}>
-            <TextField
-              label="Chore name"
-              fullWidth
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </Grid>
-          <Grid size={12}>
-            <AmountUnitInput
-              amount={amount}
-              onAmountChange={setAmount}
-              unit={unit}
-              onUnitChange={setUnit}
-            />
-          </Grid>
-        </Grid>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        {!isCreating && (
-          <IconButton
-            aria-label="delete chore"
-            color="error"
-            onClick={handleDelete}
-            disabled={deleteMutation.isPending}
-            size="large"
-          >
-            <DeleteIcon />
-          </IconButton>
-        )}
-        <Box sx={{ flex: 1 }} />
-        <Button onClick={handleClose} size="large">
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleSave}
-          disabled={saveMutation.isPending}
-          size="large"
-        >
-          Save
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
 }
 
 function ChoreList() {
@@ -465,11 +296,14 @@ function ChoreList() {
         processRowUpdate={processRowUpdate}
       />
 
-      <EditChoreDialog
-        chore={selectedChore}
-        onClose={() => void navigate({ search: {}, replace: true })}
-        isDesktop={isDesktop}
-      />
+      {selectedChore.id !== nullChore.id && (
+        <ChoreFlow
+          key={selectedChore.id}
+          chore={selectedChore}
+          isCreating={choreParam === 'new'}
+          onClose={() => void navigate({ search: {}, replace: true })}
+        />
+      )}
     </Box>
   )
 }
