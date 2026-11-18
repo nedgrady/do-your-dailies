@@ -14,45 +14,35 @@ import {
   Typography,
 } from '@mui/material'
 import { useState } from 'react'
-import ResponsiveDialog from '../../../components/ResponsiveDialog'
 import type { ChoreCompletor } from '../../../domain/choreCompletor'
 
-interface WhoDidItDialogProps {
-  choreName: string
+interface PeopleStepProps {
   completors: ChoreCompletor[]
-  onClose: () => void
-  onConfirm: (choreCompletorIds: number[]) => void
+  selectedIds: number[]
+  onChange: (choreCompletorIds: number[]) => void
   // Resolves with the new completor's id. Rejects on failure.
   onAddPerson: (name: string) => Promise<number>
-  // Server state for the two saves, owned by the parent's mutations.
-  isSaving: boolean
-  saveFailed: boolean
   isAddingPerson: boolean
   addPersonFailed: boolean
 }
 
-// Local state here is UI only: which people are ticked and whether the add
-// row is open. Saving and failure come from the parent's mutations.
-export default function WhoDidItDialog({
-  choreName,
+// Who did it. Ticked people are the selection; adding a person ticks them too.
+export default function PeopleStep({
   completors,
-  onClose,
-  onConfirm,
+  selectedIds,
+  onChange,
   onAddPerson,
-  isSaving,
-  saveFailed,
   isAddingPerson,
   addPersonFailed,
-}: WhoDidItDialogProps) {
-  const [selectedIds, setSelectedIds] = useState<number[]>([])
+}: PeopleStepProps) {
   const [isAddRowOpen, setIsAddRowOpen] = useState(false)
   const [newName, setNewName] = useState('')
 
   const toggle = (id: number) => {
-    setSelectedIds((current) =>
-      current.includes(id)
-        ? current.filter((selected) => selected !== id)
-        : [...current, id],
+    onChange(
+      selectedIds.includes(id)
+        ? selectedIds.filter((selected) => selected !== id)
+        : [...selectedIds, id],
     )
   }
 
@@ -67,37 +57,13 @@ export default function WhoDidItDialog({
     const id = await onAddPerson(name).catch(() => null)
     // A failure is shown from addPersonFailed; keep the row open to retry.
     if (id === null) return
-    setSelectedIds((current) => [...current, id])
+    onChange([...selectedIds, id])
     collapseAddPerson()
   }
 
   return (
-    <ResponsiveDialog
-      open
-      onClose={onClose}
-      title={`Who did "${choreName}"?`}
-      actions={
-        <>
-          <Button size="large" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="large"
-            variant="contained"
-            disabled={selectedIds.length === 0 || isSaving}
-            onClick={() => onConfirm(selectedIds)}
-          >
-            Done
-          </Button>
-        </>
-      }
-    >
-      {saveFailed && (
-        <Typography color="error" role="alert" sx={{ mb: 1 }}>
-          Couldn&apos;t save, try again.
-        </Typography>
-      )}
-      <List disablePadding>
+    <>
+      <List disablePadding aria-label="People who did it">
         {completors.map((completor) => {
           const selected = selectedIds.includes(completor.id)
           return (
@@ -134,7 +100,11 @@ export default function WhoDidItDialog({
 
       {isAddRowOpen && (
         <>
-          <Stack direction="row" spacing={1} sx={{ mt: 1, alignItems: 'center' }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ mt: 1, alignItems: 'center' }}
+          >
             <TextField
               autoFocus
               fullWidth
@@ -153,7 +123,10 @@ export default function WhoDidItDialog({
             >
               Add
             </Button>
-            <IconButton aria-label="Cancel adding person" onClick={collapseAddPerson}>
+            <IconButton
+              aria-label="Cancel adding person"
+              onClick={collapseAddPerson}
+            >
               <CloseIcon />
             </IconButton>
           </Stack>
@@ -164,6 +137,6 @@ export default function WhoDidItDialog({
           )}
         </>
       )}
-    </ResponsiveDialog>
+    </>
   )
 }

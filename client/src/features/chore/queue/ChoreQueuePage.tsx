@@ -1,11 +1,14 @@
+import AddIcon from '@mui/icons-material/Add'
 import {
   Box,
+  Button,
   Grid,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
   Paper,
+  Stack,
   Typography,
 } from '@mui/material'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
@@ -14,21 +17,18 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { nullChore, useAllChoresQuery } from '../../../domain/chore'
 import {
   useChoreCompletionsBetweenQuery,
-  useCreateChoreCompletionMutation,
   useDeleteChoreCompletionMutation,
 } from '../../../domain/choreCompletion'
-import {
-  useChoreCompletorsQuery,
-  useCreateChoreCompletorMutation,
-} from '../../../domain/choreCompletor'
+import { useChoreCompletorsQuery } from '../../../domain/choreCompletor'
 import { useCurrentDayChoreQueueQuery } from '../../../domain/choreQueue'
 import type { ChoreInQueue } from '../../../domain/choreQueue'
 import {
   useCompletingChore,
+  usePickingChore,
   useViewingCompletion,
 } from '../../../lib/useCompletingChore'
+import CompleteChoreFlow from './CompleteChoreFlow'
 import CompletedChoreDialog from './CompletedChoreDialog'
-import WhoDidItDialog from './WhoDidItDialog'
 
 function ChoreQueueContent() {
   const { data: allChoresLookup = [] } = useAllChoresQuery()
@@ -39,10 +39,9 @@ function ChoreQueueContent() {
   )
 
   const { data: completors = [] } = useChoreCompletorsQuery()
-  const completeChore = useCreateChoreCompletionMutation()
-  const addPersonMutation = useCreateChoreCompletorMutation()
   const deleteCompletion = useDeleteChoreCompletionMutation()
   const { completingChoreId, open, close } = useCompletingChore()
+  const picking = usePickingChore()
   const viewing = useViewingCompletion()
 
   const toDoChores = choresInQueue.filter(
@@ -52,9 +51,18 @@ function ChoreQueueContent() {
       ),
   )
 
-  // A stale, invalid or already-completed id in the URL just shows no sheet.
-  const choreBeingCompleted =
-    toDoChores.find((chore) => chore.choreId === completingChoreId) ?? null
+  // A stale, unknown or already-completed id in the URL just shows no sheet.
+  const presetChoreId =
+    completingChoreId !== undefined &&
+    allChoresLookup.some((chore) => chore.id === completingChoreId) &&
+    !completions.some((completion) => completion.choreId === completingChoreId)
+      ? completingChoreId
+      : undefined
+
+  // The same flow serves both entry points: a tapped to-do chore (preset) or
+  // the "Add completed chore" button (no preset).
+  const isFlowOpen = presetChoreId !== undefined || picking.isPicking
+  const closeFlow = presetChoreId !== undefined ? close : picking.close
 
   const completedEntries = completions.map((completion) => ({
     completion,
@@ -93,41 +101,26 @@ function ChoreQueueContent() {
     viewing.close()
   }
 
-  // Closes only after the server accepts the completion, so a failure leaves
-  // the sheet open for a retry.
-  const handleConfirmCompletion = (choreCompletorIds: number[]) => {
-    if (!choreBeingCompleted) return
-    completeChore.mutate(
-      {
-        data: {
-          choreId: choreBeingCompleted.choreId,
-          choreCompletorIds,
-        },
-      },
-      { onSuccess: close },
-    )
-  }
-
-  const handleAddPerson = async (name: string) => {
-    const created = await addPersonMutation.mutateAsync({ data: { name } })
-    return created.id
-  }
-
-  // Failed attempts from a previous sheet must not show on the next one.
-  const handleCloseSheet = () => {
-    completeChore.reset()
-    addPersonMutation.reset()
-    close()
-  }
-
   return (
     <Box>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" gutterBottom component="h2">
-              To do
-            </Typography>
+            <Stack
+              direction="row"
+              sx={{
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                mb: 1,
+              }}
+            >
+              <Typography variant="h6" component="h2">
+                To do
+              </Typography>
+              <Button startIcon={<AddIcon />} onClick={() => picking.open()}>
+                Add completed chore
+              </Button>
+            </Stack>
             <List aria-label="Chores to do" disablePadding>
               {toDoChores.map((choreInQueue) => (
                 <ListItem
@@ -188,18 +181,11 @@ function ChoreQueueContent() {
         />
       )}
 
-      {choreBeingCompleted && (
-        <WhoDidItDialog
-          key={choreBeingCompleted.choreId}
-          choreName={choreBeingCompleted.choreName}
-          completors={completors}
-          onClose={handleCloseSheet}
-          onConfirm={handleConfirmCompletion}
-          onAddPerson={handleAddPerson}
-          isSaving={completeChore.isPending}
-          saveFailed={completeChore.isError}
-          isAddingPerson={addPersonMutation.isPending}
-          addPersonFailed={addPersonMutation.isError}
+      {isFlowOpen && (
+        <CompleteChoreFlow
+          key={presetChoreId ?? 'picking'}
+          presetChoreId={presetChoreId}
+          onClose={closeFlow}
         />
       )}
     </Box>
