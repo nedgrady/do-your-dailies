@@ -53,9 +53,10 @@ export default function FlowDialog<TValues extends object>({
 
         const failedNotice = definition.submitFailed && (
           <Typography color="error" role="alert" sx={{ mb: 1 }}>
-            Couldn&apos;t save, try again.
+            {definition.submitFailedMessage ?? "Couldn't save, try again."}
           </Typography>
         )
+        const submitColor = definition.submitColor ?? 'primary'
 
         if (isDesktop) {
           return (
@@ -71,6 +72,7 @@ export default function FlowDialog<TValues extends object>({
                   <Button
                     size="large"
                     variant="contained"
+                    color={submitColor}
                     disabled={!valid || definition.isSubmitting}
                     onClick={() => void form.handleSubmit()}
                   >
@@ -117,6 +119,7 @@ export default function FlowDialog<TValues extends object>({
                   <Button
                     size="large"
                     variant="contained"
+                    color={submitColor}
                     disabled={!valid || definition.isSubmitting}
                     onClick={() => void form.handleSubmit()}
                   >

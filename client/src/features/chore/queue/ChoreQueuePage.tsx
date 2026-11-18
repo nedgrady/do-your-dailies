@@ -15,10 +15,7 @@ import { QueryErrorResetBoundary } from '@tanstack/react-query'
 import { Suspense } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { nullChore, useAllChoresQuery } from '../../../domain/chore'
-import {
-  useChoreCompletionsBetweenQuery,
-  useDeleteChoreCompletionMutation,
-} from '../../../domain/choreCompletion'
+import { useChoreCompletionsBetweenQuery } from '../../../domain/choreCompletion'
 import { useChoreCompletorsQuery } from '../../../domain/choreCompletor'
 import { useCurrentDayChoreQueueQuery } from '../../../domain/choreQueue'
 import type { ChoreInQueue } from '../../../domain/choreQueue'
@@ -28,7 +25,7 @@ import {
   useViewingCompletion,
 } from '../../../lib/useCompletingChore'
 import CompleteChoreFlow from './CompleteChoreFlow'
-import CompletedChoreDialog from './CompletedChoreDialog'
+import UndoCompletionFlow from './UndoCompletionFlow'
 
 function ChoreQueueContent() {
   const { data: allChoresLookup = [] } = useAllChoresQuery()
@@ -39,7 +36,6 @@ function ChoreQueueContent() {
   )
 
   const { data: completors = [] } = useChoreCompletorsQuery()
-  const deleteCompletion = useDeleteChoreCompletionMutation()
   const { completingChoreId, open, close } = useCompletingChore()
   const picking = usePickingChore()
   const viewing = useViewingCompletion()
@@ -83,22 +79,6 @@ function ChoreQueueContent() {
 
   const handleChoreClick = (choreInQueue: ChoreInQueue) => {
     open(choreInQueue.choreId)
-  }
-
-  // Closes only after the server accepts the undo, so a failure leaves the
-  // sheet open for a retry.
-  const handleMarkNotDone = () => {
-    if (!completionBeingViewed) return
-    deleteCompletion.mutate(
-      { id: completionBeingViewed.completion.id },
-      { onSuccess: handleCloseCompletedSheet },
-    )
-  }
-
-  // Failed undo attempts must not show on the next sheet.
-  const handleCloseCompletedSheet = () => {
-    deleteCompletion.reset()
-    viewing.close()
   }
 
   return (
@@ -169,15 +149,13 @@ function ChoreQueueContent() {
       </Grid>
 
       {completionBeingViewed && (
-        <CompletedChoreDialog
+        <UndoCompletionFlow
           key={completionBeingViewed.completion.id}
+          completionId={completionBeingViewed.completion.id}
           choreName={completionBeingViewed.chore.name}
           completorNames={completionBeingViewed.names}
           completedAt={completionBeingViewed.completion.createdAt}
-          onClose={handleCloseCompletedSheet}
-          onMarkNotDone={handleMarkNotDone}
-          isSaving={deleteCompletion.isPending}
-          saveFailed={deleteCompletion.isError}
+          onClose={viewing.close}
         />
       )}
 

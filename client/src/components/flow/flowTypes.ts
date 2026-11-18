@@ -23,6 +23,9 @@ export interface FlowDefinition<TValues> {
   defaultValues: TValues
   steps: ReadonlyArray<FlowStep<TValues>>
   submitLabel: string
+  // 'error' for destructive submits such as "Mark not done".
+  submitColor?: 'primary' | 'error'
+  submitFailedMessage?: string
   onSubmit: (values: TValues) => void
   isSubmitting: boolean
   submitFailed: boolean
