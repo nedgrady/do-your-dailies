@@ -14,6 +14,13 @@ export default function DuePill({ dueAt, now }: DuePillProps) {
   return (
     <Chip
       variant="outlined"
+      sx={{
+        bgcolor: 'transparent',
+        color: 'text.secondary',
+        borderColor: 'divider',
+        '& .MuiChip-icon': { color: 'inherit', ml: 0.5, mr: 0 },
+        '& .MuiChip-label': { pl: 0.5, pr: 1 },
+      }}
       icon={
         isOverdue ? (
           <ClockExclamationIcon fontSize="small" />
