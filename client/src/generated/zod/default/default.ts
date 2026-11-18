@@ -232,7 +232,8 @@ export const ListChoreQueueResponseItem = zod.object({
   "cadenceInDays": zod.int().min(1),
   "priority": zod.number(),
   "latestCompletionId": zod.int().optional(),
-  "lastCompletedAt": zod.iso.datetime({"offset":true}).optional()
+  "lastCompletedAt": zod.iso.datetime({"offset":true}).optional(),
+  "dueAt": zod.iso.datetime({"offset":true}).describe('When this chore becomes overdue (priority reaches 1).')
 })
 export const ListChoreQueueResponse = zod.array(ListChoreQueueResponseItem)
 

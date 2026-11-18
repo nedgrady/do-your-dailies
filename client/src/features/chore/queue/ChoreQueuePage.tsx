@@ -1,16 +1,5 @@
 import TaskAltIcon from '@mui/icons-material/TaskAlt'
-import {
-  Box,
-  Button,
-  Grid,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Paper,
-  Stack,
-  Typography,
-} from '@mui/material'
+import { Box, Button, Grid, List } from '@mui/material'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
 import { Suspense } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
@@ -24,12 +13,18 @@ import {
   usePickingChore,
   useViewingCompletion,
 } from '../../../lib/useCompletingChore'
+import ChoreQueueColumn from './ChoreQueueColumn'
+import ChoreTodoListItem from './ChoreTodoListItem'
 import CompleteChoreFlow from './CompleteChoreFlow'
+import CompletionListItem from './CompletionListItem'
 import UndoCompletionFlow from './UndoCompletionFlow'
 
 function ChoreQueueContent() {
   const { data: allChoresLookup = [] } = useAllChoresQuery()
-  const { data: choresInQueue = [] } = useCurrentDayChoreQueueQuery()
+  const { data: choresInQueue = [], dataUpdatedAt } =
+    useCurrentDayChoreQueueQuery()
+  // dataUpdatedAt changes on every poll, so the due labels refresh with it.
+  const now = new Date(dataUpdatedAt)
   const { data: completions = [] } = useChoreCompletionsBetweenQuery(
     new Date(new Date().setHours(0, 0, 0, 0)),
     new Date(new Date().setHours(24, 0, 0, 0)),
@@ -85,69 +80,51 @@ function ChoreQueueContent() {
     <Box>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
-            <Stack
-              direction="row"
-              sx={{
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                mb: 1,
-              }}
-            >
-              <Typography variant="h6" component="h2">
-                To do
-              </Typography>
+          <ChoreQueueColumn
+            title="To do"
+            count={toDoChores.length}
+            emptyMessage="Nothing to do right now"
+            footer={
               <Button
+                variant="outlined"
+                fullWidth
                 startIcon={<TaskAltIcon />}
                 onClick={() => picking.open()}
               >
                 Mark something else done
               </Button>
-            </Stack>
+            }
+          >
             <List aria-label="Chores to do" disablePadding>
               {toDoChores.map((choreInQueue) => (
-                <ListItem
+                <ChoreTodoListItem
                   key={choreInQueue.choreId}
-                  disablePadding
-                  sx={{ mb: 1 }}
-                >
-                  <ListItemButton
-                    onClick={() => handleChoreClick(choreInQueue)}
-                    component={Paper}
-                    variant="outlined"
-                    sx={{ p: 2 }}
-                  >
-                    <ListItemText primary={choreInQueue.choreName} />
-                  </ListItemButton>
-                </ListItem>
+                  choreInQueue={choreInQueue}
+                  now={now}
+                  onClick={() => handleChoreClick(choreInQueue)}
+                />
               ))}
             </List>
-          </Paper>
+          </ChoreQueueColumn>
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
-            <Typography variant="h6" gutterBottom component="h2">
-              Done
-            </Typography>
+          <ChoreQueueColumn
+            title="Done"
+            count={completedEntries.length}
+            emptyMessage="Nothing done yet today"
+          >
             <List aria-label="Done chores" disablePadding>
               {completedEntries.map(({ completion, chore, names }) => (
-                <ListItem key={completion.id} disablePadding sx={{ mb: 1 }}>
-                  <ListItemButton
-                    onClick={() => viewing.open(completion.id)}
-                    component={Paper}
-                    variant="outlined"
-                    sx={{ p: 2 }}
-                  >
-                    <ListItemText
-                      primary={chore.name}
-                      secondary={names || undefined}
-                    />
-                  </ListItemButton>
-                </ListItem>
+                <CompletionListItem
+                  key={completion.id}
+                  choreName={chore.name}
+                  completorNames={names}
+                  onClick={() => viewing.open(completion.id)}
+                />
               ))}
             </List>
-          </Paper>
+          </ChoreQueueColumn>
         </Grid>
       </Grid>
 

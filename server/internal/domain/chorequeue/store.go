@@ -71,6 +71,19 @@ type ChoreInQueue struct {
 	Priority           float64   `gorm:"column:priority"`
 	LatestCompletionID uint      `gorm:"column:latest_completion_id"`
 	LastCompletedAt    time.Time `gorm:"column:latest_completion_created_at"`
+	BaselineAt         time.Time `gorm:"column:baseline_at"`
+}
+
+// DueAt is when this chore becomes overdue (priority reaches 1).
+func (chore ChoreInQueue) DueAt() time.Time {
+	return dueAt(chore.BaselineAt, chore.CadenceInDays)
+}
+
+// dueAt is one full cadence after the baseline. Duration arithmetic (not
+// AddDate) keeps it in step with the priority ratio, which is elapsed time
+// over cadence time.
+func dueAt(baseline time.Time, cadenceInDays int) time.Time {
+	return baseline.Add(time.Duration(cadenceInDays) * 24 * time.Hour)
 }
 
 func (store *GormStore) ListForCapacityFirstUser(ctx context.Context, userID uint, maxChores int) ([]ChoreInQueue, error) {
@@ -103,6 +116,7 @@ func RankChoresAsOf(db *gorm.DB, ctx context.Context, userID uint, asOf time.Tim
 		chores.cadence_in_days,
 		latest_completion.id AS latest_completion_id,
 		latest_completion.created_at AS latest_completion_created_at,
+			COALESCE(latest_completion.created_at, chores.created_at) AS baseline_at,
 		(
 			EXTRACT(EPOCH FROM COALESCE(
 				latest_completion.duration_since_last_completed,

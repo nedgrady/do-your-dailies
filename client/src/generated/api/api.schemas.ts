@@ -32,6 +32,8 @@ export interface ChoreInQueue {
   priority: number;
   latestCompletionId?: number;
   lastCompletedAt?: string;
+  /** When this chore becomes overdue (priority reaches 1). */
+  dueAt: string;
 }
 
 export interface CreateChoreRequest {

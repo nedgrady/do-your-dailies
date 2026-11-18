@@ -86,9 +86,12 @@ type ChoreCompletor struct {
 
 // ChoreInQueue defines model for ChoreInQueue.
 type ChoreInQueue struct {
-	CadenceInDays      int        `json:"cadenceInDays"`
-	ChoreId            uint64     `json:"choreId"`
-	ChoreName          string     `json:"choreName"`
+	CadenceInDays int    `json:"cadenceInDays"`
+	ChoreId       uint64 `json:"choreId"`
+	ChoreName     string `json:"choreName"`
+
+	// DueAt When this chore becomes overdue (priority reaches 1).
+	DueAt              time.Time  `json:"dueAt"`
 	LastCompletedAt    *time.Time `json:"lastCompletedAt,omitempty"`
 	LatestCompletionId *uint64    `json:"latestCompletionId,omitempty"`
 	Priority           float32    `json:"priority"`

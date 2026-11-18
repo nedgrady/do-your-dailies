@@ -20,6 +20,7 @@ func toAPIChoresInQueue(queue []ChoreInQueue) []contracts.ChoreInQueue {
 			Priority:           float32(chore.Priority),
 			LatestCompletionId: latestCompletionId,
 			LastCompletedAt:    &chore.LastCompletedAt,
+			DueAt:              chore.DueAt(),
 		})
 	}
 

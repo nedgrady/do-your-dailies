@@ -7,9 +7,14 @@ import { queryKeys } from './queryKeys'
 
 const choreInQueueSchema = ListChoreQueueResponseItem.extend({
   lastCompletedAt: isoDateTime.optional(),
+  dueAt: isoDateTime,
 })
 
 export type ChoreInQueue = z.infer<typeof choreInQueueSchema>
+
+// Polling keeps "time left" labels fresh; each fetch updates dataUpdatedAt,
+// which callers use as `now`.
+const QUEUE_POLL_INTERVAL_MS = 5 * 60 * 1000
 
 export function useCurrentDayChoreQueueQuery() {
   const { userId } = useSimulatedUser()
@@ -17,6 +22,7 @@ export function useCurrentDayChoreQueueQuery() {
     query: {
       queryKey: queryKeys.chores.queue(userId),
       select: (data) => z.array(choreInQueueSchema).parse(data),
+      refetchInterval: QUEUE_POLL_INTERVAL_MS,
     },
   })
 }

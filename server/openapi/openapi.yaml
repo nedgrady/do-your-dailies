@@ -314,6 +314,7 @@ components:
         - choreName
         - cadenceInDays
         - priority
+        - dueAt
       properties:
         choreId:
           type: integer
@@ -331,6 +332,10 @@ components:
         lastCompletedAt:
           type: string
           format: date-time
+        dueAt:
+          type: string
+          format: date-time
+          description: When this chore becomes overdue (priority reaches 1).
     CreateChoreRequest:
       type: object
       required:
