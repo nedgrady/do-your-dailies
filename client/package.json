@@ -21,6 +21,7 @@
     "@mui/material": "^9.0.0",
     "@mui/x-data-grid": "^9.10.0",
     "@tanstack/react-devtools": "latest",
+    "@tanstack/react-form": "^1.33.5",
     "@tanstack/react-query": "latest",
     "@tanstack/react-query-devtools": "latest",
     "@tanstack/react-router": "latest",

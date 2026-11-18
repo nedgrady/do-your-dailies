@@ -6,14 +6,16 @@ import {
 } from '@tanstack/react-router'
 import type { RootSearch } from '../routes/__root'
 
-type SheetParam = 'completing' | 'completion'
+type SheetParam = keyof RootSearch
 
 // Opens and closes a sheet through one of the shared search params declared on
 // the root route. Opening pushes a history entry so the browser/phone Back
 // button closes the sheet; closing goes back one entry when we pushed it, so no
 // duplicate entry is left behind. Only one sheet is open at a time, so setting
 // a param replaces the whole search object.
-function useSheetSearchParam(param: SheetParam) {
+function useSheetSearchParam<TParam extends SheetParam>(param: TParam) {
+  type Value = NonNullable<RootSearch[TParam]>
+
   const navigate = useNavigate()
   const router = useRouter()
   const pathname = useRouterState({
@@ -21,21 +23,21 @@ function useSheetSearchParam(param: SheetParam) {
   })
   const value = useSearch({
     strict: false,
-    select: (search) => search[param],
+    select: (search) => search[param] as Value | undefined,
   })
 
   // The sheet can live on any page, so navigate to the current pathname. The
   // cast only tells the typed router that `search` is the root's shared search
   // schema, which is the only one these hooks touch.
-  const navigateSearch = (id: number | undefined, replace: boolean) =>
+  const navigateSearch = (next: Value | undefined, replace: boolean) =>
     navigate({
       to: pathname as '/',
-      search: (id === undefined ? {} : { [param]: id }) as RootSearch,
+      search: (next === undefined ? {} : { [param]: next }) as RootSearch,
       replace,
     })
 
-  const open = (id: number) => {
-    void navigateSearch(id, false)
+  const open = (next: Value) => {
+    void navigateSearch(next, false)
   }
 
   const close = () => {
@@ -59,4 +61,10 @@ export function useCompletingChore() {
 export function useViewingCompletion() {
   const { value, open, close } = useSheetSearchParam('completion')
   return { viewingCompletionId: value, open, close }
+}
+
+// The "Add completed chore" flow. Presence-only: the param is `true` when open.
+export function usePickingChore() {
+  const { value, open, close } = useSheetSearchParam('picking')
+  return { isPicking: value === true, open: () => open(true), close }
 }

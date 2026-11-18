@@ -21,21 +21,28 @@ interface MyRouterContext {
 // `completing` is the chore id whose "Who did it?" sheet is open. A number,
 // not a numeric string, for the same serialization reason as chores/manage.
 // `completion` is the completion id whose "Mark not done?" sheet is open.
+// `picking` is true while the "Add completed chore" flow is open.
 export interface RootSearch {
   completing?: number
   completion?: number
+  picking?: true
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: RootComponent,
+  // Each param is validated on its own so the schema never drops a valid one.
   validateSearch: (search: Record<string, unknown>): RootSearch => {
+    const result: RootSearch = {}
     if (typeof search.completing === 'number') {
-      return { completing: search.completing }
+      result.completing = search.completing
     }
     if (typeof search.completion === 'number') {
-      return { completion: search.completion }
+      result.completion = search.completion
     }
-    return {}
+    if (search.picking === true) {
+      result.picking = true
+    }
+    return result
   },
 })
 
