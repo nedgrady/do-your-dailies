@@ -1,4 +1,4 @@
-import AddIcon from '@mui/icons-material/Add'
+import TaskAltIcon from '@mui/icons-material/TaskAlt'
 import {
   Box,
   Button,
@@ -56,7 +56,7 @@ function ChoreQueueContent() {
       : undefined
 
   // The same flow serves both entry points: a tapped to-do chore (preset) or
-  // the "Add completed chore" button (no preset).
+  // the "Mark something else done" button (no preset).
   const isFlowOpen = presetChoreId !== undefined || picking.isPicking
   const closeFlow = presetChoreId !== undefined ? close : picking.close
 
@@ -97,8 +97,11 @@ function ChoreQueueContent() {
               <Typography variant="h6" component="h2">
                 To do
               </Typography>
-              <Button startIcon={<AddIcon />} onClick={() => picking.open()}>
-                Add completed chore
+              <Button
+                startIcon={<TaskAltIcon />}
+                onClick={() => picking.open()}
+              >
+                Mark something else done
               </Button>
             </Stack>
             <List aria-label="Chores to do" disablePadding>
@@ -125,9 +128,9 @@ function ChoreQueueContent() {
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6" gutterBottom component="h2">
-              Completed
+              Done
             </Typography>
-            <List aria-label="Completed chores" disablePadding>
+            <List aria-label="Done chores" disablePadding>
               {completedEntries.map(({ completion, chore, names }) => (
                 <ListItem key={completion.id} disablePadding sx={{ mb: 1 }}>
                   <ListItemButton

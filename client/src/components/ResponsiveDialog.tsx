@@ -20,13 +20,19 @@ interface ResponsiveDialogProps {
   children: ReactNode
   // Mobile only: fixed sheet height so it doesn't resize between steps.
   fillHeight?: boolean
+  // Desktop only: a wider dialog, for content laid out in columns.
+  wide?: boolean
 }
 
 // Centered dialog on desktop, bottom sheet below the md breakpoint.
 //
-// Layout contract: the title and actions always stay visible and only the body
-// scrolls. Callers supply title, children and actions, and must not size or
-// scroll inside children, or the actions can be pushed off screen.
+// Layout contract:
+// - The title and actions always stay visible and only the body scrolls.
+//   Callers supply title, children and actions, and must not size or scroll
+//   inside children, or the actions can be pushed off screen.
+// - Don't change the height of content while the user interacts (filtering,
+//   toggling a row, async lists). Reserve the space instead, or the dialog
+//   jumps. Desktop is top-anchored, so residual growth only moves the bottom.
 export default function ResponsiveDialog({
   open,
   onClose,
@@ -34,6 +40,7 @@ export default function ResponsiveDialog({
   actions,
   children,
   fillHeight = false,
+  wide = false,
 }: ResponsiveDialogProps) {
   const theme = useTheme()
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
@@ -44,8 +51,16 @@ export default function ResponsiveDialog({
         open={open}
         onClose={onClose}
         fullWidth
-        maxWidth="xs"
+        maxWidth={wide ? 'md' : 'sm'}
         scroll="paper"
+        // Anchored to the top, not centred, so a height change only moves the
+        // bottom edge. The title and first lines of content stay put.
+        sx={{ '& .MuiDialog-container': { alignItems: 'flex-start' } }}
+        slotProps={{
+          paper: {
+            sx: { mt: '10vh', maxHeight: 'calc(100% - 10vh - 32px)' },
+          },
+        }}
       >
         <DialogTitle>{title}</DialogTitle>
         <DialogContent>{children}</DialogContent>

@@ -20,5 +20,6 @@ Soft deletes: do not write raw SQL or string joins in domain stores; use model o
 
 UI conventions:
 - Design for touch and mouse by default. Use MUI default control sizes; reserve size="small" or dense for deliberately compact, desktop-only UI such as data grids.
-- Use ResponsiveDialog (client/src/components/ResponsiveDialog.tsx) for dialogs instead of raw MUI Dialog. It shows a bottom sheet below the md breakpoint and a centered dialog above it.
+- Use ResponsiveDialog (client/src/components/ResponsiveDialog.tsx) for dialogs instead of raw MUI Dialog. It shows a bottom sheet below the md breakpoint and a top-anchored dialog above it.
+- Dialog content must not change height while the user interacts (filtering, toggling rows, async lists). Reserve the space instead, or the dialog jumps.
 - Check new UI at roughly 390px and 1280px widths before finishing, and check dialogs/sheets with a long list (50+ items) so the title and actions stay on screen.

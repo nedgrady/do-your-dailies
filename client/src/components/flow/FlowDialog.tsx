@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Stack,
   Typography,
@@ -59,11 +60,14 @@ export default function FlowDialog<TValues extends object>({
         const submitColor = definition.submitColor ?? 'primary'
 
         if (isDesktop) {
+          const sideBySide =
+            definition.desktopColumns === true && definition.steps.length > 1
           return (
             <ResponsiveDialog
               open
               onClose={onClose}
               title={definition.title}
+              wide={sideBySide}
               actions={
                 <>
                   <Button size="large" onClick={onClose}>
@@ -82,14 +86,35 @@ export default function FlowDialog<TValues extends object>({
               }
             >
               {failedNotice}
-              {definition.steps.map((step) => (
-                <Stack key={step.id} spacing={1} sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    {step.title}
-                  </Typography>
-                  {step.render(values, setValue)}
+              {sideBySide ? (
+                <Stack
+                  direction="row"
+                  spacing={3}
+                  sx={{ alignItems: 'flex-start' }}
+                >
+                  {definition.steps.map((step) => (
+                    <Box key={step.id} sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography
+                        variant="subtitle2"
+                        color="text.secondary"
+                        sx={{ mb: 1 }}
+                      >
+                        {step.title}
+                      </Typography>
+                      {step.render(values, setValue)}
+                    </Box>
+                  ))}
                 </Stack>
-              ))}
+              ) : (
+                definition.steps.map((step) => (
+                  <Stack key={step.id} spacing={1} sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      {step.title}
+                    </Typography>
+                    {step.render(values, setValue)}
+                  </Stack>
+                ))
+              )}
             </ResponsiveDialog>
           )
         }

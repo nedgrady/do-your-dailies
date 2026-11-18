@@ -17,6 +17,13 @@ interface ChoreStepProps {
   onSelect: (choreId: number) => void
 }
 
+// Rows shown before asking the user to type. Keeps the dialog from needing
+// its own scroll bar on desktop.
+const MAX_VISIBLE = 6
+
+// Fixed row height, so the reserved space below matches the rows exactly.
+const ROW_HEIGHT = 48
+
 // Lets the user find the chore they just did. Only chores that aren't in the
 // queue and haven't been completed today are offered.
 export default function ChoreStep({
@@ -35,6 +42,12 @@ export default function ChoreStep({
   }
 
   const matches = filterChores(chores, query)
+  const visible = matches.slice(0, MAX_VISIBLE)
+  const hiddenCount = matches.length - visible.length
+  // Reserve the list and "N more" space up front, so typing a filter never
+  // resizes the dialog.
+  const reservedRows = Math.min(MAX_VISIBLE, chores.length)
+  const hasMoreLine = chores.length > MAX_VISIBLE
 
   return (
     <>
@@ -55,25 +68,35 @@ export default function ChoreStep({
           onChange={(event) => setQuery(event.target.value)}
         />
       </Box>
-      {matches.length === 0 ? (
-        <Typography color="text.secondary" sx={{ mt: 1 }}>
-          No chores match &quot;{query.trim()}&quot;.
-        </Typography>
-      ) : (
-        <List disablePadding aria-label="Chores you can mark done">
-          {matches.map((chore) => (
-            <ListItem key={chore.id} disablePadding>
-              <ListItemButton
-                selected={chore.id === selectedId}
-                aria-pressed={chore.id === selectedId}
-                onClick={() => onSelect(chore.id)}
-              >
-                <ListItemText primary={chore.name} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      )}
+      <Box sx={{ minHeight: reservedRows * ROW_HEIGHT }}>
+        {matches.length === 0 ? (
+          <Typography color="text.secondary" sx={{ mt: 1 }}>
+            No chores match &quot;{query.trim()}&quot;.
+          </Typography>
+        ) : (
+          <List disablePadding aria-label="Chores you can mark done">
+            {visible.map((chore) => (
+              <ListItem key={chore.id} disablePadding>
+                <ListItemButton
+                  sx={{ minHeight: ROW_HEIGHT }}
+                  selected={chore.id === selectedId}
+                  aria-pressed={chore.id === selectedId}
+                  onClick={() => onSelect(chore.id)}
+                >
+                  <ListItemText primary={chore.name} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </Box>
+      <Box sx={{ mt: hasMoreLine ? 1 : 0, minHeight: hasMoreLine ? 24 : 0 }}>
+        {hiddenCount > 0 && (
+          <Typography color="text.secondary" variant="body2">
+            {hiddenCount} more
+          </Typography>
+        )}
+      </Box>
     </>
   )
 }

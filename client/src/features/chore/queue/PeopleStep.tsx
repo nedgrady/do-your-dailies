@@ -1,6 +1,7 @@
 import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
 import {
+  Box,
   Button,
   Checkbox,
   IconButton,
@@ -15,6 +16,10 @@ import {
 } from '@mui/material'
 import { useState } from 'react'
 import type { ChoreCompletor } from '../../../domain/choreCompletor'
+
+// Tall enough for the name field row, so swapping "Add person" for the field
+// doesn't resize the dialog.
+const ADD_SLOT_HEIGHT = 64
 
 interface PeopleStepProps {
   completors: ChoreCompletor[]
@@ -85,25 +90,21 @@ export default function PeopleStep({
             </ListItem>
           )
         })}
-
-        {!isAddRowOpen && (
-          <ListItem disablePadding>
-            <ListItemButton onClick={() => setIsAddRowOpen(true)}>
-              <ListItemIcon>
-                <AddIcon />
-              </ListItemIcon>
-              <ListItemText primary="Add person" />
-            </ListItemButton>
-          </ListItem>
-        )}
       </List>
 
-      {isAddRowOpen && (
-        <>
+      {/* One fixed slot: either the "Add person" button or the name field. */}
+      <Box
+        sx={{
+          minHeight: ADD_SLOT_HEIGHT,
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        {isAddRowOpen ? (
           <Stack
             direction="row"
             spacing={1}
-            sx={{ mt: 1, alignItems: 'center' }}
+            sx={{ width: '100%', alignItems: 'center' }}
           >
             <TextField
               autoFocus
@@ -130,12 +131,23 @@ export default function PeopleStep({
               <CloseIcon />
             </IconButton>
           </Stack>
-          {addPersonFailed && (
-            <Typography color="error" role="alert" sx={{ mt: 1 }}>
-              Couldn&apos;t add that name, try again.
-            </Typography>
-          )}
-        </>
+        ) : (
+          <ListItemButton
+            onClick={() => setIsAddRowOpen(true)}
+            sx={{ width: '100%', borderRadius: 1 }}
+          >
+            <ListItemIcon>
+              <AddIcon />
+            </ListItemIcon>
+            <ListItemText primary="Add person" />
+          </ListItemButton>
+        )}
+      </Box>
+
+      {addPersonFailed && (
+        <Typography color="error" role="alert" sx={{ mt: 1 }}>
+          Couldn&apos;t add that name, try again.
+        </Typography>
       )}
     </>
   )

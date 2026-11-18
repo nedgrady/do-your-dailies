@@ -26,6 +26,9 @@ export interface FlowDefinition<TValues> {
   // 'error' for destructive submits such as "Mark not done".
   submitColor?: 'primary' | 'error'
   submitFailedMessage?: string
+  // Desktop only: show the steps side by side in a wider dialog, instead of
+  // stacked. Use when the steps are both lists the user works through at once.
+  desktopColumns?: boolean
   onSubmit: (values: TValues) => void
   isSubmitting: boolean
   submitFailed: boolean

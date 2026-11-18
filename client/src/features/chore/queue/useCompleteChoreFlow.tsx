@@ -90,9 +90,7 @@ export function useCompleteChoreFlow({
   }
 
   return {
-    title: presetChore
-      ? `Who did "${presetChore.name}"?`
-      : 'Add completed chore',
+    title: presetChore ? `Who did "${presetChore.name}"?` : 'Other chore',
     schema: CreateChoreCompletionBody,
     defaultValues: {
       choreId: presetChoreId ?? 0,
@@ -100,6 +98,7 @@ export function useCompleteChoreFlow({
     },
     steps: presetChoreId === undefined ? [choreStep, peopleStep] : [peopleStep],
     submitLabel: 'Done',
+    desktopColumns: true,
     onSubmit: (values) => {
       completeChore.mutate({ data: values }, { onSuccess: onDone })
     },
