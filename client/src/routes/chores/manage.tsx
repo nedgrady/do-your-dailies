@@ -12,13 +12,19 @@ export interface ChoresManageSearch {
   // preserve its type on round-trip), which is what produced ugly
   // `?chore=%2284%22` URLs — a plain number serializes unquoted.
   chore?: number | 'new'
+  // The chore id whose "Delete?" confirm sheet is open. A number, for the same
+  // serialization reason as `chore`.
+  deleting?: number
 }
 
 export const Route = createFileRoute('/chores/manage')({
   component: ChoreListPage,
+  // Each param is validated on its own so one never drops the other.
   validateSearch: (search: Record<string, unknown>): ChoresManageSearch => {
-    if (search.chore === 'new') return { chore: 'new' }
-    if (typeof search.chore === 'number') return { chore: search.chore }
-    return {}
+    const result: ChoresManageSearch = {}
+    if (search.chore === 'new') result.chore = 'new'
+    else if (typeof search.chore === 'number') result.chore = search.chore
+    if (typeof search.deleting === 'number') result.deleting = search.deleting
+    return result
   },
 })

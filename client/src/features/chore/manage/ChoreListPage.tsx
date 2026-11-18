@@ -1,4 +1,5 @@
 import AddIcon from '@mui/icons-material/Add'
+import DeleteIcon from '@mui/icons-material/Delete'
 import {
   Box,
   Button,
@@ -15,6 +16,7 @@ import type {
   GridRowModel,
   GridRowModesModel,
 } from '@mui/x-data-grid'
+import { GridActionsCellItem } from '@mui/x-data-grid'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { Suspense, useState } from 'react'
@@ -35,6 +37,7 @@ import type { DisplayUnit } from '../../../generated/api/api.schemas'
 import { EditableDataGrid } from '../../../integrations/mui/EditableDataGrid'
 import { DISPLAY_UNITS, toAmount, toDays, unitLabel } from '../../Cadence'
 import ChoreFlow from './ChoreFlow'
+import DeleteChoreFlow from './DeleteChoreFlow'
 import { ChoreInsights } from './ChoreInsights'
 
 const NEW_CHORE_ID = -2
@@ -106,9 +109,11 @@ function ChoreList() {
   const theme = useTheme()
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
   const { data: chores } = useAllChoresQuery()
-  const { chore: choreParam } = routeApi.useSearch()
+  const { chore: choreParam, deleting: deletingId } = routeApi.useSearch()
   const navigate = routeApi.useNavigate()
   const selectedChore = resolveSelectedChore(choreParam, chores)
+  // A stale or unknown id in the URL just shows no confirm sheet.
+  const choreBeingDeleted = chores.find((chore) => chore.id === deletingId)
   const createMutation = useCreateChoreMutation()
   const updateMutation = useUpdateChoreMutation()
 
@@ -119,6 +124,16 @@ function ChoreList() {
     if (params.isEditable && params.cellMode !== 'edit') {
       setEditing((x) => x + 1)
     }
+  }
+
+  // Mobile: tapping a row's cells opens its edit flow. The actions cell is
+  // skipped so the ⋮ menu (rendered through a portal) doesn't also open edit.
+  const handleMobileCellClick = (params: GridCellParams<Chore>) => {
+    if (params.field === 'actions') return
+    const row = params.row
+    void navigate({
+      search: { chore: row.id === NEW_CHORE_ID ? 'new' : row.id },
+    })
   }
 
   const processRowUpdate = async (
@@ -225,6 +240,26 @@ function ChoreList() {
         }
       },
     },
+    {
+      field: 'actions',
+      type: 'actions',
+      headerName: '',
+      width: 56,
+      getActions: (params) =>
+        params.id === NEW_CHORE_ID
+          ? []
+          : [
+              <GridActionsCellItem
+                key="delete"
+                showInMenu
+                icon={<DeleteIcon />}
+                label="Delete"
+                onClick={() =>
+                  void navigate({ search: { deleting: Number(params.id) } })
+                }
+              />,
+            ],
+    },
   ]
 
   return (
@@ -280,21 +315,19 @@ function ChoreList() {
             color: 'primary.main',
           },
         }}
-        onRowClick={
-          isDesktop
-            ? undefined
-            : (params) => {
-                const row = params.row as Chore
-                void navigate({
-                  search: { chore: row.id === NEW_CHORE_ID ? 'new' : row.id },
-                })
-              }
-        }
-        onCellClick={isDesktop ? handleCellClick : undefined}
+        onCellClick={isDesktop ? handleCellClick : handleMobileCellClick}
         onRowEditStop={() => setEditing((x) => x - 1)}
         disableRowSelectionOnClick
         processRowUpdate={processRowUpdate}
       />
+
+      {choreBeingDeleted && (
+        <DeleteChoreFlow
+          key={choreBeingDeleted.id}
+          chore={choreBeingDeleted}
+          onClose={() => void navigate({ search: {}, replace: true })}
+        />
+      )}
 
       {selectedChore.id !== nullChore.id && (
         <ChoreFlow
