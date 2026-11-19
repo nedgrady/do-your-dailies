@@ -3,11 +3,13 @@ import { useListChoreQueueSuspense } from '../generated/api/default/default'
 import { ListChoreQueueResponseItem } from '../generated/zod/default/default'
 import { useSimulatedUser } from '../lib/simulatedUser'
 import { isoDateTime } from './dateCoercion'
+import { emojiOrNoneSchema } from './emoji'
 import { queryKeys } from './queryKeys'
 
 const choreInQueueSchema = ListChoreQueueResponseItem.extend({
   lastCompletedAt: isoDateTime.optional(),
   dueAt: isoDateTime,
+  emoji: emojiOrNoneSchema,
 })
 
 export type ChoreInQueue = z.infer<typeof choreInQueueSchema>

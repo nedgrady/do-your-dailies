@@ -61,9 +61,12 @@ type Chore struct {
 	CadenceInDays int         `json:"cadenceInDays"`
 	CreatedAt     time.Time   `json:"createdAt"`
 	DisplayUnit   DisplayUnit `json:"displayUnit"`
-	Id            uint64      `json:"id"`
-	Name          string      `json:"name"`
-	UpdatedAt     time.Time   `json:"updatedAt"`
+
+	// Emoji A single emoji. Empty string means no emoji is set.
+	Emoji     Emoji     `json:"emoji"`
+	Id        uint64    `json:"id"`
+	Name      string    `json:"name"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // ChoreCompletion defines model for ChoreCompletion.
@@ -91,7 +94,10 @@ type ChoreInQueue struct {
 	ChoreName     string `json:"choreName"`
 
 	// DueAt When this chore becomes overdue (priority reaches 1).
-	DueAt              time.Time  `json:"dueAt"`
+	DueAt time.Time `json:"dueAt"`
+
+	// Emoji A single emoji. Empty string means no emoji is set.
+	Emoji              Emoji      `json:"emoji"`
 	LastCompletedAt    *time.Time `json:"lastCompletedAt,omitempty"`
 	LatestCompletionId *uint64    `json:"latestCompletionId,omitempty"`
 	Priority           float32    `json:"priority"`
@@ -144,6 +150,9 @@ type CreateChoreRequest struct {
 	CadenceInDays int          `json:"cadenceInDays"`
 	DisplayUnit   *DisplayUnit `json:"displayUnit,omitempty"`
 
+	// Emoji A single emoji. Empty string means no emoji is set.
+	Emoji *Emoji `json:"emoji,omitempty"`
+
 	// LastCompletedAt When this chore was last actually done, if known. Backdates a completion record instead of leaving the chore with no history (which otherwise reads as "just done now").
 	LastCompletedAt *time.Time `json:"lastCompletedAt,omitempty"`
 	Name            string     `json:"name"`
@@ -152,11 +161,17 @@ type CreateChoreRequest struct {
 // DisplayUnit defines model for DisplayUnit.
 type DisplayUnit string
 
-// UpdateChoreRequest defines model for UpdateChoreRequest.
+// Emoji A single emoji. Empty string means no emoji is set.
+type Emoji = string
+
+// UpdateChoreRequest Omitted fields are left unchanged. An empty emoji clears it.
 type UpdateChoreRequest struct {
 	CadenceInDays *int         `json:"cadenceInDays,omitempty"`
 	DisplayUnit   *DisplayUnit `json:"displayUnit,omitempty"`
-	Name          *string      `json:"name,omitempty"`
+
+	// Emoji A single emoji. Empty string means no emoji is set.
+	Emoji *Emoji  `json:"emoji,omitempty"`
+	Name  *string `json:"name,omitempty"`
 }
 
 // IdempotencyKey defines model for IdempotencyKey.

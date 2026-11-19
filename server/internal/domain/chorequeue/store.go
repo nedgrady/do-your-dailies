@@ -65,13 +65,14 @@ func (store *GormStore) List(ctx context.Context, userID uint, targetDay time.Ti
 }
 
 type ChoreInQueue struct {
-	ChoreID            uint      `gorm:"column:id"`
-	ChoreName          string    `gorm:"column:name"`
-	CadenceInDays      int       `gorm:"column:cadence_in_days"`
-	Priority           float64   `gorm:"column:priority"`
-	LatestCompletionID uint      `gorm:"column:latest_completion_id"`
-	LastCompletedAt    time.Time `gorm:"column:latest_completion_created_at"`
-	BaselineAt         time.Time `gorm:"column:baseline_at"`
+	ChoreID            uint         `gorm:"column:id"`
+	ChoreName          string       `gorm:"column:name"`
+	CadenceInDays      int          `gorm:"column:cadence_in_days"`
+	Priority           float64      `gorm:"column:priority"`
+	LatestCompletionID uint         `gorm:"column:latest_completion_id"`
+	LastCompletedAt    time.Time    `gorm:"column:latest_completion_created_at"`
+	BaselineAt         time.Time    `gorm:"column:baseline_at"`
+	Emoji              models.Emoji `gorm:"column:emoji"`
 }
 
 // DueAt is when this chore becomes overdue (priority reaches 1).
@@ -114,6 +115,7 @@ func RankChoresAsOf(db *gorm.DB, ctx context.Context, userID uint, asOf time.Tim
 		chores.id,
 		chores.name,
 		chores.cadence_in_days,
+			chores.emoji,
 		latest_completion.id AS latest_completion_id,
 		latest_completion.created_at AS latest_completion_created_at,
 			COALESCE(latest_completion.created_at, chores.created_at) AS baseline_at,

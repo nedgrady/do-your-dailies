@@ -32,12 +32,14 @@ import {
   mutationStatus,
   SaveStatusIndicator,
 } from '../../../forms/SaveStatusIndicator'
+import { toApiEmoji } from '../../../domain/emoji'
 import { UnsavedChangesGuard } from '../../../forms/UnsavedChangesGuard'
 import type { DisplayUnit } from '../../../generated/api/api.schemas'
 import { EditableDataGrid } from '../../../integrations/mui/EditableDataGrid'
 import { DISPLAY_UNITS, toAmount, toDays, unitLabel } from '../../Cadence'
 import ChoreFlow from './ChoreFlow'
 import DeleteChoreFlow from './DeleteChoreFlow'
+import ChoreEmojiCell from './emoji/ChoreEmojiCell'
 import { ChoreInsights } from './ChoreInsights'
 
 const NEW_CHORE_ID = -2
@@ -58,6 +60,7 @@ const draftChore: Chore = {
   name: '',
   cadenceInDays: toDays(1, 'DAY'),
   displayUnit: 'DAY',
+  emoji: null,
   createdAt: new Date(0),
   updatedAt: new Date(0),
 }
@@ -180,7 +183,31 @@ function ChoreList() {
     return { ...oldRow, name, cadenceInDays, displayUnit }
   }
 
+  // Desktop only: on mobile, the emoji is set in the add/edit flow instead.
+  // Picking here saves straight away, so it doesn't go through the cell editor.
+  const emojiColumn: GridColDef<Chore> = {
+    field: 'emoji',
+    headerName: 'Emoji',
+    width: 84,
+    sortable: false,
+    filterable: false,
+    renderCell: (params) =>
+      params.id === NEW_CHORE_ID ? null : (
+        <ChoreEmojiCell
+          name={params.row.name}
+          emoji={params.row.emoji}
+          onChange={(emoji) =>
+            updateMutation.mutate({
+              id: params.row.id,
+              data: { emoji: toApiEmoji(emoji) },
+            })
+          }
+        />
+      ),
+  }
+
   const columns: GridColDef<Chore>[] = [
+    ...(isDesktop ? [emojiColumn] : []),
     {
       field: 'name',
       headerName: 'Chore',

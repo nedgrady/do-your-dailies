@@ -19,6 +19,7 @@ func ToAPIChore(chore models.Chore) contracts.Chore {
 		Name:          chore.Name,
 		CadenceInDays: chore.CadenceInDays,
 		DisplayUnit:   contracts.DisplayUnit(chore.DisplayUnit),
+		Emoji:         string(chore.Emoji),
 		CreatedAt:     chore.CreatedAt,
 		UpdatedAt:     chore.UpdatedAt,
 	}

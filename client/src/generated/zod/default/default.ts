@@ -37,6 +37,8 @@ export const CreateChoreCompletorResponse = zod.object({
 })
 
 
+export const listChoresResponseEmojiMax = 32;
+
 
 
 export const ListChoresResponseItem = zod.object({
@@ -44,6 +46,7 @@ export const ListChoresResponseItem = zod.object({
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
   "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
+  "emoji": zod.string().max(listChoresResponseEmojiMax).describe('A single emoji. Empty string means no emoji is set.'),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
@@ -58,15 +61,20 @@ export const CreateChoreHeader = zod.object({
 })
 
 
+export const createChoreBodyEmojiMax = 32;
+
 
 
 export const CreateChoreBody = zod.object({
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
   "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']).optional(),
+  "emoji": zod.string().max(createChoreBodyEmojiMax).optional().describe('A single emoji. Empty string means no emoji is set.'),
   "lastCompletedAt": zod.iso.datetime({"offset":true}).optional().describe('When this chore was last actually done, if known. Backdates a completion record instead of leaving the chore with no history (which otherwise reads as \"just done now\").')
 })
 
+
+export const createChoreResponseEmojiMax = 32;
 
 
 
@@ -75,6 +83,7 @@ export const CreateChoreResponse = zod.object({
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
   "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
+  "emoji": zod.string().max(createChoreResponseEmojiMax).describe('A single emoji. Empty string means no emoji is set.'),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
@@ -88,6 +97,8 @@ export const BulkCreateChoresHeader = zod.object({
 })
 
 
+export const bulkCreateChoresBodyChoresItemEmojiMax = 32;
+
 
 
 export const BulkCreateChoresBody = zod.object({
@@ -95,10 +106,13 @@ export const BulkCreateChoresBody = zod.object({
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
   "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']).optional(),
+  "emoji": zod.string().max(bulkCreateChoresBodyChoresItemEmojiMax).optional().describe('A single emoji. Empty string means no emoji is set.'),
   "lastCompletedAt": zod.iso.datetime({"offset":true}).optional().describe('When this chore was last actually done, if known. Backdates a completion record instead of leaving the chore with no history (which otherwise reads as \"just done now\").')
 }))
 })
 
+
+export const bulkCreateChoresResponseEmojiMax = 32;
 
 
 
@@ -107,6 +121,7 @@ export const BulkCreateChoresResponseItem = zod.object({
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
   "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
+  "emoji": zod.string().max(bulkCreateChoresResponseEmojiMax).describe('A single emoji. Empty string means no emoji is set.'),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
@@ -117,6 +132,8 @@ export const GetChoreParams = zod.object({
 })
 
 
+export const getChoreResponseEmojiMax = 32;
+
 
 
 export const GetChoreResponse = zod.object({
@@ -124,6 +141,7 @@ export const GetChoreResponse = zod.object({
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
   "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
+  "emoji": zod.string().max(getChoreResponseEmojiMax).describe('A single emoji. Empty string means no emoji is set.'),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
@@ -133,14 +151,19 @@ export const UpdateChoreParams = zod.object({
 })
 
 
+export const updateChoreBodyEmojiMax = 32;
+
 
 
 export const UpdateChoreBody = zod.object({
   "name": zod.string().optional(),
   "cadenceInDays": zod.int().min(1).optional(),
-  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']).optional()
-})
+  "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']).optional(),
+  "emoji": zod.string().max(updateChoreBodyEmojiMax).optional().describe('A single emoji. Empty string means no emoji is set.')
+}).describe('Omitted fields are left unchanged. An empty emoji clears it.')
 
+
+export const updateChoreResponseEmojiMax = 32;
 
 
 
@@ -149,6 +172,7 @@ export const UpdateChoreResponse = zod.object({
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
   "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
+  "emoji": zod.string().max(updateChoreResponseEmojiMax).describe('A single emoji. Empty string means no emoji is set.'),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 })
@@ -159,6 +183,8 @@ export const DeleteChoreParams = zod.object({
 
 export const DeleteChoreResponse = zod.void()
 
+
+export const getChoreInsightsResponseChoreProjectionsItemChoreEmojiMax = 32;
 
 
 
@@ -172,6 +198,7 @@ export const GetChoreInsightsResponse = zod.object({
   "name": zod.string(),
   "cadenceInDays": zod.int().min(1),
   "displayUnit": zod.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
+  "emoji": zod.string().max(getChoreInsightsResponseChoreProjectionsItemChoreEmojiMax).describe('A single emoji. Empty string means no emoji is set.'),
   "createdAt": zod.iso.datetime({"offset":true}),
   "updatedAt": zod.iso.datetime({"offset":true})
 }),
@@ -224,6 +251,8 @@ export const DeleteChoreCompletionParams = zod.object({
 export const DeleteChoreCompletionResponse = zod.void()
 
 
+export const listChoreQueueResponseEmojiMax = 32;
+
 
 
 export const ListChoreQueueResponseItem = zod.object({
@@ -233,7 +262,8 @@ export const ListChoreQueueResponseItem = zod.object({
   "priority": zod.number(),
   "latestCompletionId": zod.int().optional(),
   "lastCompletedAt": zod.iso.datetime({"offset":true}).optional(),
-  "dueAt": zod.iso.datetime({"offset":true}).describe('When this chore becomes overdue (priority reaches 1).')
+  "dueAt": zod.iso.datetime({"offset":true}).describe('When this chore becomes overdue (priority reaches 1).'),
+  "emoji": zod.string().max(listChoreQueueResponseEmojiMax).describe('A single emoji. Empty string means no emoji is set.')
 })
 export const ListChoreQueueResponse = zod.array(ListChoreQueueResponseItem)
 

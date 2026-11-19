@@ -7,8 +7,10 @@ import {
   useCreateChoreMutation,
   useUpdateChoreMutation,
 } from '../../../domain/chore'
+import { toApiEmoji } from '../../../domain/emoji'
 import { toAmount, toDays } from '../../Cadence'
 import { CadenceStep, NameStep } from './ChoreFieldSteps'
+import { EmojiStep } from './emoji/EmojiStep'
 import type { ChoreFormValues } from './choreForm'
 import { choreFormSchema } from './choreForm'
 
@@ -46,17 +48,29 @@ export function useChoreFlow({
         <CadenceStep values={values} setValue={setValue} />
       ),
     },
+    {
+      id: 'emoji',
+      title: 'Emoji (optional)',
+      fields: ['emoji'],
+      render: (values, setValue) => (
+        <EmojiStep
+          value={values.emoji}
+          onChange={(emoji) => setValue('emoji', emoji)}
+        />
+      ),
+    },
   ]
 
   return {
     title: isCreating ? 'Add chore' : 'Edit chore',
     schema: choreFormSchema,
     defaultValues: isCreating
-      ? { name: '', amount: '1', unit: 'DAY' }
+      ? { name: '', amount: '1', unit: 'DAY', emoji: null }
       : {
           name: chore.name,
           amount: String(toAmount(chore.cadenceInDays, chore.displayUnit)),
           unit: chore.displayUnit,
+          emoji: chore.emoji,
         },
     steps,
     submitLabel: 'Save',
@@ -65,6 +79,7 @@ export function useChoreFlow({
         name: values.name.trim(),
         cadenceInDays: toDays(Number(values.amount), values.unit),
         displayUnit: values.unit,
+        emoji: toApiEmoji(values.emoji),
       }
       if (isCreating) {
         createMutation.mutate({ data }, { onSuccess: onDone })

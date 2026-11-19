@@ -21,6 +21,7 @@ func toAPIChoresInQueue(queue []ChoreInQueue) []contracts.ChoreInQueue {
 			LatestCompletionId: latestCompletionId,
 			LastCompletedAt:    &chore.LastCompletedAt,
 			DueAt:              chore.DueAt(),
+			Emoji:              string(chore.Emoji),
 		})
 	}
 

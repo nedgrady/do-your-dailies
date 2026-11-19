@@ -281,6 +281,10 @@ components:
     DisplayUnit:
       type: string
       enum: [DAY, WEEK, MONTH, YEAR]
+    Emoji:
+      type: string
+      maxLength: 32
+      description: A single emoji. Empty string means no emoji is set.
     Chore:
       type: object
       required:
@@ -288,6 +292,7 @@ components:
         - name
         - cadenceInDays
         - displayUnit
+        - emoji
         - createdAt
         - updatedAt
       properties:
@@ -301,6 +306,8 @@ components:
           minimum: 1
         displayUnit:
           $ref: "#/components/schemas/DisplayUnit"
+        emoji:
+          $ref: "#/components/schemas/Emoji"
         createdAt:
           type: string
           format: date-time
@@ -315,6 +322,7 @@ components:
         - cadenceInDays
         - priority
         - dueAt
+        - emoji
       properties:
         choreId:
           type: integer
@@ -336,6 +344,8 @@ components:
           type: string
           format: date-time
           description: When this chore becomes overdue (priority reaches 1).
+        emoji:
+          $ref: "#/components/schemas/Emoji"
     CreateChoreRequest:
       type: object
       required:
@@ -349,6 +359,8 @@ components:
           minimum: 1
         displayUnit:
           $ref: "#/components/schemas/DisplayUnit"
+        emoji:
+          $ref: "#/components/schemas/Emoji"
         lastCompletedAt:
           type: string
           format: date-time
@@ -386,6 +398,7 @@ components:
             $ref: "#/components/schemas/BulkCreateChoresRowError"
     UpdateChoreRequest:
       type: object
+      description: Omitted fields are left unchanged. An empty emoji clears it.
       properties:
         name:
           type: string
@@ -394,6 +407,8 @@ components:
           minimum: 1
         displayUnit:
           $ref: "#/components/schemas/DisplayUnit"
+        emoji:
+          $ref: "#/components/schemas/Emoji"
     ChoreCompletor:
       type: object
       required:

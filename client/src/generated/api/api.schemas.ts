@@ -14,12 +14,19 @@ export const DisplayUnit = {
   YEAR: 'YEAR',
 } as const;
 
+/**
+ * A single emoji. Empty string means no emoji is set.
+ * @maxLength 32
+ */
+export type Emoji = string;
+
 export interface Chore {
   id: number;
   name: string;
   /** @minimum 1 */
   cadenceInDays: number;
   displayUnit: DisplayUnit;
+  emoji: Emoji;
   createdAt: string;
   updatedAt: string;
 }
@@ -34,6 +41,7 @@ export interface ChoreInQueue {
   lastCompletedAt?: string;
   /** When this chore becomes overdue (priority reaches 1). */
   dueAt: string;
+  emoji: Emoji;
 }
 
 export interface CreateChoreRequest {
@@ -41,6 +49,7 @@ export interface CreateChoreRequest {
   /** @minimum 1 */
   cadenceInDays: number;
   displayUnit?: DisplayUnit;
+  emoji?: Emoji;
   /** When this chore was last actually done, if known. Backdates a completion record instead of leaving the chore with no history (which otherwise reads as "just done now"). */
   lastCompletedAt?: string;
 }
@@ -58,11 +67,15 @@ export interface BulkCreateChoresValidationError {
   errors: BulkCreateChoresRowError[];
 }
 
+/**
+ * Omitted fields are left unchanged. An empty emoji clears it.
+ */
 export interface UpdateChoreRequest {
   name?: string;
   /** @minimum 1 */
   cadenceInDays?: number;
   displayUnit?: DisplayUnit;
+  emoji?: Emoji;
 }
 
 export interface ChoreCompletor {

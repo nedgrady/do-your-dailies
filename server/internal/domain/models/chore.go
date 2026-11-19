@@ -7,6 +7,7 @@ type Chore struct {
 	Name             string             `json:"name" gorm:"not null"`
 	CadenceInDays    int                `json:"cadence_in_days" gorm:"not null"`
 	DisplayUnit      DisplayUnit        `json:"display_unit" gorm:"not null;default:'DAY'"`
+	Emoji            Emoji              `json:"emoji" gorm:"not null;default:''"`
 	ChoreCompletions []*ChoreCompletion `json:"chore_completions" gorm:"foreignKey:ChoreID"`
 	UserID           uint               `json:"user_id" gorm:"not null"`
 }

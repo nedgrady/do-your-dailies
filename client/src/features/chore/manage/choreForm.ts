@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { emojiSchema } from '../../../domain/emoji'
 
 // Form values are what the user types: the amount stays a string until submit.
 export const choreFormSchema = z.object({
@@ -10,6 +11,7 @@ export const choreFormSchema = z.object({
     return Number.isInteger(parsed) && parsed > 0
   }, 'Must be a positive whole number'),
   unit: z.enum(['DAY', 'WEEK', 'MONTH', 'YEAR']),
+  emoji: emojiSchema.nullable(),
 })
 
 export type ChoreFormValues = z.infer<typeof choreFormSchema>

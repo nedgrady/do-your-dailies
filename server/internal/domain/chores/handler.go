@@ -48,10 +48,16 @@ func (handler ChoreHandler) CreateChore(ctx context.Context, request contracts.C
 		return contracts.CreateChore422Response{}, nil
 	}
 
+	emoji := resolveEmoji(request.Body.Emoji)
+	if !emoji.Valid() {
+		return contracts.CreateChore422Response{}, nil
+	}
+
 	chore, err := handler.Store.Create(ctx, userID, CreateRequest{
 		Name:            request.Body.Name,
 		CadenceInDays:   request.Body.CadenceInDays,
 		DisplayUnit:     displayUnit,
+		Emoji:           emoji,
 		LastCompletedAt: request.Body.LastCompletedAt,
 	})
 	if err != nil {
@@ -83,10 +89,16 @@ func (handler ChoreHandler) BulkCreateChores(ctx context.Context, request contra
 			rowErrors = append(rowErrors, contracts.BulkCreateChoresRowError{Index: i, Message: err.Error()})
 			continue
 		}
+		emoji := resolveEmoji(chore.Emoji)
+		if !emoji.Valid() {
+			rowErrors = append(rowErrors, contracts.BulkCreateChoresRowError{Index: i, Message: "emoji must be a single emoji"})
+			continue
+		}
 		requests = append(requests, CreateRequest{
 			Name:            chore.Name,
 			CadenceInDays:   chore.CadenceInDays,
 			DisplayUnit:     displayUnit,
+			Emoji:           emoji,
 			LastCompletedAt: chore.LastCompletedAt,
 		})
 	}
@@ -141,10 +153,20 @@ func (handler ChoreHandler) UpdateChore(ctx context.Context, request contracts.U
 		displayUnit = &unit
 	}
 
+	var emoji *models.Emoji
+	if request.Body.Emoji != nil {
+		value := models.Emoji(*request.Body.Emoji)
+		if !value.Valid() {
+			return contracts.UpdateChore422Response{}, nil
+		}
+		emoji = &value
+	}
+
 	chore, err := handler.Store.Update(ctx, userID, uint(request.Id), UpdateRequest{
 		Name:          request.Body.Name,
 		CadenceInDays: request.Body.CadenceInDays,
 		DisplayUnit:   displayUnit,
+		Emoji:         emoji,
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -178,6 +200,14 @@ func validateCadence(cadenceInDays int) error {
 	}
 
 	return nil
+}
+
+// resolveEmoji treats an omitted emoji as none ("").
+func resolveEmoji(emoji *contracts.Emoji) models.Emoji {
+	if emoji == nil {
+		return ""
+	}
+	return models.Emoji(*emoji)
 }
 
 func resolveDisplayUnit(unit *contracts.DisplayUnit) models.DisplayUnit {

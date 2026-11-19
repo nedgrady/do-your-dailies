@@ -30,7 +30,9 @@ func NewGormStore(db *gorm.DB) *GormStore {
 
 func (store *GormStore) List(ctx context.Context, userID uint) ([]models.Chore, error) {
 	var chores []models.Chore
-	result := store.db.WithContext(ctx).Where("user_id = ?", userID).Find(&chores)
+	// Explicit order: Postgres returns an updated row at the end of an unordered
+	// scan, so without this an edited chore jumps to the bottom of the list.
+	result := store.db.WithContext(ctx).Where("user_id = ?", userID).Order("id ASC").Find(&chores)
 	return chores, result.Error
 }
 
@@ -40,6 +42,7 @@ func (store *GormStore) Create(ctx context.Context, userID uint, req CreateReque
 		Name:          req.Name,
 		CadenceInDays: req.CadenceInDays,
 		DisplayUnit:   req.DisplayUnit,
+		Emoji:         req.Emoji,
 	}
 
 	err := store.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -62,6 +65,7 @@ func (store *GormStore) CreateMany(ctx context.Context, userID uint, reqs []Crea
 			Name:          req.Name,
 			CadenceInDays: req.CadenceInDays,
 			DisplayUnit:   req.DisplayUnit,
+			Emoji:         req.Emoji,
 		})
 	}
 
@@ -122,6 +126,9 @@ func (store *GormStore) Update(ctx context.Context, userID uint, id uint, req Up
 	}
 	if req.DisplayUnit != nil {
 		chore.DisplayUnit = *req.DisplayUnit
+	}
+	if req.Emoji != nil {
+		chore.Emoji = *req.Emoji
 	}
 	result := store.db.WithContext(ctx).Save(&chore)
 	return chore, result.Error

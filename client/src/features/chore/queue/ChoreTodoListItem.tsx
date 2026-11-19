@@ -1,4 +1,5 @@
 import { ListItemText } from '@mui/material'
+import ChoreAvatar from '../../../components/ChoreAvatar'
 import ClickableCardButton from '../../../components/ClickableCardButton'
 import type { ChoreInQueue } from '../../../domain/choreQueue'
 import DuePill from './DuePill'
@@ -16,6 +17,7 @@ export default function ChoreTodoListItem({
 }: ChoreTodoListItemProps) {
   return (
     <ClickableCardButton onClick={onClick}>
+      <ChoreAvatar name={choreInQueue.choreName} emoji={choreInQueue.emoji} />
       <ListItemText
         primary={choreInQueue.choreName}
         secondary={<DuePill dueAt={choreInQueue.dueAt} now={now} />}

@@ -119,6 +119,7 @@ function ChoreQueueContent() {
                 <CompletionListItem
                   key={completion.id}
                   choreName={chore.name}
+                  emoji={chore.emoji}
                   completorNames={names}
                   onClick={() => viewing.open(completion.id)}
                 />
